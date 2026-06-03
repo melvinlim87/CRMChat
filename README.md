@@ -32,6 +32,12 @@ lead pipeline, and reply from a single Team Inbox.
 - 👤 **Lead assignment** — owner per lead, inline reassign, filter by owner
 - ⚡ **Automations** — auto-reply / add tag / set status on inbound messages
 - 🟢 **Live inbox** — new messages appear via polling, no manual refresh
+- 📊 **Dashboard** — stat cards, recent conversations, pipeline breakdown
+- 🗂️ **Pipeline board** — drag-and-drop Kanban to move leads between stages
+- 📝 **Lead notes** — timestamped notes per lead in the chat sidebar
+- 🤖 **AI replies** — multi-provider (Claude / GPT / Gemini); "✨ AI" drafts a reply
+- ⚙️ **Settings** — pick AI provider + model, manage API keys
+- 🔀 **AI Flows** — visual node-based WhatsApp flow builder (send / AI / branch / tag / status)
 
 ## Getting started
 
@@ -151,6 +157,9 @@ prisma/
 - [x] Google integrations: Gmail, Calendar, Drive (OAuth)
 - [x] Google write actions: send Gmail, create Calendar events
 - [x] Automations (auto-reply / tag / set status on inbound message)
+- [x] Dashboard, drag-and-drop pipeline board, lead notes
+- [x] Multi-provider AI (Claude / GPT / Gemini) with model selector + AI-drafted replies
+- [x] Visual WhatsApp AI flow builder (React Flow)
 - [ ] WhatsApp message templates + 24h-window handling
 - [ ] Real-time via WebSocket/SSE (replace polling)
 - [ ] Lead followers, notes, drag-and-drop pipeline stages
