@@ -1,0 +1,15 @@
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: crmchat
+      POSTGRES_PASSWORD: crmchat
+      POSTGRES_DB: crmchat
+    ports:
+      - "5432:5432"
+    volumes:
+      - crmchat_pgdata:/var/lib/postgresql/data
+
+volumes:
+  crmchat_pgdata:

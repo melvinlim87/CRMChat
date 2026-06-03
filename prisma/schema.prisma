@@ -1,0 +1,86 @@
+// CRMChat — chat-based CRM with WhatsApp Business integration
+// Docs: https://www.prisma.io/docs
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  password  String
+  createdAt DateTime @default(now())
+
+  leads Lead[]
+}
+
+enum LeadStatus {
+  NEW
+  CONTACTED
+  QUALIFIED
+  WON
+  LOST
+}
+
+model Lead {
+  id        String     @id @default(cuid())
+  name      String
+  phone     String?    @unique
+  email     String?
+  company   String?
+  status    LeadStatus @default(NEW)
+  source    String?    @default("whatsapp")
+  tags      String[]   @default([])
+  notes     String?
+  ownerId   String?
+  owner     User?      @relation(fields: [ownerId], references: [id])
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  conversation Conversation?
+}
+
+model Conversation {
+  id            String   @id @default(cuid())
+  leadId        String   @unique
+  lead          Lead     @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  channel       String   @default("whatsapp")
+  lastMessageAt DateTime @default(now())
+  unreadCount   Int      @default(0)
+  createdAt     DateTime @default(now())
+
+  messages Message[]
+}
+
+enum MessageDirection {
+  INBOUND
+  OUTBOUND
+}
+
+model Message {
+  id             String           @id @default(cuid())
+  conversationId String
+  conversation   Conversation     @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  direction      MessageDirection
+  body           String
+  status         String           @default("sent")
+  externalId     String? // WhatsApp message id
+  createdAt      DateTime         @default(now())
+
+  @@index([conversationId])
+}
+
+model Integration {
+  id        String   @id @default(cuid())
+  provider  String   @unique // e.g. "whatsapp", "gmail", "slack"
+  status    String   @default("disconnected")
+  config    Json?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}

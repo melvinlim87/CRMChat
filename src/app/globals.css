@@ -1,0 +1,30 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: #ffffff;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  @apply bg-[#fdf6f0] text-slate-800 antialiased;
+}
+
+/* Subtle scrollbars */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #e7d9cf transparent;
+}
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+*::-webkit-scrollbar-thumb {
+  background-color: #e7d9cf;
+  border-radius: 9999px;
+}
