@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { runInboundAutomations } from "@/lib/automations";
+import { runInboundFlows } from "@/lib/flow-engine";
 
 // 1) Webhook verification handshake (Meta calls this once when you subscribe).
 export async function GET(req: NextRequest) {
@@ -67,8 +68,9 @@ export async function POST(req: NextRequest) {
             },
           });
 
-          // Apply any matching automation rules to this inbound message.
+          // Apply any matching automation rules, then run AI flows.
           await runInboundAutomations({ lead, conversation, text });
+          await runInboundFlows({ lead, conversation, text });
         }
       }
     }
