@@ -8,13 +8,16 @@ export default async function ChatPage({
 }: {
   searchParams: { c?: string };
 }) {
-  const conversations = await prisma.conversation.findMany({
-    orderBy: { lastMessageAt: "desc" },
-    include: {
-      lead: true,
-      messages: { orderBy: { createdAt: "asc" } },
-    },
-  });
+  const [conversations, users] = await Promise.all([
+    prisma.conversation.findMany({
+      orderBy: { lastMessageAt: "desc" },
+      include: {
+        lead: true,
+        messages: { orderBy: { createdAt: "asc" } },
+      },
+    }),
+    prisma.user.findMany({ orderBy: { name: "asc" }, select: { id: true, name: true, email: true } }),
+  ]);
 
   const dto: ConversationDTO[] = conversations.map((c) => ({
     id: c.id,
@@ -28,6 +31,7 @@ export default async function ChatPage({
       company: c.lead.company,
       status: c.lead.status,
       tags: c.lead.tags,
+      ownerId: c.lead.ownerId,
     },
     messages: c.messages.map((m) => ({
       id: m.id,
@@ -38,5 +42,5 @@ export default async function ChatPage({
     })),
   }));
 
-  return <ChatInbox conversations={dto} initialConversationId={searchParams.c} />;
+  return <ChatInbox conversations={dto} users={users} initialConversationId={searchParams.c} />;
 }

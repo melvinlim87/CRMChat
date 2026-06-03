@@ -13,6 +13,21 @@ async function main() {
     create: { email, name: "Jeremy Wong", password },
   });
 
+  // A small team so lead assignment is meaningful.
+  const teammates = await Promise.all(
+    [
+      { email: "aisha@crmchat.app", name: "Aisha Rahman" },
+      { email: "marcus@crmchat.app", name: "Marcus Lim" },
+    ].map((t) =>
+      prisma.user.upsert({
+        where: { email: t.email },
+        update: {},
+        create: { email: t.email, name: t.name, password },
+      })
+    )
+  );
+  const team = [user, ...teammates];
+
   const seedLeads: Array<{
     name: string;
     phone: string;
@@ -72,7 +87,10 @@ async function main() {
     },
   ];
 
+  let i = 0;
   for (const l of seedLeads) {
+    const owner = team[i % team.length];
+    i++;
     const lead = await prisma.lead.upsert({
       where: { phone: l.phone },
       update: {},
@@ -83,7 +101,7 @@ async function main() {
         company: l.company,
         status: l.status,
         tags: l.tags,
-        ownerId: user.id,
+        ownerId: owner.id,
         source: "whatsapp",
       },
     });

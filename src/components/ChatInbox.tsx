@@ -4,6 +4,7 @@ import { useMemo, useRef, useState, useEffect } from "react";
 import clsx from "clsx";
 import type { LeadStatus, MessageDirection } from "@prisma/client";
 import StatusBadge from "./StatusBadge";
+import OwnerSelect, { type TeamUser } from "./OwnerSelect";
 import { clockTime, initials, timeAgo } from "@/lib/format";
 
 export type MessageDTO = {
@@ -26,15 +27,18 @@ export type ConversationDTO = {
     company: string | null;
     status: LeadStatus;
     tags: string[];
+    ownerId: string | null;
   };
   messages: MessageDTO[];
 };
 
 export default function ChatInbox({
   conversations: initial,
+  users,
   initialConversationId,
 }: {
   conversations: ConversationDTO[];
+  users: TeamUser[];
   initialConversationId?: string;
 }) {
   const [conversations, setConversations] = useState(initial);
@@ -238,7 +242,7 @@ export default function ChatInbox({
             </div>
           </div>
         </div>
-        <ContactPanel lead={active.lead} />
+        <ContactPanel lead={active.lead} users={users} />
         </>
       ) : (
         <div className="flex flex-1 items-center justify-center text-slate-400">
@@ -249,7 +253,7 @@ export default function ChatInbox({
   );
 }
 
-function ContactPanel({ lead }: { lead: ConversationDTO["lead"] }) {
+function ContactPanel({ lead, users }: { lead: ConversationDTO["lead"]; users: TeamUser[] }) {
   return (
     <aside className="hidden w-72 shrink-0 flex-col border-l border-slate-200 bg-white xl:flex">
       <div className="flex flex-col items-center gap-2 border-b border-slate-100 px-6 py-6 text-center">
@@ -262,6 +266,10 @@ function ContactPanel({ lead }: { lead: ConversationDTO["lead"] }) {
       </div>
 
       <div className="space-y-5 px-6 py-5 text-sm">
+        <div>
+          <p className="mb-1.5 text-xs font-medium uppercase tracking-wide text-slate-400">Owner</p>
+          <OwnerSelect leadId={lead.id} ownerId={lead.ownerId} users={users} />
+        </div>
         <Field label="Phone" value={lead.phone || "—"} />
         <Field label="Channel" value="WhatsApp" />
         <div>
