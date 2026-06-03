@@ -40,6 +40,7 @@ const NODE_DEFAULTS: Record<string, Record<string, unknown>> = {
 const PALETTE = [
   { type: "send", label: "Send message" },
   { type: "ai", label: "AI reply" },
+  { type: "wait", label: "Wait for reply" },
   { type: "condition", label: "Condition" },
   { type: "tag", label: "Add tag" },
   { type: "status", label: "Set status" },
@@ -225,6 +226,17 @@ function AINode({ id, data }: NodeProps) {
   );
 }
 
+function WaitNode() {
+  return (
+    <div className={`${card} border-teal-300`}>
+      <Handle type="target" position={Position.Top} />
+      <p className="text-[10px] font-bold uppercase tracking-wide text-teal-600">⏸ Wait for reply</p>
+      <p className="mt-0.5 text-xs text-slate-500">Pause until the customer responds, then continue.</p>
+      <Handle type="source" position={Position.Bottom} id="out" />
+    </div>
+  );
+}
+
 function ConditionNode({ id, data }: NodeProps) {
   const update = useUpdate(id);
   return (
@@ -281,6 +293,7 @@ const nodeTypes = {
   trigger: TriggerNode,
   send: SendNode,
   ai: AINode,
+  wait: WaitNode,
   condition: ConditionNode,
   tag: TagNode,
   status: StatusNode,

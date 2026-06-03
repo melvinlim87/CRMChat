@@ -123,6 +123,20 @@ model Flow {
   graph     Json     @default("{}") // { nodes: [...], edges: [...] }
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  runs FlowRun[]
+}
+
+// Tracks where a conversation currently is inside a flow, so flows can span
+// multiple messages (multi-turn). One active run per conversation.
+model FlowRun {
+  id             String   @id @default(cuid())
+  flowId         String
+  flow           Flow     @relation(fields: [flowId], references: [id], onDelete: Cascade)
+  conversationId String   @unique
+  currentNodeId  String
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 }
 
 model Automation {
