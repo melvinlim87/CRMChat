@@ -2,11 +2,11 @@ import clsx from "clsx";
 import type { LeadStatus } from "@prisma/client";
 
 const STYLES: Record<LeadStatus, string> = {
-  NEW: "bg-sky-50 text-sky-700 ring-sky-600/20",
-  CONTACTED: "bg-amber-50 text-amber-700 ring-amber-600/20",
-  QUALIFIED: "bg-violet-50 text-violet-700 ring-violet-600/20",
-  WON: "bg-emerald-50 text-emerald-700 ring-emerald-600/20",
-  LOST: "bg-slate-100 text-slate-500 ring-slate-500/20",
+  NEW: "bg-sky-500/10 text-sky-300 ring-sky-600/20",
+  CONTACTED: "bg-amber-500/10 text-amber-300 ring-amber-600/20",
+  QUALIFIED: "bg-violet-500/10 text-violet-300 ring-violet-600/20",
+  WON: "bg-emerald-500/10 text-emerald-300 ring-emerald-600/20",
+  LOST: "bg-white/10 text-slate-400 ring-slate-500/20",
 };
 
 const LABELS: Record<LeadStatus, string> = {

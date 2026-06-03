@@ -23,43 +23,43 @@ export default async function DrivePage() {
 
   return (
     <div className="flex h-full flex-col">
-      <header className="border-b border-slate-200 bg-white px-8 py-5">
-        <h1 className="text-xl font-semibold text-slate-900">Drive</h1>
-        <p className="text-sm text-slate-500">Recent files{status.email ? ` · ${status.email}` : ""}</p>
+      <header className="border-b border-white/10 bg-surface-panel px-8 py-5">
+        <h1 className="text-xl font-semibold text-slate-100">Drive</h1>
+        <p className="text-sm text-slate-400">Recent files{status.email ? ` · ${status.email}` : ""}</p>
       </header>
 
       <div className="flex-1 overflow-auto p-8">
-        <div className="overflow-hidden rounded-xl border border-slate-200 bg-white">
+        <div className="overflow-hidden rounded-xl border border-white/10 bg-surface-panel">
           <table className="w-full text-left text-sm">
-            <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
+            <thead className="border-b border-white/10 bg-white/5 text-xs uppercase tracking-wide text-slate-400">
               <tr>
                 <th className="px-5 py-3 font-medium">Name</th>
                 <th className="px-5 py-3 font-medium">Type</th>
                 <th className="px-5 py-3 font-medium">Modified</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
+            <tbody className="divide-y divide-white/5">
               {files.map((f) => (
-                <tr key={f.id} className="transition hover:bg-slate-50">
+                <tr key={f.id} className="transition hover:bg-white/5">
                   <td className="px-5 py-3">
                     <a
                       href={f.webViewLink}
                       target="_blank"
                       rel="noreferrer"
-                      className="font-medium text-slate-900 hover:text-brand-600"
+                      className="font-medium text-slate-100 hover:text-brand-300"
                     >
                       {f.name}
                     </a>
                   </td>
-                  <td className="px-5 py-3 text-slate-500">{fileKind(f.mimeType)}</td>
-                  <td className="px-5 py-3 text-slate-500">
+                  <td className="px-5 py-3 text-slate-400">{fileKind(f.mimeType)}</td>
+                  <td className="px-5 py-3 text-slate-400">
                     {f.modifiedTime ? timeAgo(new Date(f.modifiedTime)) : "—"}
                   </td>
                 </tr>
               ))}
               {files.length === 0 && (
                 <tr>
-                  <td colSpan={3} className="px-5 py-16 text-center text-slate-400">
+                  <td colSpan={3} className="px-5 py-16 text-center text-slate-500">
                     No files to show.
                   </td>
                 </tr>

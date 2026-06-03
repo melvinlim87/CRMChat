@@ -32,12 +32,12 @@ export default function Sidebar({ user }: { user: { name: string | null; email: 
   }
 
   return (
-    <aside className="flex h-screen w-60 shrink-0 flex-col border-r border-slate-200 bg-white">
+    <aside className="glass flex h-screen w-60 shrink-0 flex-col border-r border-white/10">
       <div className="flex items-center gap-2.5 px-5 py-5">
-        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-orange-500 to-rose-500 text-sm font-bold text-white shadow-sm shadow-orange-500/30">
+        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 via-violet-500 to-fuchsia-500 text-sm font-bold text-white shadow-sm shadow-violet-500/40">
           C
         </div>
-        <span className="text-lg font-semibold tracking-tight text-slate-900">CRMChat</span>
+        <span className="text-lg font-semibold tracking-tight text-slate-100">CRMChat</span>
       </div>
 
       <nav className="flex-1 space-y-1 px-3 py-2">
@@ -51,8 +51,8 @@ export default function Sidebar({ user }: { user: { name: string | null; email: 
               className={clsx(
                 "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition",
                 active
-                  ? "bg-brand-50 text-brand-700"
-                  : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+                  ? "bg-brand-500/20 text-white ring-1 ring-inset ring-brand-500/40 shadow-glow"
+                  : "text-slate-300 hover:bg-white/5 hover:text-slate-100"
               )}
             >
               <Icon className="h-[18px] w-[18px]" />
@@ -61,7 +61,7 @@ export default function Sidebar({ user }: { user: { name: string | null; email: 
           );
         })}
 
-        <p className="px-3 pb-1 pt-5 text-xs font-semibold uppercase tracking-wide text-slate-400">
+        <p className="px-3 pb-1 pt-5 text-xs font-semibold uppercase tracking-wide text-slate-500">
           Google
         </p>
         {GOOGLE_NAV.map((item) => {
@@ -74,8 +74,8 @@ export default function Sidebar({ user }: { user: { name: string | null; email: 
               className={clsx(
                 "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition",
                 active
-                  ? "bg-brand-50 text-brand-700"
-                  : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+                  ? "bg-brand-500/20 text-white ring-1 ring-inset ring-brand-500/40 shadow-glow"
+                  : "text-slate-300 hover:bg-white/5 hover:text-slate-100"
               )}
             >
               <Icon className="h-[18px] w-[18px]" />
@@ -85,19 +85,19 @@ export default function Sidebar({ user }: { user: { name: string | null; email: 
         })}
       </nav>
 
-      <div className="border-t border-slate-200 p-3">
+      <div className="border-t border-white/10 p-3">
         <div className="flex items-center gap-2.5 rounded-lg px-2 py-2">
           <div className="flex h-8 w-8 items-center justify-center rounded-full bg-violet-500 text-xs font-semibold text-white">
             {(user.name || user.email).slice(0, 1).toUpperCase()}
           </div>
           <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-medium text-slate-800">{user.name || "User"}</p>
-            <p className="truncate text-xs text-slate-400">{user.email}</p>
+            <p className="truncate text-sm font-medium text-slate-100">{user.name || "User"}</p>
+            <p className="truncate text-xs text-slate-500">{user.email}</p>
           </div>
         </div>
         <button
           onClick={logout}
-          className="mt-1 w-full rounded-lg px-3 py-2 text-left text-sm text-slate-500 transition hover:bg-slate-50 hover:text-slate-900"
+          className="mt-1 w-full rounded-lg px-3 py-2 text-left text-sm text-slate-400 transition hover:bg-white/5 hover:text-slate-100"
         >
           Sign out
         </button>

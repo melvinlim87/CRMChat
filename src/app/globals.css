@@ -3,7 +3,7 @@
 @tailwind utilities;
 
 :root {
-  --background: #ffffff;
+  color-scheme: dark;
 }
 
 html,
@@ -12,19 +12,57 @@ body {
 }
 
 body {
-  @apply bg-[#fdf6f0] text-slate-800 antialiased;
+  @apply text-slate-200 antialiased;
+  background-color: #0a0e1a;
+  background-image:
+    radial-gradient(900px 500px at 15% -10%, rgba(99, 102, 241, 0.18), transparent 60%),
+    radial-gradient(800px 500px at 100% 0%, rgba(217, 70, 239, 0.12), transparent 55%),
+    radial-gradient(700px 500px at 50% 120%, rgba(139, 92, 246, 0.1), transparent 60%);
+  background-attachment: fixed;
 }
 
-/* Subtle scrollbars */
+/* Glassy panel helper */
+.glass {
+  background-color: rgba(14, 19, 34, 0.7);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+/* Unstyled form controls get a sensible dark base */
+input,
+textarea,
+select {
+  color: inherit;
+}
+input::placeholder,
+textarea::placeholder {
+  color: rgb(100 116 139);
+}
+select option {
+  background-color: #141a2c;
+  color: #e2e8f0;
+}
+
+/* Dark scrollbars */
 * {
   scrollbar-width: thin;
-  scrollbar-color: #e7d9cf transparent;
+  scrollbar-color: rgba(148, 163, 184, 0.25) transparent;
 }
 *::-webkit-scrollbar {
   width: 8px;
   height: 8px;
 }
 *::-webkit-scrollbar-thumb {
-  background-color: #e7d9cf;
+  background-color: rgba(148, 163, 184, 0.25);
   border-radius: 9999px;
+}
+
+/* React Flow dark tweaks */
+.react-flow__attribution {
+  display: none;
+}
+.react-flow__controls-button {
+  background: #141a2c !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+  color: #e2e8f0 !important;
 }

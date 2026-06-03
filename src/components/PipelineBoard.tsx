@@ -55,16 +55,16 @@ export default function PipelineBoard({ leads: initial }: { leads: BoardLead[] }
             }}
             onDragLeave={() => setOverCol((c) => (c === col.status ? null : c))}
             onDrop={() => moveTo(col.status)}
-            className={`flex w-72 shrink-0 flex-col rounded-2xl border bg-slate-50/60 transition ${
-              overCol === col.status ? "border-brand-400 bg-brand-50/40" : "border-slate-200"
+            className={`flex w-72 shrink-0 flex-col rounded-2xl border bg-white/5 transition ${
+              overCol === col.status ? "border-brand-400 bg-brand-500/15/40" : "border-white/10"
             }`}
           >
             <div className="flex items-center justify-between px-4 py-3">
               <div className="flex items-center gap-2">
                 <span className={`h-2.5 w-2.5 rounded-full ${col.dot}`} />
-                <span className="text-sm font-semibold text-slate-700">{col.label}</span>
+                <span className="text-sm font-semibold text-slate-200">{col.label}</span>
               </div>
-              <span className="rounded-full bg-white px-2 py-0.5 text-xs font-medium text-slate-500">
+              <span className="rounded-full bg-surface-panel px-2 py-0.5 text-xs font-medium text-slate-400">
                 {colLeads.length}
               </span>
             </div>
@@ -76,23 +76,23 @@ export default function PipelineBoard({ leads: initial }: { leads: BoardLead[] }
                   draggable
                   onDragStart={() => setDragId(lead.id)}
                   onDragEnd={() => setDragId(null)}
-                  className={`cursor-grab rounded-xl border border-slate-200 bg-white p-3 shadow-sm transition active:cursor-grabbing ${
+                  className={`cursor-grab rounded-xl border border-white/10 bg-surface-panel p-3 shadow-sm transition active:cursor-grabbing ${
                     dragId === lead.id ? "opacity-50" : "hover:shadow-md"
                   }`}
                 >
                   <div className="flex items-center gap-2.5">
-                    <span className="flex h-8 w-8 items-center justify-center rounded-full bg-brand-100 text-[11px] font-semibold text-brand-700">
+                    <span className="flex h-8 w-8 items-center justify-center rounded-full bg-brand-500/20 text-[11px] font-semibold text-brand-300">
                       {initials(lead.name)}
                     </span>
                     <div className="min-w-0">
-                      <p className="truncate text-sm font-medium text-slate-900">{lead.name}</p>
-                      {lead.company && <p className="truncate text-xs text-slate-400">{lead.company}</p>}
+                      <p className="truncate text-sm font-medium text-slate-100">{lead.name}</p>
+                      {lead.company && <p className="truncate text-xs text-slate-500">{lead.company}</p>}
                     </div>
                   </div>
                   {lead.tags.length > 0 && (
                     <div className="mt-2 flex flex-wrap gap-1">
                       {lead.tags.map((t) => (
-                        <span key={t} className="rounded-md bg-slate-100 px-1.5 py-0.5 text-[11px] text-slate-600">
+                        <span key={t} className="rounded-md bg-white/10 px-1.5 py-0.5 text-[11px] text-slate-300">
                           {t}
                         </span>
                       ))}
@@ -101,7 +101,7 @@ export default function PipelineBoard({ leads: initial }: { leads: BoardLead[] }
                 </div>
               ))}
               {colLeads.length === 0 && (
-                <p className="rounded-xl border border-dashed border-slate-200 py-6 text-center text-xs text-slate-300">
+                <p className="rounded-xl border border-dashed border-white/10 py-6 text-center text-xs text-slate-600">
                   Drop here
                 </p>
               )}

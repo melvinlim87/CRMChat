@@ -67,26 +67,26 @@ export default function AutomationsManager({ initial }: { initial: Automation[] 
       {/* List */}
       <div className="space-y-3">
         {automations.length === 0 && (
-          <p className="rounded-xl border border-dashed border-slate-200 bg-white px-5 py-12 text-center text-slate-400">
+          <p className="rounded-xl border border-dashed border-white/10 bg-surface-panel px-5 py-12 text-center text-slate-500">
             No automations yet. Create one to auto-reply, tag, or update leads when a message arrives.
           </p>
         )}
         {automations.map((a) => (
-          <div key={a.id} className="rounded-xl border border-slate-200 bg-white p-4">
+          <div key={a.id} className="rounded-xl border border-white/10 bg-surface-panel p-4">
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
-                <p className="font-medium text-slate-900">{a.name}</p>
-                <p className="mt-1 text-sm text-slate-500">
+                <p className="font-medium text-slate-100">{a.name}</p>
+                <p className="mt-1 text-sm text-slate-400">
                   When a message{" "}
                   {a.keyword ? (
                     <>
-                      contains <span className="font-medium text-slate-700">“{a.keyword}”</span>
+                      contains <span className="font-medium text-slate-200">“{a.keyword}”</span>
                     </>
                   ) : (
                     "arrives"
                   )}{" "}
-                  → <span className="font-medium text-slate-700">{ACTION_LABELS[a.action]}</span>:{" "}
-                  <span className="text-slate-600">{a.actionValue}</span>
+                  → <span className="font-medium text-slate-200">{ACTION_LABELS[a.action]}</span>:{" "}
+                  <span className="text-slate-300">{a.actionValue}</span>
                 </p>
               </div>
               <div className="flex shrink-0 items-center gap-3">
@@ -97,11 +97,11 @@ export default function AutomationsManager({ initial }: { initial: Automation[] 
                     onChange={(e) => toggle(a.id, e.target.checked)}
                     className="peer sr-only"
                   />
-                  <span className="relative h-5 w-9 rounded-full bg-slate-200 transition peer-checked:bg-brand-500 after:absolute after:left-0.5 after:top-0.5 after:h-4 after:w-4 after:rounded-full after:bg-white after:transition peer-checked:after:translate-x-4" />
+                  <span className="relative h-5 w-9 rounded-full bg-slate-200 transition peer-checked:bg-brand-500 after:absolute after:left-0.5 after:top-0.5 after:h-4 after:w-4 after:rounded-full after:bg-surface-panel after:transition peer-checked:after:translate-x-4" />
                 </label>
                 <button
                   onClick={() => remove(a.id)}
-                  className="text-slate-400 transition hover:text-red-500"
+                  className="text-slate-500 transition hover:text-red-500"
                   title="Delete"
                 >
                   ✕
@@ -113,35 +113,35 @@ export default function AutomationsManager({ initial }: { initial: Automation[] 
       </div>
 
       {/* Create form */}
-      <div className="h-fit rounded-xl border border-slate-200 bg-white p-5">
-        <h3 className="font-semibold text-slate-900">New automation</h3>
+      <div className="h-fit rounded-xl border border-white/10 bg-surface-panel p-5">
+        <h3 className="font-semibold text-slate-100">New automation</h3>
         <div className="mt-4 space-y-3">
           <div>
-            <label className="mb-1 block text-xs font-medium text-slate-500">Name</label>
+            <label className="mb-1 block text-xs font-medium text-slate-400">Name</label>
             <input
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="e.g. Pricing auto-reply"
-              className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:border-brand-500"
+              className="w-full rounded-lg border border-white/10 px-3 py-2 text-sm outline-none focus:border-brand-500"
             />
           </div>
           <div>
-            <label className="mb-1 block text-xs font-medium text-slate-500">
-              Keyword <span className="text-slate-400">(optional)</span>
+            <label className="mb-1 block text-xs font-medium text-slate-400">
+              Keyword <span className="text-slate-500">(optional)</span>
             </label>
             <input
               value={keyword}
               onChange={(e) => setKeyword(e.target.value)}
               placeholder="Leave blank to match any message"
-              className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:border-brand-500"
+              className="w-full rounded-lg border border-white/10 px-3 py-2 text-sm outline-none focus:border-brand-500"
             />
           </div>
           <div>
-            <label className="mb-1 block text-xs font-medium text-slate-500">Action</label>
+            <label className="mb-1 block text-xs font-medium text-slate-400">Action</label>
             <select
               value={action}
               onChange={(e) => setAction(e.target.value as AutomationAction)}
-              className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-brand-500"
+              className="w-full rounded-lg border border-white/10 bg-surface-panel px-3 py-2 text-sm outline-none focus:border-brand-500"
             >
               <option value="AUTO_REPLY">Send auto-reply</option>
               <option value="ADD_TAG">Add tag</option>
@@ -149,23 +149,23 @@ export default function AutomationsManager({ initial }: { initial: Automation[] 
             </select>
           </div>
           <div>
-            <label className="mb-1 block text-xs font-medium text-slate-500">{ACTION_HINTS[action]}</label>
+            <label className="mb-1 block text-xs font-medium text-slate-400">{ACTION_HINTS[action]}</label>
             {action === "AUTO_REPLY" ? (
               <textarea
                 value={actionValue}
                 onChange={(e) => setActionValue(e.target.value)}
                 rows={3}
-                className="w-full resize-none rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:border-brand-500"
+                className="w-full resize-none rounded-lg border border-white/10 px-3 py-2 text-sm outline-none focus:border-brand-500"
               />
             ) : (
               <input
                 value={actionValue}
                 onChange={(e) => setActionValue(e.target.value)}
-                className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:border-brand-500"
+                className="w-full rounded-lg border border-white/10 px-3 py-2 text-sm outline-none focus:border-brand-500"
               />
             )}
           </div>
-          {error && <p className="text-sm text-red-600">{error}</p>}
+          {error && <p className="text-sm text-red-400">{error}</p>}
           <button
             onClick={create}
             disabled={saving || !name.trim() || !actionValue.trim()}

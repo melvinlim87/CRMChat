@@ -105,25 +105,25 @@ function FlowEditorInner({ flow }: { flow: FlowData }) {
 
   return (
     <div className="flex h-full flex-col">
-      <header className="flex flex-wrap items-center gap-3 border-b border-slate-200 bg-white px-6 py-3">
-        <Link href="/flows" className="text-sm text-slate-400 hover:text-slate-700">
+      <header className="flex flex-wrap items-center gap-3 border-b border-white/10 bg-surface-panel px-6 py-3">
+        <Link href="/flows" className="text-sm text-slate-500 hover:text-slate-200">
           ← Flows
         </Link>
         <input
           value={name}
           onChange={(e) => setName(e.target.value)}
-          className="rounded-lg border border-slate-200 px-3 py-1.5 text-sm font-medium outline-none focus:border-brand-500"
+          className="rounded-lg border border-white/10 px-3 py-1.5 text-sm font-medium outline-none focus:border-brand-500"
         />
         <div className="flex items-center gap-1.5">
-          <span className="text-xs text-slate-400">Trigger keyword</span>
+          <span className="text-xs text-slate-500">Trigger keyword</span>
           <input
             value={keyword}
             onChange={(e) => setKeyword(e.target.value)}
             placeholder="any message"
-            className="w-32 rounded-lg border border-slate-200 px-2.5 py-1.5 text-sm outline-none focus:border-brand-500"
+            className="w-32 rounded-lg border border-white/10 px-2.5 py-1.5 text-sm outline-none focus:border-brand-500"
           />
         </div>
-        <label className="flex items-center gap-2 text-sm text-slate-600">
+        <label className="flex items-center gap-2 text-sm text-slate-300">
           <input type="checkbox" checked={enabled} onChange={(e) => setEnabled(e.target.checked)} className="accent-brand-500" />
           Enabled
         </label>
@@ -133,7 +133,7 @@ function FlowEditorInner({ flow }: { flow: FlowData }) {
             <button
               key={p.type}
               onClick={() => addNode(p.type)}
-              className="rounded-lg border border-slate-200 px-2.5 py-1.5 text-xs font-medium text-slate-600 transition hover:bg-slate-50"
+              className="rounded-lg border border-white/10 px-2.5 py-1.5 text-xs font-medium text-slate-300 transition hover:bg-white/5"
             >
               + {p.label}
             </button>
@@ -149,7 +149,7 @@ function FlowEditorInner({ flow }: { flow: FlowData }) {
         </div>
       </header>
 
-      <div className="h-full w-full flex-1 bg-slate-50">
+      <div className="h-full w-full flex-1 bg-white/5">
         <ReactFlow
           nodes={nodes}
           edges={edges}
@@ -177,14 +177,14 @@ function useUpdate(id: string) {
     setNodes((nds) => nds.map((n) => (n.id === id ? { ...n, data: { ...n.data, ...patch } } : n)));
 }
 
-const card = "w-56 rounded-xl border bg-white px-3 py-2.5 shadow-sm";
-const inputCls = "nodrag mt-1 w-full rounded-md border border-slate-200 px-2 py-1.5 text-sm outline-none focus:border-brand-500";
+const card = "w-56 rounded-xl border bg-surface-panel px-3 py-2.5 shadow-sm";
+const inputCls = "nodrag mt-1 w-full rounded-md border border-white/10 px-2 py-1.5 text-sm outline-none focus:border-brand-500";
 
 function TriggerNode() {
   return (
     <div className={`${card} border-emerald-400`}>
       <p className="text-[10px] font-bold uppercase tracking-wide text-emerald-600">Trigger</p>
-      <p className="text-sm font-medium text-slate-800">WhatsApp message received</p>
+      <p className="text-sm font-medium text-slate-100">WhatsApp message received</p>
       <Handle type="source" position={Position.Bottom} id="out" />
     </div>
   );
@@ -213,7 +213,7 @@ function AINode({ id, data }: NodeProps) {
   return (
     <div className={`${card} border-violet-300`}>
       <Handle type="target" position={Position.Top} />
-      <p className="text-[10px] font-bold uppercase tracking-wide text-violet-600">✨ AI reply</p>
+      <p className="text-[10px] font-bold uppercase tracking-wide text-violet-400">✨ AI reply</p>
       <textarea
         rows={2}
         value={data.instruction ?? ""}
@@ -231,7 +231,7 @@ function WaitNode() {
     <div className={`${card} border-teal-300`}>
       <Handle type="target" position={Position.Top} />
       <p className="text-[10px] font-bold uppercase tracking-wide text-teal-600">⏸ Wait for reply</p>
-      <p className="mt-0.5 text-xs text-slate-500">Pause until the customer responds, then continue.</p>
+      <p className="mt-0.5 text-xs text-slate-400">Pause until the customer responds, then continue.</p>
       <Handle type="source" position={Position.Bottom} id="out" />
     </div>
   );
@@ -249,7 +249,7 @@ function ConditionNode({ id, data }: NodeProps) {
         placeholder="message contains…"
         className={inputCls}
       />
-      <div className="mt-2 flex justify-between px-1 text-[10px] font-medium text-slate-400">
+      <div className="mt-2 flex justify-between px-1 text-[10px] font-medium text-slate-500">
         <span>match ↙</span>
         <span>↘ else</span>
       </div>
@@ -274,9 +274,9 @@ function TagNode({ id, data }: NodeProps) {
 function StatusNode({ id, data }: NodeProps) {
   const update = useUpdate(id);
   return (
-    <div className={`${card} border-slate-300`}>
+    <div className={`${card} border-white/15`}>
       <Handle type="target" position={Position.Top} />
-      <p className="text-[10px] font-bold uppercase tracking-wide text-slate-500">Set status</p>
+      <p className="text-[10px] font-bold uppercase tracking-wide text-slate-400">Set status</p>
       <select value={data.status ?? "CONTACTED"} onChange={(e) => update({ status: e.target.value })} className={inputCls}>
         {["NEW", "CONTACTED", "QUALIFIED", "WON", "LOST"].map((s) => (
           <option key={s} value={s}>

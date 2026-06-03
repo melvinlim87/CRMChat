@@ -18,7 +18,7 @@ export default function GoogleDisconnect() {
     <button
       onClick={disconnect}
       disabled={loading}
-      className="mt-4 w-full rounded-lg border border-slate-200 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-50 disabled:opacity-60"
+      className="mt-4 w-full rounded-lg border border-white/10 py-2 text-sm font-medium text-slate-300 transition hover:bg-white/5 disabled:opacity-60"
     >
       {loading ? "Disconnecting…" : "Disconnect"}
     </button>

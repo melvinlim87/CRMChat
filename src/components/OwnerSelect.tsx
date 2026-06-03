@@ -40,8 +40,8 @@ export default function OwnerSelect({
       onClick={(e) => e.stopPropagation()}
       className={
         compact
-          ? "rounded-md border border-slate-200 bg-white px-2 py-1 text-xs text-slate-700 outline-none focus:border-brand-500 disabled:opacity-60"
-          : "w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 outline-none focus:border-brand-500 disabled:opacity-60"
+          ? "rounded-md border border-white/10 bg-surface-panel px-2 py-1 text-xs text-slate-200 outline-none focus:border-brand-500 disabled:opacity-60"
+          : "w-full rounded-lg border border-white/10 bg-surface-panel px-3 py-2 text-sm text-slate-200 outline-none focus:border-brand-500 disabled:opacity-60"
       }
     >
       <option value="">Unassigned</option>

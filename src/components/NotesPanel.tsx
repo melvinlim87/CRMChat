@@ -40,14 +40,14 @@ export default function NotesPanel({ leadId }: { leadId: string }) {
 
   return (
     <div>
-      <p className="mb-1.5 text-xs font-medium uppercase tracking-wide text-slate-400">Notes</p>
+      <p className="mb-1.5 text-xs font-medium uppercase tracking-wide text-slate-500">Notes</p>
       <div className="flex gap-1.5">
         <input
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && add()}
           placeholder="Add a note…"
-          className="min-w-0 flex-1 rounded-lg border border-slate-200 px-2.5 py-1.5 text-sm outline-none focus:border-brand-500"
+          className="min-w-0 flex-1 rounded-lg border border-white/10 px-2.5 py-1.5 text-sm outline-none focus:border-brand-500"
         />
         <button
           onClick={add}
@@ -59,14 +59,14 @@ export default function NotesPanel({ leadId }: { leadId: string }) {
       </div>
       <ul className="mt-3 space-y-2">
         {notes.map((n) => (
-          <li key={n.id} className="rounded-lg bg-slate-50 px-3 py-2">
-            <p className="whitespace-pre-wrap text-sm text-slate-700">{n.body}</p>
-            <p className="mt-1 text-[11px] text-slate-400">
+          <li key={n.id} className="rounded-lg bg-white/5 px-3 py-2">
+            <p className="whitespace-pre-wrap text-sm text-slate-200">{n.body}</p>
+            <p className="mt-1 text-[11px] text-slate-500">
               {n.author} · {timeAgo(n.createdAt)}
             </p>
           </li>
         ))}
-        {notes.length === 0 && <li className="text-xs text-slate-300">No notes yet.</li>}
+        {notes.length === 0 && <li className="text-xs text-slate-600">No notes yet.</li>}
       </ul>
     </div>
   );

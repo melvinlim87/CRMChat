@@ -33,34 +33,34 @@ export default async function CalendarPage() {
 
   return (
     <div className="flex h-full flex-col">
-      <header className="flex items-center justify-between border-b border-slate-200 bg-white px-8 py-5">
+      <header className="flex items-center justify-between border-b border-white/10 bg-surface-panel px-8 py-5">
         <div>
-          <h1 className="text-xl font-semibold text-slate-900">Calendar</h1>
-          <p className="text-sm text-slate-500">Upcoming events{status.email ? ` · ${status.email}` : ""}</p>
+          <h1 className="text-xl font-semibold text-slate-100">Calendar</h1>
+          <p className="text-sm text-slate-400">Upcoming events{status.email ? ` · ${status.email}` : ""}</p>
         </div>
         <NewEvent />
       </header>
 
       <div className="flex-1 overflow-auto p-8">
-        {events.length === 0 && <p className="text-center text-slate-400">No upcoming events.</p>}
+        {events.length === 0 && <p className="text-center text-slate-500">No upcoming events.</p>}
 
         <div className="max-w-2xl space-y-6">
           {Array.from(groups.entries()).map(([day, dayEvents]) => (
             <div key={day}>
-              <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-400">{day}</p>
-              <div className="overflow-hidden rounded-xl border border-slate-200 bg-white">
+              <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">{day}</p>
+              <div className="overflow-hidden rounded-xl border border-white/10 bg-surface-panel">
                 {dayEvents.map((e) => (
                   <a
                     key={e.id}
                     href={e.htmlLink}
                     target="_blank"
                     rel="noreferrer"
-                    className="flex items-center gap-4 border-b border-slate-50 px-5 py-3 transition last:border-b-0 hover:bg-slate-50"
+                    className="flex items-center gap-4 border-b border-slate-50 px-5 py-3 transition last:border-b-0 hover:bg-white/5"
                   >
-                    <div className="w-28 shrink-0 text-sm text-slate-500">{formatTimeRange(e)}</div>
+                    <div className="w-28 shrink-0 text-sm text-slate-400">{formatTimeRange(e)}</div>
                     <div className="min-w-0 flex-1">
-                      <p className="truncate font-medium text-slate-900">{e.summary}</p>
-                      {e.location && <p className="truncate text-xs text-slate-400">{e.location}</p>}
+                      <p className="truncate font-medium text-slate-100">{e.summary}</p>
+                      {e.location && <p className="truncate text-xs text-slate-500">{e.location}</p>}
                     </div>
                   </a>
                 ))}

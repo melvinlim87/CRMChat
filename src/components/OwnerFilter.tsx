@@ -19,7 +19,7 @@ export default function OwnerFilter({ users }: { users: TeamUser[] }) {
     <select
       value={current}
       onChange={(e) => onChange(e.target.value)}
-      className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 outline-none focus:border-brand-500"
+      className="rounded-lg border border-white/10 bg-surface-panel px-3 py-2 text-sm text-slate-200 outline-none focus:border-brand-500"
     >
       <option value="">All owners</option>
       <option value="unassigned">Unassigned</option>

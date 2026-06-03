@@ -30,10 +30,10 @@ export default async function LeadsPage({
 
   return (
     <div className="flex h-full flex-col">
-      <header className="flex items-center justify-between border-b border-slate-200 bg-white px-8 py-5">
+      <header className="flex items-center justify-between border-b border-white/10 bg-surface-panel px-8 py-5">
         <div>
-          <h1 className="text-xl font-semibold text-slate-900">Leads</h1>
-          <p className="text-sm text-slate-500">{leads.length} contacts in your pipeline</p>
+          <h1 className="text-xl font-semibold text-slate-100">Leads</h1>
+          <p className="text-sm text-slate-400">{leads.length} contacts in your pipeline</p>
         </div>
         <div className="flex items-center gap-3">
           <OwnerFilter users={users} />
@@ -47,9 +47,9 @@ export default async function LeadsPage({
       </header>
 
       <div className="flex-1 overflow-auto p-8">
-        <div className="overflow-hidden rounded-xl border border-slate-200 bg-white">
+        <div className="overflow-hidden rounded-xl border border-white/10 bg-surface-panel">
           <table className="w-full text-left text-sm">
-            <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
+            <thead className="border-b border-white/10 bg-white/5 text-xs uppercase tracking-wide text-slate-400">
               <tr>
                 <th className="px-5 py-3 font-medium">Name</th>
                 <th className="px-5 py-3 font-medium">Company</th>
@@ -59,24 +59,24 @@ export default async function LeadsPage({
                 <th className="px-5 py-3 font-medium">Last activity</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
+            <tbody className="divide-y divide-white/5">
               {leads.map((lead) => (
-                <tr key={lead.id} className="transition hover:bg-slate-50">
+                <tr key={lead.id} className="transition hover:bg-white/5">
                   <td className="px-5 py-3">
                     <Link
                       href={lead.conversation ? `/chat?c=${lead.conversation.id}` : "/chat"}
                       className="flex items-center gap-3"
                     >
-                      <span className="flex h-9 w-9 items-center justify-center rounded-full bg-brand-100 text-xs font-semibold text-brand-700">
+                      <span className="flex h-9 w-9 items-center justify-center rounded-full bg-brand-500/20 text-xs font-semibold text-brand-300">
                         {initials(lead.name)}
                       </span>
                       <div>
-                        <p className="font-medium text-slate-900">{lead.name}</p>
-                        <p className="text-xs text-slate-400">{lead.phone || lead.email || "—"}</p>
+                        <p className="font-medium text-slate-100">{lead.name}</p>
+                        <p className="text-xs text-slate-500">{lead.phone || lead.email || "—"}</p>
                       </div>
                     </Link>
                   </td>
-                  <td className="px-5 py-3 text-slate-600">{lead.company || "—"}</td>
+                  <td className="px-5 py-3 text-slate-300">{lead.company || "—"}</td>
                   <td className="px-5 py-3">
                     <StatusBadge status={lead.status} />
                   </td>
@@ -85,18 +85,18 @@ export default async function LeadsPage({
                   </td>
                   <td className="px-5 py-3">
                     <div className="flex flex-wrap gap-1">
-                      {lead.tags.length === 0 && <span className="text-slate-300">—</span>}
+                      {lead.tags.length === 0 && <span className="text-slate-600">—</span>}
                       {lead.tags.map((t) => (
                         <span
                           key={t}
-                          className="rounded-md bg-slate-100 px-1.5 py-0.5 text-xs text-slate-600"
+                          className="rounded-md bg-white/10 px-1.5 py-0.5 text-xs text-slate-300"
                         >
                           {t}
                         </span>
                       ))}
                     </div>
                   </td>
-                  <td className="px-5 py-3 text-slate-500">
+                  <td className="px-5 py-3 text-slate-400">
                     {timeAgo(lead.conversation?.lastMessageAt ?? lead.updatedAt)}
                   </td>
                 </tr>
@@ -104,7 +104,7 @@ export default async function LeadsPage({
 
               {leads.length === 0 && (
                 <tr>
-                  <td colSpan={6} className="px-5 py-16 text-center text-slate-400">
+                  <td colSpan={6} className="px-5 py-16 text-center text-slate-500">
                     No leads found.
                   </td>
                 </tr>

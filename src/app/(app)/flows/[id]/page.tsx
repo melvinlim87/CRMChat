@@ -8,7 +8,7 @@ export const dynamic = "force-dynamic";
 // React Flow needs the browser; load the editor client-side only.
 const FlowEditor = dynamicImport(() => import("@/components/FlowEditor"), {
   ssr: false,
-  loading: () => <div className="p-8 text-sm text-slate-400">Loading editor…</div>,
+  loading: () => <div className="p-8 text-sm text-slate-500">Loading editor…</div>,
 });
 
 export default async function FlowEditorPage({ params }: { params: { id: string } }) {

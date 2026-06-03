@@ -170,10 +170,10 @@ export default function ChatInbox({
   return (
     <div className="flex h-full">
       {/* Conversation list */}
-      <div className="flex w-80 shrink-0 flex-col border-r border-slate-200 bg-white">
-        <div className="border-b border-slate-200 px-4 py-4">
+      <div className="flex w-80 shrink-0 flex-col border-r border-white/10 bg-surface-panel">
+        <div className="border-b border-white/10 px-4 py-4">
           <div className="mb-3 flex items-center gap-2">
-            <h2 className="text-lg font-semibold text-slate-900">Inbox</h2>
+            <h2 className="text-lg font-semibold text-slate-100">Inbox</h2>
             <span className="flex items-center gap-1 text-xs text-emerald-600">
               <span className="h-2 w-2 animate-pulse rounded-full bg-emerald-500" />
               Live
@@ -183,7 +183,7 @@ export default function ChatInbox({
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search conversations"
-            className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none focus:border-brand-500 focus:bg-white"
+            className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm outline-none focus:border-brand-500 focus:bg-surface-panel"
           />
         </div>
         <div className="flex-1 overflow-auto">
@@ -194,21 +194,21 @@ export default function ChatInbox({
                 key={c.id}
                 onClick={() => setActiveId(c.id)}
                 className={clsx(
-                  "flex w-full items-start gap-3 border-b border-slate-50 px-4 py-3 text-left transition hover:bg-slate-50",
-                  activeId === c.id && "bg-brand-50/60"
+                  "flex w-full items-start gap-3 border-b border-slate-50 px-4 py-3 text-left transition hover:bg-white/5",
+                  activeId === c.id && "bg-brand-500/15/60"
                 )}
               >
-                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand-100 text-sm font-semibold text-brand-700">
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand-500/20 text-sm font-semibold text-brand-300">
                   {initials(c.lead.name)}
                 </span>
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center justify-between">
-                    <p className="truncate font-medium text-slate-900">{c.lead.name}</p>
-                    <span className="ml-2 shrink-0 text-xs text-slate-400">
+                    <p className="truncate font-medium text-slate-100">{c.lead.name}</p>
+                    <span className="ml-2 shrink-0 text-xs text-slate-500">
                       {timeAgo(c.lastMessageAt)}
                     </span>
                   </div>
-                  <p className="truncate text-sm text-slate-500">{last?.body ?? "No messages yet"}</p>
+                  <p className="truncate text-sm text-slate-400">{last?.body ?? "No messages yet"}</p>
                 </div>
                 {c.unreadCount > 0 && (
                   <span className="ml-1 mt-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-brand-500 px-1.5 text-xs font-semibold text-white">
@@ -219,7 +219,7 @@ export default function ChatInbox({
             );
           })}
           {filtered.length === 0 && (
-            <p className="px-4 py-10 text-center text-sm text-slate-400">No conversations</p>
+            <p className="px-4 py-10 text-center text-sm text-slate-500">No conversations</p>
           )}
         </div>
       </div>
@@ -227,15 +227,15 @@ export default function ChatInbox({
       {/* Thread */}
       {active ? (
         <>
-        <div className="flex flex-1 flex-col bg-[#fdf6f0]">
-          <div className="flex items-center justify-between border-b border-slate-200 bg-white px-6 py-3.5">
+        <div className="flex flex-1 flex-col bg-[#0a0e1a]">
+          <div className="flex items-center justify-between border-b border-white/10 bg-surface-panel px-6 py-3.5">
             <div className="flex items-center gap-3">
-              <span className="flex h-9 w-9 items-center justify-center rounded-full bg-brand-100 text-sm font-semibold text-brand-700">
+              <span className="flex h-9 w-9 items-center justify-center rounded-full bg-brand-500/20 text-sm font-semibold text-brand-300">
                 {initials(active.lead.name)}
               </span>
               <div>
-                <p className="font-medium text-slate-900">{active.lead.name}</p>
-                <p className="text-xs text-slate-400">{active.lead.phone || "WhatsApp"}</p>
+                <p className="font-medium text-slate-100">{active.lead.name}</p>
+                <p className="text-xs text-slate-500">{active.lead.phone || "WhatsApp"}</p>
               </div>
             </div>
             <StatusBadge status={active.lead.status} />
@@ -252,14 +252,14 @@ export default function ChatInbox({
                     "max-w-[70%] rounded-2xl px-4 py-2 text-sm shadow-sm",
                     m.direction === "OUTBOUND"
                       ? "rounded-br-sm bg-brand-500 text-white"
-                      : "rounded-bl-sm bg-white text-slate-800"
+                      : "rounded-bl-sm bg-surface-panel text-slate-100"
                   )}
                 >
                   <p className="whitespace-pre-wrap">{m.body}</p>
                   <p
                     className={clsx(
                       "mt-1 text-right text-[10px]",
-                      m.direction === "OUTBOUND" ? "text-white/70" : "text-slate-400"
+                      m.direction === "OUTBOUND" ? "text-white/70" : "text-slate-500"
                     )}
                   >
                     {clockTime(m.createdAt)}
@@ -271,14 +271,14 @@ export default function ChatInbox({
             ))}
           </div>
 
-          <div className="border-t border-slate-200 bg-white px-4 py-3">
-            {aiError && <p className="mb-2 text-xs text-red-600">{aiError}</p>}
+          <div className="border-t border-white/10 bg-surface-panel px-4 py-3">
+            {aiError && <p className="mb-2 text-xs text-red-400">{aiError}</p>}
             <div className="flex items-end gap-2">
               <button
                 onClick={aiDraft}
                 disabled={aiLoading}
                 title="Draft a reply with AI"
-                className="flex items-center gap-1 rounded-xl border border-violet-200 bg-violet-50 px-3 py-2.5 text-sm font-medium text-violet-700 transition hover:bg-violet-100 disabled:opacity-50"
+                className="flex items-center gap-1 rounded-xl border border-violet-500/30 bg-violet-500/10 px-3 py-2.5 text-sm font-medium text-violet-300 transition hover:bg-violet-500/20 disabled:opacity-50"
               >
                 {aiLoading ? "…" : "✨ AI"}
               </button>
@@ -293,7 +293,7 @@ export default function ChatInbox({
                 }}
                 rows={1}
                 placeholder="Type a message…"
-                className="max-h-32 flex-1 resize-none rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm outline-none focus:border-brand-500 focus:bg-white"
+                className="max-h-32 flex-1 resize-none rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm outline-none focus:border-brand-500 focus:bg-surface-panel"
               />
               <button
                 onClick={send}
@@ -308,7 +308,7 @@ export default function ChatInbox({
         <ContactPanel lead={active.lead} users={users} />
         </>
       ) : (
-        <div className="flex flex-1 items-center justify-center text-slate-400">
+        <div className="flex flex-1 items-center justify-center text-slate-500">
           Select a conversation to start chatting
         </div>
       )}
@@ -334,29 +334,29 @@ function mergeConversations(prev: ConversationDTO[], server: ConversationDTO[]):
 
 function ContactPanel({ lead, users }: { lead: ConversationDTO["lead"]; users: TeamUser[] }) {
   return (
-    <aside className="hidden w-72 shrink-0 flex-col border-l border-slate-200 bg-white xl:flex">
-      <div className="flex flex-col items-center gap-2 border-b border-slate-100 px-6 py-6 text-center">
-        <span className="flex h-14 w-14 items-center justify-center rounded-full bg-brand-100 text-lg font-semibold text-brand-700">
+    <aside className="hidden w-72 shrink-0 flex-col border-l border-white/10 bg-surface-panel xl:flex">
+      <div className="flex flex-col items-center gap-2 border-b border-white/[5] px-6 py-6 text-center">
+        <span className="flex h-14 w-14 items-center justify-center rounded-full bg-brand-500/20 text-lg font-semibold text-brand-300">
           {initials(lead.name)}
         </span>
-        <p className="font-semibold text-slate-900">{lead.name}</p>
-        {lead.company && <p className="text-sm text-slate-400">{lead.company}</p>}
+        <p className="font-semibold text-slate-100">{lead.name}</p>
+        {lead.company && <p className="text-sm text-slate-500">{lead.company}</p>}
         <StatusBadge status={lead.status} />
       </div>
 
       <div className="flex-1 space-y-5 overflow-y-auto px-6 py-5 text-sm">
         <div>
-          <p className="mb-1.5 text-xs font-medium uppercase tracking-wide text-slate-400">Owner</p>
+          <p className="mb-1.5 text-xs font-medium uppercase tracking-wide text-slate-500">Owner</p>
           <OwnerSelect leadId={lead.id} ownerId={lead.ownerId} users={users} />
         </div>
         <Field label="Phone" value={lead.phone || "—"} />
         <Field label="Channel" value="WhatsApp" />
         <div>
-          <p className="mb-1.5 text-xs font-medium uppercase tracking-wide text-slate-400">Tags</p>
+          <p className="mb-1.5 text-xs font-medium uppercase tracking-wide text-slate-500">Tags</p>
           <div className="flex flex-wrap gap-1">
-            {lead.tags.length === 0 && <span className="text-slate-300">No tags</span>}
+            {lead.tags.length === 0 && <span className="text-slate-600">No tags</span>}
             {lead.tags.map((t) => (
-              <span key={t} className="rounded-md bg-slate-100 px-1.5 py-0.5 text-xs text-slate-600">
+              <span key={t} className="rounded-md bg-white/10 px-1.5 py-0.5 text-xs text-slate-300">
                 {t}
               </span>
             ))}
@@ -371,8 +371,8 @@ function ContactPanel({ lead, users }: { lead: ConversationDTO["lead"]; users: T
 function Field({ label, value }: { label: string; value: string }) {
   return (
     <div>
-      <p className="mb-0.5 text-xs font-medium uppercase tracking-wide text-slate-400">{label}</p>
-      <p className="text-slate-700">{value}</p>
+      <p className="mb-0.5 text-xs font-medium uppercase tracking-wide text-slate-500">{label}</p>
+      <p className="text-slate-200">{value}</p>
     </div>
   );
 }

@@ -49,7 +49,7 @@ export default function FlowsList({ initial }: { initial: Flow[] }) {
           onChange={(e) => setName(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && create()}
           placeholder="New flow name, e.g. Lead qualification bot"
-          className="flex-1 rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:border-brand-500"
+          className="flex-1 rounded-lg border border-white/10 px-3 py-2 text-sm outline-none focus:border-brand-500"
         />
         <button
           onClick={create}
@@ -62,29 +62,29 @@ export default function FlowsList({ initial }: { initial: Flow[] }) {
 
       <div className="space-y-3">
         {flows.length === 0 && (
-          <p className="rounded-xl border border-dashed border-slate-200 bg-white px-5 py-12 text-center text-slate-400">
+          <p className="rounded-xl border border-dashed border-white/10 bg-surface-panel px-5 py-12 text-center text-slate-500">
             No flows yet. Create one to build a visual WhatsApp AI conversation.
           </p>
         )}
         {flows.map((f) => (
-          <div key={f.id} className="flex items-center justify-between rounded-xl border border-slate-200 bg-white p-4">
+          <div key={f.id} className="flex items-center justify-between rounded-xl border border-white/10 bg-surface-panel p-4">
             <div className="min-w-0">
-              <Link href={`/flows/${f.id}`} className="font-medium text-slate-900 hover:text-brand-600">
+              <Link href={`/flows/${f.id}`} className="font-medium text-slate-100 hover:text-brand-300">
                 {f.name}
               </Link>
-              <p className="mt-0.5 text-sm text-slate-500">
+              <p className="mt-0.5 text-sm text-slate-400">
                 Trigger: {f.keyword ? `message contains “${f.keyword}”` : "any message"}
               </p>
             </div>
             <div className="flex shrink-0 items-center gap-3">
               <label className="inline-flex cursor-pointer items-center" title={f.enabled ? "Enabled" : "Disabled"}>
                 <input type="checkbox" checked={f.enabled} onChange={(e) => toggle(f.id, e.target.checked)} className="peer sr-only" />
-                <span className="relative h-5 w-9 rounded-full bg-slate-200 transition peer-checked:bg-brand-500 after:absolute after:left-0.5 after:top-0.5 after:h-4 after:w-4 after:rounded-full after:bg-white after:transition peer-checked:after:translate-x-4" />
+                <span className="relative h-5 w-9 rounded-full bg-slate-200 transition peer-checked:bg-brand-500 after:absolute after:left-0.5 after:top-0.5 after:h-4 after:w-4 after:rounded-full after:bg-surface-panel after:transition peer-checked:after:translate-x-4" />
               </label>
-              <Link href={`/flows/${f.id}`} className="rounded-lg border border-slate-200 px-3 py-1.5 text-sm font-medium text-slate-600 hover:bg-slate-50">
+              <Link href={`/flows/${f.id}`} className="rounded-lg border border-white/10 px-3 py-1.5 text-sm font-medium text-slate-300 hover:bg-white/5">
                 Edit
               </Link>
-              <button onClick={() => remove(f.id)} className="text-slate-400 transition hover:text-red-500" title="Delete">
+              <button onClick={() => remove(f.id)} className="text-slate-500 transition hover:text-red-500" title="Delete">
                 ✕
               </button>
             </div>
