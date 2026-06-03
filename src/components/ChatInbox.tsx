@@ -48,6 +48,8 @@ export default function ChatInbox({
   );
   const [draft, setDraft] = useState("");
   const [sending, setSending] = useState(false);
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiError, setAiError] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -143,6 +145,26 @@ export default function ChatInbox({
 
   function updateConversation(id: string, fn: (c: ConversationDTO) => ConversationDTO) {
     setConversations((prev) => prev.map((c) => (c.id === id ? fn(c) : c)));
+  }
+
+  async function aiDraft() {
+    if (!active || aiLoading) return;
+    setAiLoading(true);
+    setAiError(null);
+    try {
+      const res = await fetch("/api/ai/draft", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ conversationId: active.id }),
+      });
+      const data = await res.json();
+      if (res.ok && data.suggestion) setDraft(data.suggestion);
+      else setAiError(data.error || "Couldn't generate a reply");
+    } catch {
+      setAiError("Couldn't reach the AI service");
+    } finally {
+      setAiLoading(false);
+    }
   }
 
   return (
@@ -250,7 +272,16 @@ export default function ChatInbox({
           </div>
 
           <div className="border-t border-slate-200 bg-white px-4 py-3">
+            {aiError && <p className="mb-2 text-xs text-red-600">{aiError}</p>}
             <div className="flex items-end gap-2">
+              <button
+                onClick={aiDraft}
+                disabled={aiLoading}
+                title="Draft a reply with AI"
+                className="flex items-center gap-1 rounded-xl border border-violet-200 bg-violet-50 px-3 py-2.5 text-sm font-medium text-violet-700 transition hover:bg-violet-100 disabled:opacity-50"
+              >
+                {aiLoading ? "…" : "✨ AI"}
+              </button>
               <textarea
                 value={draft}
                 onChange={(e) => setDraft(e.target.value)}
