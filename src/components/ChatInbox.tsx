@@ -70,6 +70,31 @@ export default function ChatInbox({
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight });
   }, [active?.messages.length, activeId]);
 
+  // Live polling: refresh the inbox every few seconds so new inbound
+  // messages appear without a manual reload.
+  useEffect(() => {
+    const interval = setInterval(async () => {
+      try {
+        const res = await fetch("/api/conversations", { cache: "no-store" });
+        if (!res.ok) return;
+        const data = await res.json();
+        setConversations((prev) => mergeConversations(prev, data.conversations));
+      } catch {
+        /* ignore transient polling errors */
+      }
+    }, 5000);
+    return () => clearInterval(interval);
+  }, []);
+
+  // Mark the open conversation as read.
+  useEffect(() => {
+    if (!activeId) return;
+    setConversations((prev) =>
+      prev.map((c) => (c.id === activeId ? { ...c, unreadCount: 0 } : c))
+    );
+    fetch(`/api/conversations/${activeId}/read`, { method: "POST" }).catch(() => {});
+  }, [activeId]);
+
   async function send() {
     const body = draft.trim();
     if (!body || !active || sending) return;
@@ -124,7 +149,13 @@ export default function ChatInbox({
       {/* Conversation list */}
       <div className="flex w-80 shrink-0 flex-col border-r border-slate-200 bg-white">
         <div className="border-b border-slate-200 px-4 py-4">
-          <h2 className="mb-3 text-lg font-semibold text-slate-900">Inbox</h2>
+          <div className="mb-3 flex items-center gap-2">
+            <h2 className="text-lg font-semibold text-slate-900">Inbox</h2>
+            <span className="flex items-center gap-1 text-xs text-emerald-600">
+              <span className="h-2 w-2 animate-pulse rounded-full bg-emerald-500" />
+              Live
+            </span>
+          </div>
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
@@ -251,6 +282,22 @@ export default function ChatInbox({
       )}
     </div>
   );
+}
+
+// Server data is the source of truth, but we keep any locally-pending
+// optimistic messages (temp ids, not yet persisted) so they don't flicker
+// out between a send and the next poll.
+function mergeConversations(prev: ConversationDTO[], server: ConversationDTO[]): ConversationDTO[] {
+  const prevById = new Map(prev.map((c) => [c.id, c]));
+  return server.map((sc) => {
+    const pc = prevById.get(sc.id);
+    if (!pc) return sc;
+    const serverKeys = new Set(sc.messages.map((m) => `${m.direction}|${m.body}`));
+    const pending = pc.messages.filter(
+      (m) => m.id.startsWith("tmp-") && !serverKeys.has(`${m.direction}|${m.body}`)
+    );
+    return { ...sc, messages: [...sc.messages, ...pending] };
+  });
 }
 
 function ContactPanel({ lead, users }: { lead: ConversationDTO["lead"]; users: TeamUser[] }) {
