@@ -22,9 +22,13 @@ lead pipeline, and reply from a single Team Inbox.
 - 👥 **Leads** — pipeline table with status, tags, company, last activity
 - 💬 **Chat** — GoHighLevel-style Team Inbox: conversation list, message thread,
   composer, and a contact-details side panel
-- 🔌 **Integrations** — connection hub (WhatsApp wired up; others stubbed)
+- 🔌 **Integrations** — connection hub (WhatsApp + Google wired up; others stubbed)
 - 📥 **WhatsApp webhook** — inbound messages auto-create leads + conversations
 - 📤 **Send** — outbound replies delivered via the WhatsApp Cloud API
+- 🟥 **Gmail** — recent inbox, read via the Gmail API
+- 📅 **Google Calendar** — upcoming events in an agenda view
+- 📁 **Google Drive** — recent files list
+- 🔑 **Google OAuth** — one connection grants Gmail + Calendar + Drive (read-only)
 
 ## Getting started
 
@@ -87,6 +91,30 @@ Open http://localhost:3000 and log in with:
 > **message template** rather than free-form text. The current send helper sends
 > plain text (works within the window); template support is on the roadmap.
 
+## Connecting Google (Gmail, Calendar, Drive)
+
+1. In the [Google Cloud Console](https://console.cloud.google.com/) create (or pick)
+   a project and enable the **Gmail API**, **Google Calendar API**, and **Google
+   Drive API**.
+2. Configure the **OAuth consent screen** (External is fine for testing; add your
+   own Google account as a test user).
+3. Create an **OAuth 2.0 Client ID** of type **Web application** and add the
+   redirect URI:
+   ```
+   http://localhost:3000/api/integrations/google/callback
+   ```
+   (use your real domain in production).
+4. Put the credentials in `.env`:
+   ```
+   GOOGLE_CLIENT_ID="..."
+   GOOGLE_CLIENT_SECRET="..."
+   ```
+5. Restart the dev server, go to **Integrations → Connect Google**, and approve
+   access. Gmail, Calendar, and Drive pages then populate from your account.
+
+> Scopes are **read-only** (`gmail.readonly`, `calendar.readonly`,
+> `drive.metadata.readonly`). Sending email / creating events is on the roadmap.
+
 ## Project structure
 
 ```
@@ -95,15 +123,19 @@ src/
     (app)/            # authenticated app (sidebar layout)
       leads/          # Leads CRM table
       chat/           # Team Inbox (chat)
-      integrations/   # Channel connections
+      gmail/          # Gmail inbox (Google)
+      calendar/       # Calendar agenda (Google)
+      drive/          # Drive files (Google)
+      integrations/   # Channel + tool connections
     api/
-      auth/           # login / logout
-      messages/       # send a message
-      conversations/  # inbox polling endpoint
-      webhooks/whatsapp/  # Meta webhook (verify + inbound)
+      auth/                    # login / logout
+      messages/                # send a message
+      conversations/           # inbox polling endpoint
+      webhooks/whatsapp/       # Meta webhook (verify + inbound)
+      integrations/google/     # OAuth start / callback / disconnect
     login/            # sign-in page
-  components/         # Sidebar, ChatInbox, StatusBadge
-  lib/                # prisma, auth, whatsapp, formatting
+  components/         # Sidebar, ChatInbox, StatusBadge, ConnectGoogle, ...
+  lib/                # prisma, auth, whatsapp, google, formatting
 prisma/
   schema.prisma       # data model
   seed.ts             # demo data
@@ -116,8 +148,11 @@ prisma/
 - [ ] Lead detail editing, notes, and pipeline stages (drag & drop)
 - [ ] Team members, roles, and assignment (lead owner / followers)
 - [ ] Automations & trigger links (GoHighLevel-style workflows)
-- [ ] Additional channels: Instagram DMs, Gmail, SMS
+- [ ] Additional channels: Instagram DMs, SMS
+- [ ] Google write actions: send email, create calendar events, upload to Drive
+- [ ] Link Gmail threads / Drive files / events to specific leads
 - [ ] Multi-tenant / multi-workspace support
+- [x] Google integrations: Gmail, Calendar, Drive (read-only via OAuth)
 
 ## License
 
