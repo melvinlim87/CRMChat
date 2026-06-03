@@ -78,9 +78,31 @@ model Message {
 
 model Integration {
   id        String   @id @default(cuid())
-  provider  String   @unique // e.g. "whatsapp", "gmail", "slack"
+  provider  String   @unique // e.g. "whatsapp", "google", "slack"
   status    String   @default("disconnected")
   config    Json?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+enum AutomationTrigger {
+  MESSAGE_RECEIVED
+}
+
+enum AutomationAction {
+  AUTO_REPLY
+  ADD_TAG
+  SET_STATUS
+}
+
+model Automation {
+  id          String            @id @default(cuid())
+  name        String
+  enabled     Boolean           @default(true)
+  trigger     AutomationTrigger @default(MESSAGE_RECEIVED)
+  keyword     String? // substring match on inbound text; empty = any message
+  action      AutomationAction
+  actionValue String // reply text, tag name, or target status
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
 }

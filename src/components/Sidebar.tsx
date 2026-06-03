@@ -7,6 +7,7 @@ import clsx from "clsx";
 const NAV = [
   { href: "/leads", label: "Leads", icon: LeadsIcon },
   { href: "/chat", label: "Chat", icon: ChatIcon },
+  { href: "/automations", label: "Automations", icon: BoltIcon },
   { href: "/integrations", label: "Integrations", icon: PlugIcon },
 ];
 
@@ -127,6 +128,14 @@ function PlugIcon({ className }: { className?: string }) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
       <path d="M12 22v-5M9 8V2M15 8V2M18 8v3a6 6 0 0 1-12 0V8z" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function BoltIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
 }

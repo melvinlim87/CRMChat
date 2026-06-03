@@ -140,6 +140,27 @@ async function main() {
     create: { provider: "whatsapp", status: "disconnected" },
   });
 
+  // Example automations (only fire on live inbound WhatsApp messages).
+  const automationCount = await prisma.automation.count();
+  if (automationCount === 0) {
+    await prisma.automation.createMany({
+      data: [
+        {
+          name: "Pricing auto-reply",
+          keyword: "pricing",
+          action: "AUTO_REPLY",
+          actionValue: "Thanks for your interest! Our team plan is $49/mo for 5 users. Want a quick demo?",
+        },
+        {
+          name: "Tag demo requests",
+          keyword: "demo",
+          action: "ADD_TAG",
+          actionValue: "demo-interest",
+        },
+      ],
+    });
+  }
+
   console.log("Seed complete. Login with demo@crmchat.app / password123");
 }
 

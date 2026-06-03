@@ -25,10 +25,13 @@ lead pipeline, and reply from a single Team Inbox.
 - 🔌 **Integrations** — connection hub (WhatsApp + Google wired up; others stubbed)
 - 📥 **WhatsApp webhook** — inbound messages auto-create leads + conversations
 - 📤 **Send** — outbound replies delivered via the WhatsApp Cloud API
-- 🟥 **Gmail** — recent inbox, read via the Gmail API
-- 📅 **Google Calendar** — upcoming events in an agenda view
+- 🟥 **Gmail** — recent inbox (read) + compose & send (write)
+- 📅 **Google Calendar** — upcoming events agenda + create new events
 - 📁 **Google Drive** — recent files list
-- 🔑 **Google OAuth** — one connection grants Gmail + Calendar + Drive (read-only)
+- 🔑 **Google OAuth** — one connection grants Gmail + Calendar + Drive
+- 👤 **Lead assignment** — owner per lead, inline reassign, filter by owner
+- ⚡ **Automations** — auto-reply / add tag / set status on inbound messages
+- 🟢 **Live inbox** — new messages appear via polling, no manual refresh
 
 ## Getting started
 
@@ -143,16 +146,18 @@ prisma/
 
 ## Roadmap
 
+- [x] Lead owner & assignment (assign, filter, inline reassign)
+- [x] Real-time inbox (live polling, mark-read)
+- [x] Google integrations: Gmail, Calendar, Drive (OAuth)
+- [x] Google write actions: send Gmail, create Calendar events
+- [x] Automations (auto-reply / tag / set status on inbound message)
 - [ ] WhatsApp message templates + 24h-window handling
-- [ ] Real-time updates (WebSocket / SSE) instead of refresh-on-send
-- [ ] Lead detail editing, notes, and pipeline stages (drag & drop)
-- [ ] Team members, roles, and assignment (lead owner / followers)
-- [ ] Automations & trigger links (GoHighLevel-style workflows)
+- [ ] Real-time via WebSocket/SSE (replace polling)
+- [ ] Lead followers, notes, drag-and-drop pipeline stages
+- [ ] Drive uploads + link Gmail threads / files / events to leads
+- [ ] More automation triggers (status change, scheduled follow-ups)
 - [ ] Additional channels: Instagram DMs, SMS
-- [ ] Google write actions: send email, create calendar events, upload to Drive
-- [ ] Link Gmail threads / Drive files / events to specific leads
 - [ ] Multi-tenant / multi-workspace support
-- [x] Google integrations: Gmail, Calendar, Drive (read-only via OAuth)
 
 ## License
 
