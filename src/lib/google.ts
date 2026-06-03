@@ -10,7 +10,9 @@ export const GOOGLE_SCOPES = [
   "openid",
   "https://www.googleapis.com/auth/userinfo.email",
   "https://www.googleapis.com/auth/gmail.readonly",
-  "https://www.googleapis.com/auth/calendar.readonly",
+  "https://www.googleapis.com/auth/gmail.send",
+  // calendar.events covers reading and creating events.
+  "https://www.googleapis.com/auth/calendar.events",
   "https://www.googleapis.com/auth/drive.metadata.readonly",
 ];
 
@@ -230,4 +232,58 @@ export async function listRecentFiles(token: string, max = 25): Promise<DriveFil
   if (!res.ok) return [];
   const data = await res.json();
   return (data.files ?? []) as DriveFile[];
+}
+
+/* ------------------------------ Write actions ----------------------------- */
+
+type ActionResult = { ok: boolean; error?: string };
+
+export async function sendGmail(
+  token: string,
+  { to, subject, body }: { to: string; subject: string; body: string }
+): Promise<ActionResult> {
+  const mime =
+    `To: ${to}\r\n` +
+    `Subject: ${subject}\r\n` +
+    `Content-Type: text/plain; charset="UTF-8"\r\n\r\n` +
+    body;
+  const raw = Buffer.from(mime).toString("base64url");
+
+  const res = await fetch("https://gmail.googleapis.com/gmail/v1/users/me/messages/send", {
+    method: "POST",
+    headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+    body: JSON.stringify({ raw }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    return { ok: false, error: err?.error?.message || `Gmail send failed (${res.status})` };
+  }
+  return { ok: true };
+}
+
+export async function createCalendarEvent(
+  token: string,
+  {
+    summary,
+    description,
+    start,
+    end,
+  }: { summary: string; description?: string; start: string; end: string }
+): Promise<ActionResult & { htmlLink?: string }> {
+  const res = await fetch("https://www.googleapis.com/calendar/v3/calendars/primary/events", {
+    method: "POST",
+    headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      summary,
+      description,
+      start: { dateTime: new Date(start).toISOString() },
+      end: { dateTime: new Date(end).toISOString() },
+    }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    return { ok: false, error: err?.error?.message || `Event create failed (${res.status})` };
+  }
+  const event = await res.json();
+  return { ok: true, htmlLink: event.htmlLink };
 }

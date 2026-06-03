@@ -1,4 +1,5 @@
 import ConnectGoogle from "@/components/ConnectGoogle";
+import NewEvent from "@/components/NewEvent";
 import { getGoogleStatus, getValidGoogleToken, googleConfigured, listUpcomingEvents, type CalendarEvent } from "@/lib/google";
 
 export const dynamic = "force-dynamic";
@@ -32,9 +33,12 @@ export default async function CalendarPage() {
 
   return (
     <div className="flex h-full flex-col">
-      <header className="border-b border-slate-200 bg-white px-8 py-5">
-        <h1 className="text-xl font-semibold text-slate-900">Calendar</h1>
-        <p className="text-sm text-slate-500">Upcoming events{status.email ? ` · ${status.email}` : ""}</p>
+      <header className="flex items-center justify-between border-b border-slate-200 bg-white px-8 py-5">
+        <div>
+          <h1 className="text-xl font-semibold text-slate-900">Calendar</h1>
+          <p className="text-sm text-slate-500">Upcoming events{status.email ? ` · ${status.email}` : ""}</p>
+        </div>
+        <NewEvent />
       </header>
 
       <div className="flex-1 overflow-auto p-8">

@@ -1,4 +1,5 @@
 import ConnectGoogle from "@/components/ConnectGoogle";
+import ComposeEmail from "@/components/ComposeEmail";
 import { getGoogleStatus, getValidGoogleToken, googleConfigured, listRecentEmails } from "@/lib/google";
 import { initials, timeAgo } from "@/lib/format";
 
@@ -24,6 +25,7 @@ export default async function GmailPage() {
           <h1 className="text-xl font-semibold text-slate-900">Gmail</h1>
           <p className="text-sm text-slate-500">Recent inbox{status.email ? ` · ${status.email}` : ""}</p>
         </div>
+        <ComposeEmail />
       </header>
 
       <div className="flex-1 overflow-auto">
