@@ -5,10 +5,14 @@ import { usePathname, useRouter } from "next/navigation";
 import clsx from "clsx";
 
 const NAV = [
+  { href: "/dashboard", label: "Dashboard", icon: GridIcon },
   { href: "/leads", label: "Leads", icon: LeadsIcon },
+  { href: "/pipeline", label: "Pipeline", icon: ColumnsIcon },
   { href: "/chat", label: "Chat", icon: ChatIcon },
+  { href: "/flows", label: "AI Flows", icon: FlowIcon },
   { href: "/automations", label: "Automations", icon: BoltIcon },
   { href: "/integrations", label: "Integrations", icon: PlugIcon },
+  { href: "/settings", label: "Settings", icon: GearIcon },
 ];
 
 const GOOGLE_NAV = [
@@ -30,7 +34,7 @@ export default function Sidebar({ user }: { user: { name: string | null; email: 
   return (
     <aside className="flex h-screen w-60 shrink-0 flex-col border-r border-slate-200 bg-white">
       <div className="flex items-center gap-2.5 px-5 py-5">
-        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-500 text-sm font-bold text-white">
+        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-orange-500 to-rose-500 text-sm font-bold text-white shadow-sm shadow-orange-500/30">
           C
         </div>
         <span className="text-lg font-semibold tracking-tight text-slate-900">CRMChat</span>
@@ -128,6 +132,47 @@ function PlugIcon({ className }: { className?: string }) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
       <path d="M12 22v-5M9 8V2M15 8V2M18 8v3a6 6 0 0 1-12 0V8z" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function GridIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <rect x="3" y="3" width="7" height="7" rx="1.5" />
+      <rect x="14" y="3" width="7" height="7" rx="1.5" />
+      <rect x="3" y="14" width="7" height="7" rx="1.5" />
+      <rect x="14" y="14" width="7" height="7" rx="1.5" />
+    </svg>
+  );
+}
+
+function ColumnsIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <rect x="3" y="4" width="5" height="16" rx="1.5" />
+      <rect x="10" y="4" width="5" height="11" rx="1.5" />
+      <rect x="17" y="4" width="4" height="14" rx="1.5" />
+    </svg>
+  );
+}
+
+function FlowIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <rect x="3" y="3" width="6" height="5" rx="1.5" />
+      <rect x="15" y="8" width="6" height="5" rx="1.5" />
+      <rect x="3" y="16" width="6" height="5" rx="1.5" />
+      <path d="M9 5.5h3a2 2 0 0 1 2 2v3M9 18.5h3a2 2 0 0 0 2-2v-3" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function GearIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <circle cx="12" cy="12" r="3" />
+      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-2.82 1.17V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 7.5 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 3.02 14a1.65 1.65 0 0 0-1.51-1H1a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 2.6 7.5a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 2.6a1.65 1.65 0 0 0 1-1.51V1a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 21.4 9c.14.31.22.65.22 1z" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
 }

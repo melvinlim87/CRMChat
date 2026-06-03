@@ -18,6 +18,7 @@ model User {
   createdAt DateTime @default(now())
 
   leads Lead[]
+  notes Note[]
 }
 
 enum LeadStatus {
@@ -37,13 +38,25 @@ model Lead {
   status    LeadStatus @default(NEW)
   source    String?    @default("whatsapp")
   tags      String[]   @default([])
-  notes     String?
   ownerId   String?
   owner     User?      @relation(fields: [ownerId], references: [id])
   createdAt DateTime   @default(now())
   updatedAt DateTime   @updatedAt
 
   conversation Conversation?
+  notes        Note[]
+}
+
+model Note {
+  id        String   @id @default(cuid())
+  leadId    String
+  lead      Lead     @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  body      String
+  authorId  String?
+  author    User?    @relation(fields: [authorId], references: [id])
+  createdAt DateTime @default(now())
+
+  @@index([leadId])
 }
 
 model Conversation {
@@ -93,6 +106,23 @@ enum AutomationAction {
   AUTO_REPLY
   ADD_TAG
   SET_STATUS
+}
+
+model Setting {
+  id        String   @id @default(cuid())
+  key       String   @unique // e.g. "ai"
+  value     Json
+  updatedAt DateTime @updatedAt
+}
+
+model Flow {
+  id        String   @id @default(cuid())
+  name      String
+  enabled   Boolean  @default(false)
+  keyword   String? // optional trigger keyword; empty = any inbound message
+  graph     Json     @default("{}") // { nodes: [...], edges: [...] }
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Automation {

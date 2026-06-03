@@ -5,6 +5,7 @@ import clsx from "clsx";
 import type { LeadStatus, MessageDirection } from "@prisma/client";
 import StatusBadge from "./StatusBadge";
 import OwnerSelect, { type TeamUser } from "./OwnerSelect";
+import NotesPanel from "./NotesPanel";
 import { clockTime, initials, timeAgo } from "@/lib/format";
 
 export type MessageDTO = {
@@ -312,7 +313,7 @@ function ContactPanel({ lead, users }: { lead: ConversationDTO["lead"]; users: T
         <StatusBadge status={lead.status} />
       </div>
 
-      <div className="space-y-5 px-6 py-5 text-sm">
+      <div className="flex-1 space-y-5 overflow-y-auto px-6 py-5 text-sm">
         <div>
           <p className="mb-1.5 text-xs font-medium uppercase tracking-wide text-slate-400">Owner</p>
           <OwnerSelect leadId={lead.id} ownerId={lead.ownerId} users={users} />
@@ -330,6 +331,7 @@ function ContactPanel({ lead, users }: { lead: ConversationDTO["lead"]; users: T
             ))}
           </div>
         </div>
+        <NotesPanel key={lead.id} leadId={lead.id} />
       </div>
     </aside>
   );
