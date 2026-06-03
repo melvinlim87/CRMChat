@@ -1,7 +1,9 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { getGoogleStatus, googleConfigured } from "@/lib/google";
+import { whatsappConfigured } from "@/lib/whatsapp";
 import GoogleDisconnect from "@/components/GoogleDisconnect";
+import IntegrationActions from "@/components/IntegrationActions";
 
 export const dynamic = "force-dynamic";
 
@@ -37,27 +39,26 @@ export default async function IntegrationsPage({
 }) {
   const integrations = await prisma.integration.findMany();
   const byProvider = new Map(integrations.map((i) => [i.provider, i]));
-  const whatsappConnected =
-    Boolean(process.env.WHATSAPP_PHONE_NUMBER_ID && process.env.WHATSAPP_ACCESS_TOKEN) ||
-    byProvider.get("whatsapp")?.status === "connected";
+  const whatsappConnected = await whatsappConfigured();
+  const slackConnected = byProvider.get("slack")?.status === "connected";
   const google = await getGoogleStatus();
   const googleReady = googleConfigured();
 
   return (
     <div className="flex h-full flex-col">
-      <header className="border-b border-slate-200 bg-white px-8 py-5">
-        <h1 className="text-xl font-semibold text-slate-900">Integrations</h1>
-        <p className="text-sm text-slate-500">Connect your channels and tools to capture everything in one place.</p>
+      <header className="border-b border-white/10 bg-surface-panel px-8 py-5">
+        <h1 className="text-xl font-semibold text-slate-100">Integrations</h1>
+        <p className="text-sm text-slate-400">Connect your channels and tools to capture everything in one place.</p>
       </header>
 
       <div className="flex-1 overflow-auto p-8">
         {searchParams.connected === "google" && (
-          <div className="mb-6 max-w-3xl rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+          <div className="mb-6 max-w-3xl rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-300">
             Google connected{google.email ? ` as ${google.email}` : ""}. Gmail, Calendar, and Drive are ready.
           </div>
         )}
         {searchParams.error && (
-          <div className="mb-6 max-w-3xl rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          <div className="mb-6 max-w-3xl rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300">
             {ERROR_MESSAGES[searchParams.error] || "Something went wrong connecting that service."}
           </div>
         )}
@@ -72,19 +73,19 @@ export default async function IntegrationsPage({
                   : byProvider.get(s.key)?.status === "connected";
 
             return (
-              <div key={s.key} className="rounded-xl border border-slate-200 bg-white p-5">
+              <div key={s.key} className="rounded-xl border border-white/10 bg-surface-panel p-5">
                 <div className="flex items-center gap-3">
                   <span className={`flex h-10 w-10 items-center justify-center rounded-lg ${s.color} text-sm font-bold text-white`}>
                     {s.name.slice(0, 1)}
                   </span>
                   <div>
-                    <p className="font-medium text-slate-900">{s.name}</p>
-                    <span className={connected ? "text-xs font-medium text-emerald-600" : "text-xs font-medium text-slate-400"}>
+                    <p className="font-medium text-slate-100">{s.name}</p>
+                    <span className={connected ? "text-xs font-medium text-emerald-600" : "text-xs font-medium text-slate-500"}>
                       {connected ? (s.provider === "google" && google.email ? google.email : "Connected") : "Not connected"}
                     </span>
                   </div>
                 </div>
-                <p className="mt-3 text-sm text-slate-500">{s.desc}</p>
+                <p className="mt-3 text-sm text-slate-400">{s.desc}</p>
 
                 {s.provider === "google" ? (
                   connected ? (
@@ -109,34 +110,33 @@ export default async function IntegrationsPage({
                   ) : (
                     <button
                       disabled
-                      className="mt-4 w-full cursor-not-allowed rounded-lg border border-slate-200 py-2 text-sm font-medium text-slate-400"
+                      className="mt-4 w-full cursor-not-allowed rounded-lg border border-white/10 py-2 text-sm font-medium text-slate-500"
                     >
                       Configure to connect
                     </button>
                   )
+                ) : s.provider === "whatsapp" ? (
+                  <IntegrationActions provider="whatsapp" name={s.name} connected={connected} />
+                ) : s.key === "slack" ? (
+                  <IntegrationActions provider="slack" name={s.name} connected={connected} />
                 ) : (
-                  <button
-                    disabled
-                    className="mt-4 w-full rounded-lg border border-slate-200 py-2 text-sm font-medium text-slate-600 disabled:cursor-not-allowed disabled:opacity-70"
-                  >
-                    {connected ? "Manage" : "Connect"}
-                  </button>
+                  <IntegrationActions provider="comingsoon" name={s.name} connected={false} />
                 )}
               </div>
             );
           })}
         </div>
 
-        <div className="mt-8 max-w-3xl rounded-xl border border-amber-200 bg-amber-50 p-5 text-sm text-amber-800">
+        <div className="mt-8 max-w-3xl rounded-xl border border-amber-500/30 bg-amber-500/10 p-5 text-sm text-amber-200">
           <p className="font-medium">Setting up Google (Gmail, Calendar, Drive)</p>
           <p className="mt-1">
             Create an OAuth client in the{" "}
             <a className="underline" href="https://console.cloud.google.com/apis/credentials" target="_blank" rel="noreferrer">
               Google Cloud Console
             </a>
-            , add <code className="rounded bg-amber-100 px-1">GOOGLE_CLIENT_ID</code> and{" "}
-            <code className="rounded bg-amber-100 px-1">GOOGLE_CLIENT_SECRET</code> to your environment, and set the
-            redirect URI to <code className="rounded bg-amber-100 px-1">/api/integrations/google/callback</code>. See the
+            , add <code className="rounded bg-amber-500/20 px-1">GOOGLE_CLIENT_ID</code> and{" "}
+            <code className="rounded bg-amber-500/20 px-1">GOOGLE_CLIENT_SECRET</code> to your environment, and set the
+            redirect URI to <code className="rounded bg-amber-500/20 px-1">/api/integrations/google/callback</code>. See the
             README for the full guide.
           </p>
         </div>

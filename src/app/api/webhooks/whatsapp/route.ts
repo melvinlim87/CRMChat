@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { runInboundAutomations } from "@/lib/automations";
 import { runInboundFlows } from "@/lib/flow-engine";
+import { getWhatsAppVerifyToken } from "@/lib/whatsapp";
+import { notifySlack } from "@/lib/slack";
 
 // 1) Webhook verification handshake (Meta calls this once when you subscribe).
 export async function GET(req: NextRequest) {
@@ -10,7 +12,8 @@ export async function GET(req: NextRequest) {
   const token = params.get("hub.verify_token");
   const challenge = params.get("hub.challenge");
 
-  if (mode === "subscribe" && token === process.env.WHATSAPP_VERIFY_TOKEN) {
+  const verifyToken = await getWhatsAppVerifyToken();
+  if (mode === "subscribe" && token && token === verifyToken) {
     return new NextResponse(challenge ?? "", { status: 200 });
   }
   return new NextResponse("Forbidden", { status: 403 });
@@ -67,6 +70,9 @@ export async function POST(req: NextRequest) {
               status: "received",
             },
           });
+
+          // Notify Slack (if connected) about the inbound message.
+          await notifySlack(`💬 New WhatsApp message from *${profileName}* (${fromPhone}):\n> ${text}`);
 
           // Apply any matching automation rules, then run AI flows.
           await runInboundAutomations({ lead, conversation, text });
