@@ -4,6 +4,7 @@ import { generateReply, REPLY_RULES, type ChatMessage } from "@/lib/ai";
 import { getKnowledgeContext } from "@/lib/knowledge";
 import { detectNegative } from "@/lib/sentiment";
 import { notifySlack } from "@/lib/slack";
+import { runAutomations } from "@/lib/automation-engine";
 
 // Public endpoint the embeddable website widget calls. No auth — it's meant to
 // run on the customer's public site. Each browser session maps to one CRM
@@ -73,6 +74,9 @@ export async function POST(req: NextRequest) {
     where: { id: conversation.id },
     data: { lastMessageAt: new Date(), unreadCount: { increment: 1 } },
   });
+
+  // Run message automations (n8n workflows) for this widget message.
+  await runAutomations("MESSAGE_RECEIVED", { lead: conversation.lead, conversation, text: message.trim() }).catch(() => {});
 
   return NextResponse.json({ reply });
 }

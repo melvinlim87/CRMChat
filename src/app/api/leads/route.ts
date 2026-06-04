@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
+import { runAutomations } from "@/lib/automation-engine";
 import type { LeadStatus } from "@prisma/client";
 
 const VALID_STATUS: LeadStatus[] = ["NEW", "CONTACTED", "QUALIFIED", "WON", "LOST"];
@@ -33,6 +34,8 @@ export async function POST(req: NextRequest) {
       tags: Array.isArray(body.tags) ? body.tags : [],
     },
   });
+
+  await runAutomations("LEAD_CREATED", { lead }).catch(() => {});
 
   return NextResponse.json({ lead });
 }

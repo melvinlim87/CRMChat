@@ -102,6 +102,8 @@ model Integration {
 
 enum AutomationTrigger {
   MESSAGE_RECEIVED
+  LEAD_CREATED
+  FORM_SUBMITTED
 }
 
 enum AutomationAction {
@@ -177,8 +179,9 @@ model Automation {
   enabled     Boolean           @default(true)
   trigger     AutomationTrigger @default(MESSAGE_RECEIVED)
   keyword     String? // substring match on inbound text; empty = any message
-  action      AutomationAction
-  actionValue String // reply text, tag name, or target status
+  action      AutomationAction? // legacy single-action automations
+  actionValue String? // legacy: reply text, tag name, or status
+  graph       Json              @default("{}") // n8n-style visual workflow
   createdAt   DateTime          @default(now())
   updatedAt   DateTime          @updatedAt
 }

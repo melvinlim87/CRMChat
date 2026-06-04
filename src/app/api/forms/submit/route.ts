@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { notifySlack } from "@/lib/slack";
+import { runAutomations } from "@/lib/automation-engine";
 
 // Public endpoint: a published landing-page form posts here and we turn the
 // submission into a CRM lead + conversation + inbound message.
@@ -25,6 +26,7 @@ export async function POST(req: NextRequest) {
   let lead = normalizedPhone
     ? await prisma.lead.findUnique({ where: { phone: normalizedPhone } })
     : null;
+  const isNewLead = !lead;
 
   if (lead) {
     lead = await prisma.lead.update({
@@ -61,6 +63,10 @@ export async function POST(req: NextRequest) {
   });
 
   await notifySlack(`📝 New website lead: *${name.trim()}* (${email || phone || "no contact"})\n> ${body}`);
+
+  // Fire automations: form submitted (always) + lead created (if brand new).
+  await runAutomations("FORM_SUBMITTED", { lead, conversation, text: body }).catch(() => {});
+  if (isNewLead) await runAutomations("LEAD_CREATED", { lead, conversation, text: body }).catch(() => {});
 
   return NextResponse.json({ ok: true });
 }

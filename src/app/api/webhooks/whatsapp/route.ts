@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { runInboundAutomations } from "@/lib/automations";
+import { runAutomations } from "@/lib/automation-engine";
 import { runInboundFlows } from "@/lib/flow-engine";
 import { getWhatsAppVerifyToken } from "@/lib/whatsapp";
 import { notifySlack } from "@/lib/slack";
@@ -81,8 +81,8 @@ export async function POST(req: NextRequest) {
             await notifySlack(`⚠️ *${profileName}* may need a human — message flagged as frustrated.`);
           }
 
-          // Apply any matching automation rules, then run AI flows.
-          await runInboundAutomations({ lead, conversation, text });
+          // Run automations (n8n-style + legacy), then AI flows.
+          await runAutomations("MESSAGE_RECEIVED", { lead, conversation, text });
           await runInboundFlows({ lead, conversation, text });
         }
       }
