@@ -115,11 +115,22 @@ model Setting {
   updatedAt DateTime @updatedAt
 }
 
-// Saved canned responses / quick replies for the chat composer.
+// Canned responses for the chat composer.
 model CannedResponse {
   id        String   @id @default(cuid())
   title     String
   body      String
+  createdAt DateTime @default(now())
+}
+
+// Uploaded knowledge-base documents (PDFs). Extracted text powers AI replies.
+model Document {
+  id        String   @id @default(cuid())
+  name      String
+  mimeType  String   @default("application/pdf")
+  size      Int      @default(0)
+  text      String   @default("") // extracted text
+  content   Bytes? // original file bytes (for download)
   createdAt DateTime @default(now())
 }
 

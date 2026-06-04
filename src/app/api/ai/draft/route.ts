@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
 import { generateReply, type ChatMessage } from "@/lib/ai";
+import { getKnowledgeContext } from "@/lib/knowledge";
 
 const SYSTEM = `You are a helpful, friendly sales and support assistant replying to a lead over WhatsApp on behalf of the business.
 Write a concise, natural reply to the most recent customer message. Keep it warm and professional, 1-3 short sentences, no markdown, no signatures.`;
@@ -31,7 +32,10 @@ export async function POST(req: NextRequest) {
     messages.push({ role: "user", content: "(The customer is waiting. Write a helpful opening or follow-up.)" });
   }
 
-  const system = `${SYSTEM}\n\nLead name: ${conversation.lead.name}. Company: ${conversation.lead.company ?? "unknown"}.`;
+  const knowledge = await getKnowledgeContext();
+  const system =
+    `${SYSTEM}\n\nLead name: ${conversation.lead.name}. Company: ${conversation.lead.company ?? "unknown"}.` +
+    (knowledge ? `\n\nUse the following knowledge base to answer accurately. Only use it if relevant:\n${knowledge}` : "");
   const result = await generateReply(messages, system);
 
   if (!result.text) return NextResponse.json({ error: result.error || "No suggestion" }, { status: 502 });
