@@ -115,6 +115,17 @@ model Setting {
   updatedAt DateTime @updatedAt
 }
 
+// A published/editable marketing page built in the drag-and-drop site builder.
+model Page {
+  id        String   @id @default(cuid())
+  slug      String   @unique
+  title     String
+  published Boolean  @default(false)
+  blocks    Json     @default("[]") // ordered array of widget blocks
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
 model Flow {
   id        String   @id @default(cuid())
   name      String

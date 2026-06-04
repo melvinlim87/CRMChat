@@ -9,6 +9,7 @@ const NAV = [
   { href: "/leads", label: "Leads", icon: LeadsIcon },
   { href: "/pipeline", label: "Pipeline", icon: ColumnsIcon },
   { href: "/chat", label: "Chat", icon: ChatIcon },
+  { href: "/website", label: "Website", icon: GlobeIcon },
   { href: "/flows", label: "AI Flows", icon: FlowIcon },
   { href: "/automations", label: "Automations", icon: BoltIcon },
   { href: "/integrations", label: "Integrations", icon: PlugIcon },
@@ -153,6 +154,15 @@ function ColumnsIcon({ className }: { className?: string }) {
       <rect x="3" y="4" width="5" height="16" rx="1.5" />
       <rect x="10" y="4" width="5" height="11" rx="1.5" />
       <rect x="17" y="4" width="4" height="14" rx="1.5" />
+    </svg>
+  );
+}
+
+function GlobeIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <circle cx="12" cy="12" r="9" />
+      <path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18" strokeLinecap="round" />
     </svg>
   );
 }

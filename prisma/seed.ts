@@ -161,6 +161,23 @@ async function main() {
     });
   }
 
+  // Starter website page for the drag-and-drop builder.
+  const pageCount = await prisma.page.count();
+  if (pageCount === 0) {
+    await prisma.page.create({
+      data: {
+        slug: "home",
+        title: "Home",
+        published: false,
+        blocks: [
+          { id: "b1", type: "hero", data: { title: "Empowering your next big move", subtitle: "A landing page you built in CRMChat. Edit this text, drag widgets, then publish.", buttonLabel: "Get started", buttonHref: "#", align: "center" } },
+          { id: "b2", type: "heading", data: { text: "Why choose us", align: "center" } },
+          { id: "b3", type: "text", data: { text: "Add your value propositions here. Click any text to edit it inline.", align: "center" } },
+        ],
+      },
+    });
+  }
+
   console.log("Seed complete. Login with demo@crmchat.app / password123");
 }
 
