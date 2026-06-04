@@ -1,5 +1,6 @@
 import AISettingsForm from "@/components/AISettingsForm";
 import QuickReplies from "@/components/QuickReplies";
+import TeamMembers from "@/components/TeamMembers";
 
 export const dynamic = "force-dynamic";
 
@@ -13,6 +14,7 @@ export default function SettingsPage() {
       <div className="flex-1 overflow-auto p-8">
         <div className="max-w-2xl space-y-6">
           <AISettingsForm />
+          <TeamMembers />
           <QuickReplies />
         </div>
       </div>

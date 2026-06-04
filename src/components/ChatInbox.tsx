@@ -69,10 +69,13 @@ export default function ChatInbox({
       if (filter === "unread" && c.unreadCount === 0) return false;
       if (filter === "attention" && !c.needsHuman) return false;
       if (!q) return true;
+      const digits = q.replace(/[^\d]/g, "");
       return (
         c.lead.name.toLowerCase().includes(q) ||
         (c.lead.company || "").toLowerCase().includes(q) ||
-        (c.lead.phone || "").includes(q)
+        (c.lead.email || "").toLowerCase().includes(q) ||
+        (!!digits && (c.lead.phone || "").replace(/[^\d]/g, "").includes(digits)) ||
+        c.messages.some((m) => m.body.toLowerCase().includes(q))
       );
     });
   }, [conversations, search, filter]);
@@ -201,7 +204,7 @@ export default function ChatInbox({
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search conversations"
+            placeholder="Search name, number or message"
             className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm outline-none focus:border-brand-500 focus:bg-surface-panel"
           />
           <div className="mt-3 flex gap-1.5">

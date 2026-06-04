@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import StatusBadge from "@/components/StatusBadge";
 import OwnerSelect from "@/components/OwnerSelect";
 import OwnerFilter from "@/components/OwnerFilter";
+import NewLead from "@/components/NewLead";
 import { initials, timeAgo } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
@@ -37,9 +38,10 @@ export default async function LeadsPage({
         </div>
         <div className="flex items-center gap-3">
           <OwnerFilter users={users} />
+          <NewLead users={users} />
           <Link
             href="/chat"
-            className="rounded-lg bg-brand-500 px-4 py-2 text-sm font-semibold text-slate-950 transition hover:bg-brand-600"
+            className="rounded-lg border border-white/10 px-4 py-2 text-sm font-medium text-slate-200 transition hover:bg-white/5"
           >
             Open inbox
           </Link>
