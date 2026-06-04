@@ -14,6 +14,7 @@ import ReactFlow, {
   ReactFlowProvider,
   Handle,
   Position,
+  NodeResizer,
   type Node,
   type Edge,
   type Connection,
@@ -188,72 +189,82 @@ function useUpdate(id: string) {
     setNodes((nds) => nds.map((n) => (n.id === id ? { ...n, data: { ...n.data, ...patch } } : n)));
 }
 
-const card = "w-56 rounded-xl border bg-surface-panel px-3 py-2.5 shadow-sm";
-const inputCls = "nodrag mt-1 w-full rounded-md border border-white/10 px-2 py-1.5 text-sm outline-none focus:border-brand-500";
+// Cards fill their node box so they grow when resized. min sizes keep them
+// readable before any resize.
+const card =
+  "flex h-full w-full flex-col rounded-xl border bg-surface-panel px-3 py-2.5 shadow-sm";
+const inputCls = "nodrag mt-1 w-full rounded-md border border-white/10 bg-white/5 px-2 py-1.5 text-sm outline-none focus:border-brand-500";
 
-function TriggerNode() {
+function Resizer({ visible }: { visible?: boolean }) {
+  return <NodeResizer isVisible={visible} minWidth={220} minHeight={90} lineClassName="!border-brand-400" handleClassName="!h-2.5 !w-2.5 !rounded-sm !bg-brand-400 !border-0" />;
+}
+
+function TriggerNode({ selected }: NodeProps) {
   return (
-    <div className={`${card} border-emerald-400`}>
-      <p className="text-[10px] font-bold uppercase tracking-wide text-emerald-600">Trigger</p>
+    <div className={`${card} border-emerald-400`} style={{ minWidth: 220 }}>
+      <Resizer visible={selected} />
+      <p className="text-[10px] font-bold uppercase tracking-wide text-emerald-400">Trigger</p>
       <p className="text-sm font-medium text-slate-100">WhatsApp message received</p>
       <Handle type="source" position={Position.Bottom} id="out" />
     </div>
   );
 }
 
-function SendNode({ id, data }: NodeProps) {
+function SendNode({ id, data, selected }: NodeProps) {
   const update = useUpdate(id);
   return (
-    <div className={`${card} border-sky-300`}>
+    <div className={`${card} border-sky-300`} style={{ minWidth: 240, minHeight: 130 }}>
+      <Resizer visible={selected} />
       <Handle type="target" position={Position.Top} />
-      <p className="text-[10px] font-bold uppercase tracking-wide text-sky-600">Send message</p>
+      <p className="text-[10px] font-bold uppercase tracking-wide text-sky-400">Send message</p>
       <textarea
-        rows={2}
         value={data.message ?? ""}
         onChange={(e) => update({ message: e.target.value })}
         placeholder="Message text…"
-        className={`${inputCls} resize-none`}
+        className={`${inputCls} min-h-[70px] flex-1 resize-none`}
       />
       <Handle type="source" position={Position.Bottom} id="out" />
     </div>
   );
 }
 
-function AINode({ id, data }: NodeProps) {
+function AINode({ id, data, selected }: NodeProps) {
   const update = useUpdate(id);
   return (
-    <div className={`${card} border-violet-300`}>
+    <div className={`${card} border-violet-300`} style={{ minWidth: 240, minHeight: 130 }}>
+      <Resizer visible={selected} />
       <Handle type="target" position={Position.Top} />
       <p className="text-[10px] font-bold uppercase tracking-wide text-violet-400">✨ AI reply</p>
       <textarea
-        rows={2}
         value={data.instruction ?? ""}
         onChange={(e) => update({ instruction: e.target.value })}
         placeholder="Optional instruction (e.g. answer pricing questions)"
-        className={`${inputCls} resize-none`}
+        className={`${inputCls} min-h-[70px] flex-1 resize-none`}
       />
       <Handle type="source" position={Position.Bottom} id="out" />
     </div>
   );
 }
 
-function WaitNode() {
+function WaitNode({ selected }: NodeProps) {
   return (
-    <div className={`${card} border-teal-300`}>
+    <div className={`${card} border-teal-300`} style={{ minWidth: 220 }}>
+      <Resizer visible={selected} />
       <Handle type="target" position={Position.Top} />
-      <p className="text-[10px] font-bold uppercase tracking-wide text-teal-600">⏸ Wait for reply</p>
+      <p className="text-[10px] font-bold uppercase tracking-wide text-teal-400">⏸ Wait for reply</p>
       <p className="mt-0.5 text-xs text-slate-400">Pause until the customer responds, then continue.</p>
       <Handle type="source" position={Position.Bottom} id="out" />
     </div>
   );
 }
 
-function ConditionNode({ id, data }: NodeProps) {
+function ConditionNode({ id, data, selected }: NodeProps) {
   const update = useUpdate(id);
   return (
-    <div className={`${card} border-amber-300`}>
+    <div className={`${card} border-amber-300`} style={{ minWidth: 220 }}>
+      <Resizer visible={selected} />
       <Handle type="target" position={Position.Top} />
-      <p className="text-[10px] font-bold uppercase tracking-wide text-amber-600">Condition</p>
+      <p className="text-[10px] font-bold uppercase tracking-wide text-amber-400">Condition</p>
       <input
         value={data.keyword ?? ""}
         onChange={(e) => update({ keyword: e.target.value })}
@@ -270,22 +281,24 @@ function ConditionNode({ id, data }: NodeProps) {
   );
 }
 
-function TagNode({ id, data }: NodeProps) {
+function TagNode({ id, data, selected }: NodeProps) {
   const update = useUpdate(id);
   return (
-    <div className={`${card} border-pink-300`}>
+    <div className={`${card} border-pink-300`} style={{ minWidth: 220 }}>
+      <Resizer visible={selected} />
       <Handle type="target" position={Position.Top} />
-      <p className="text-[10px] font-bold uppercase tracking-wide text-pink-600">Add tag</p>
+      <p className="text-[10px] font-bold uppercase tracking-wide text-pink-400">Add tag</p>
       <input value={data.tag ?? ""} onChange={(e) => update({ tag: e.target.value })} placeholder="tag name" className={inputCls} />
       <Handle type="source" position={Position.Bottom} id="out" />
     </div>
   );
 }
 
-function StatusNode({ id, data }: NodeProps) {
+function StatusNode({ id, data, selected }: NodeProps) {
   const update = useUpdate(id);
   return (
-    <div className={`${card} border-white/15`}>
+    <div className={`${card} border-white/15`} style={{ minWidth: 220 }}>
+      <Resizer visible={selected} />
       <Handle type="target" position={Position.Top} />
       <p className="text-[10px] font-bold uppercase tracking-wide text-slate-400">Set status</p>
       <select value={data.status ?? "CONTACTED"} onChange={(e) => update({ status: e.target.value })} className={inputCls}>
