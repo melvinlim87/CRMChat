@@ -12,19 +12,53 @@ function nextNode(edges: Edge[], fromId: string, handle?: string): string | unde
   return edge?.target;
 }
 
+const delay = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
 export default function FlowSimulator({ nodes, edges }: { nodes: Node[]; edges: Edge[] }) {
   const [messages, setMessages] = useState<Msg[]>([]);
   const [waitNodeId, setWaitNodeId] = useState<string | null>(null);
   const [ended, setEnded] = useState(false);
+  const [typing, setTyping] = useState(false);
   const [input, setInput] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
+  const messagesRef = useRef<Msg[]>([]);
 
   const byId = (id?: string) => nodes.find((n) => n.id === id);
 
-  // Walk the graph from `startId`, using `userMsg` for any condition checks,
-  // until we hit a wait node (pause) or run out of nodes (end).
-  function run(startId: string | undefined, userMsg: string) {
-    const out: Msg[] = [];
+  function addMsg(m: Msg) {
+    setMessages((prev) => {
+      const next = [...prev, m];
+      messagesRef.current = next;
+      return next;
+    });
+  }
+
+  // Call the real AI (grounded in the knowledge base) for an AI node.
+  async function aiReply(instruction: string): Promise<string> {
+    setTyping(true);
+    const convo = messagesRef.current
+      .filter((m) => m.from !== "system")
+      .map((m) => ({ role: m.from === "user" ? "user" : "assistant", content: m.text }));
+    try {
+      const res = await fetch("/api/ai/preview", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ messages: convo, instruction }),
+      });
+      const d = await res.json();
+      setTyping(false);
+      if (res.ok && d.reply) return d.reply;
+      return `⚠️ ${d.error || "Couldn't generate a reply"} (add an AI key in Settings)`;
+    } catch {
+      setTyping(false);
+      return "⚠️ Couldn't reach the AI service";
+    }
+  }
+
+  // Walk the graph from `startId`, using `userMsg` for condition checks, until
+  // we hit a wait node (pause) or run out of nodes (end). Async so AI nodes can
+  // fetch a real reply.
+  async function run(startId: string | undefined, userMsg: string) {
     let id = startId;
     let steps = 0;
     while (id && steps < 30) {
@@ -34,7 +68,6 @@ export default function FlowSimulator({ nodes, edges }: { nodes: Node[]; edges: 
       const d = (node.data || {}) as Record<string, string>;
 
       if (node.type === "wait") {
-        setMessages((m) => [...m, ...out]);
         setWaitNodeId(id);
         return;
       }
@@ -44,21 +77,30 @@ export default function FlowSimulator({ nodes, edges }: { nodes: Node[]; edges: 
         id = nextNode(edges, id, matched ? "match" : "else");
         continue;
       }
-      if (node.type === "send") out.push({ from: "bot", text: d.message || "(empty message)" });
-      else if (node.type === "ai") out.push({ from: "bot", text: `🤖 ${d.instruction ? `(AI: ${d.instruction})` : "AI-generated reply based on your knowledge base"}` });
-      else if (node.type === "tag") out.push({ from: "system", text: `🏷️ Tagged "${d.tag || ""}"` });
-      else if (node.type === "status") out.push({ from: "system", text: `📌 Status → ${d.status || ""}` });
+      if (node.type === "send") {
+        addMsg({ from: "bot", text: d.message || "(empty message)" });
+        await delay(350);
+      } else if (node.type === "ai") {
+        const reply = await aiReply(d.instruction || "");
+        addMsg({ from: "bot", text: reply });
+        await delay(200);
+      } else if (node.type === "tag") {
+        addMsg({ from: "system", text: `🏷️ Tagged "${d.tag || ""}"` });
+      } else if (node.type === "status") {
+        addMsg({ from: "system", text: `📌 Status → ${d.status || ""}` });
+      }
       id = nextNode(edges, id);
     }
-    setMessages((m) => [...m, ...out]);
     setWaitNodeId(null);
     setEnded(true);
   }
 
   function restart() {
+    messagesRef.current = [];
     setMessages([]);
     setEnded(false);
     setWaitNodeId(null);
+    setTyping(false);
     const trigger = nodes.find((n) => n.type === "trigger");
     setTimeout(() => run(trigger ? nextNode(edges, trigger.id) : undefined, ""), 0);
   }
@@ -71,13 +113,13 @@ export default function FlowSimulator({ nodes, edges }: { nodes: Node[]; edges: 
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight });
-  }, [messages]);
+  }, [messages, typing]);
 
   function sendUser() {
     const text = input.trim();
     if (!text || !waitNodeId) return;
     setInput("");
-    setMessages((m) => [...m, { from: "user", text }]);
+    addMsg({ from: "user", text });
     const resumeFrom = nextNode(edges, waitNodeId);
     setWaitNodeId(null);
     setTimeout(() => run(resumeFrom, text), 150);
@@ -122,7 +164,18 @@ export default function FlowSimulator({ nodes, edges }: { nodes: Node[]; edges: 
               </div>
             )
           )}
-          {ended && <div className="mx-auto w-fit pt-1 text-center text-[10px] text-slate-500">— end of flow —</div>}
+          {typing && (
+            <div className="flex justify-start">
+              <div className="rounded-lg rounded-bl-sm bg-[#202c33] px-3 py-2 text-[12px] text-slate-400">
+                <span className="inline-flex gap-1">
+                  <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-slate-400" />
+                  <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-slate-400 [animation-delay:0.15s]" />
+                  <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-slate-400 [animation-delay:0.3s]" />
+                </span>
+              </div>
+            </div>
+          )}
+          {ended && !typing && <div className="mx-auto w-fit pt-1 text-center text-[10px] text-slate-500">— end of flow —</div>}
         </div>
 
         {/* Input */}
