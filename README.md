@@ -1,43 +1,41 @@
-# CRMChat
+# AlgoVenture — AI WhatsApp CRM
 
-A chat-based CRM that connects **WhatsApp Business** and keeps all your leads in
-one inbox — inspired by [The Librarian](https://thelibrarian.io/) and
-[GoHighLevel](https://www.gohighlevel.com/). Capture conversations, manage your
-lead pipeline, and reply from a single Team Inbox.
-
-> **Status:** v1 scaffold — core foundation, auth, Leads CRM, and a live Chat
-> inbox with a WhatsApp Cloud API connector. See the roadmap below.
+A full **AI-powered chat CRM**: WhatsApp + a website chat widget + Google, an AI
+"brain" grounded in your own PDFs, a visual flow builder, a drag-and-drop website
+builder, and a sales pipeline — inspired by [GoHighLevel](https://www.gohighlevel.com/)
+and [The Librarian](https://thelibrarian.io/).
 
 ## Tech stack
 
-- **Next.js 14** (App Router) + **TypeScript**
-- **Tailwind CSS** for the UI
+- **Next.js 14** (App Router) + **TypeScript** + **Tailwind CSS**
 - **Prisma** ORM + **PostgreSQL**
-- **WhatsApp Business Cloud API** (official Meta API)
-- Lightweight JWT cookie auth (`jose` + `bcryptjs`)
+- **React Flow** (visual flow builder)
+- **WhatsApp Business Cloud API** + **Google APIs** + multi-provider AI
+- JWT cookie auth (`jose` + `bcryptjs`)
 
-## Features in this version
+## Features
 
-- 🔐 Email/password login with session cookies
-- 👥 **Leads** — pipeline table with status, tags, company, last activity
-- 💬 **Chat** — GoHighLevel-style Team Inbox: conversation list, message thread,
-  composer, and a contact-details side panel
-- 🔌 **Integrations** — connection hub (WhatsApp + Google wired up; others stubbed)
-- 📥 **WhatsApp webhook** — inbound messages auto-create leads + conversations
-- 📤 **Send** — outbound replies delivered via the WhatsApp Cloud API
-- 🟥 **Gmail** — recent inbox (read) + compose & send (write)
-- 📅 **Google Calendar** — upcoming events agenda + create new events
-- 📁 **Google Drive** — recent files list
-- 🔑 **Google OAuth** — one connection grants Gmail + Calendar + Drive
-- 👤 **Lead assignment** — owner per lead, inline reassign, filter by owner
-- ⚡ **Automations** — auto-reply / add tag / set status on inbound messages
-- 🟢 **Live inbox** — new messages appear via polling, no manual refresh
-- 📊 **Dashboard** — stat cards, recent conversations, pipeline breakdown
-- 🗂️ **Pipeline board** — drag-and-drop Kanban to move leads between stages
-- 📝 **Lead notes** — timestamped notes per lead in the chat sidebar
-- 🤖 **AI replies** — multi-provider (Claude / GPT / Gemini); "✨ AI" drafts a reply
-- ⚙️ **Settings** — pick AI provider + model, manage API keys
-- 🔀 **AI Flows** — visual node-based WhatsApp flow builder (send / AI / branch / tag / status)
+**Inbox & CRM**
+- 💬 GoHighLevel-style **Team Inbox** — live updates, channel badges, WhatsApp-Web search (name / number / email / message), unread & "Needs you" filters, contact panel
+- ⚡ **Quick replies** (canned responses) + **✨ AI draft** in the composer
+- 👥 **Leads** table + 🗂️ drag-and-drop **Pipeline** board, manual **New lead**, owner assignment & filter, lead **notes**
+- 📊 **Dashboard** with charts (new leads/day, by source) + stats
+- 🧑‍🤝‍🧑 **Team members** — add users who can log in and own leads
+
+**AI brain**
+- 🤖 **Multi-provider AI** with model picker: **Groq (free)**, **Gemini (free)**, **Ollama (local)**, OpenRouter, OpenAI, Anthropic
+- 📚 **Knowledge base** — upload PDFs → text extracted → **RAG** grounds every AI reply
+- 🔀 **Visual WhatsApp AI flow builder** — one-click templates, resizable nodes, send/AI/condition/wait/tag/status, multi-turn, looping AI for continuous chat, and a **live phone preview** with real AI
+- 🔧 **Automations** (auto-reply / tag / status), 🌍 **multilingual** replies, 🚨 **sentiment + human handoff**
+
+**Channels & integrations**
+- 📲 **WhatsApp Business** (Cloud API) — configure in-app; inbound → leads, outbound send
+- 🔌 **Embeddable chat widget** — plug-and-play `<script>` for any website, with live preview
+- 🌐 **Website builder** — drag-and-drop pages incl. a **lead-capture form**, publish to a public URL
+- 🔵 **Google** (Gmail/Calendar/Drive read + write) · 🔔 **Slack** notifications
+
+**Go-live**
+- 🚀 **Go Live** readiness checklist + `DEPLOY.md` (Vercel + Neon)
 
 ## Getting started
 
