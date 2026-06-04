@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
+import { buildTemplate, type TemplateKey } from "@/lib/flow-templates";
 
 export async function GET() {
   const session = await getSession();
@@ -13,25 +14,15 @@ export async function POST(req: NextRequest) {
   const session = await getSession();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const { name } = await req.json().catch(() => ({}));
-  if (!name?.trim()) return NextResponse.json({ error: "Name is required" }, { status: 400 });
+  const { name, template } = await req.json().catch(() => ({}));
 
-  // Seed every new flow with a trigger node so the canvas isn't empty.
-  const graph = {
-    nodes: [
-      {
-        id: "trigger",
-        type: "trigger",
-        position: { x: 240, y: 40 },
-        data: {},
-        deletable: false,
-      },
-    ],
-    edges: [],
-  };
-
+  const built = buildTemplate((template as TemplateKey) || "blank");
   const flow = await prisma.flow.create({
-    data: { name: name.trim(), graph },
+    data: {
+      name: (name?.trim() as string) || built.name,
+      keyword: built.keyword,
+      graph: built.graph as object,
+    },
   });
   return NextResponse.json({ flow });
 }

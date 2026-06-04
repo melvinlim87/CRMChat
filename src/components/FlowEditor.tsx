@@ -20,6 +20,7 @@ import ReactFlow, {
   type NodeProps,
 } from "reactflow";
 import "reactflow/dist/style.css";
+import FlowSimulator from "./FlowSimulator";
 
 export type FlowData = {
   id: string;
@@ -58,6 +59,7 @@ function FlowEditorInner({ flow }: { flow: FlowData }) {
   const [enabled, setEnabled] = useState(flow.enabled);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [showPreview, setShowPreview] = useState(true);
 
   const onConnect = useCallback(
     (c: Connection) => setEdges((eds) => addEdge({ ...c, animated: true }, eds)),
@@ -138,6 +140,12 @@ function FlowEditorInner({ flow }: { flow: FlowData }) {
               + {p.label}
             </button>
           ))}
+          <button
+            onClick={() => setShowPreview((v) => !v)}
+            className={`rounded-lg border px-3 py-1.5 text-xs font-medium transition ${showPreview ? "border-brand-500/50 bg-brand-500/15 text-brand-300" : "border-white/10 text-slate-300 hover:bg-white/5"}`}
+          >
+            📱 Preview
+          </button>
           {saved && <span className="text-sm font-medium text-emerald-600">Saved ✓</span>}
           <button
             onClick={save}
@@ -149,21 +157,24 @@ function FlowEditorInner({ flow }: { flow: FlowData }) {
         </div>
       </header>
 
-      <div className="h-full w-full flex-1 bg-white/5">
-        <ReactFlow
-          nodes={nodes}
-          edges={edges}
-          onNodesChange={onNodesChange}
-          onEdgesChange={onEdgesChange}
-          onConnect={onConnect}
-          nodeTypes={nodeTypes}
-          fitView
-          proOptions={{ hideAttribution: true }}
-        >
-          <Background color="#e2d9d0" gap={20} />
-          <Controls />
-          <MiniMap pannable zoomable />
-        </ReactFlow>
+      <div className="flex min-h-0 flex-1">
+        <div className="h-full flex-1 bg-white/5">
+          <ReactFlow
+            nodes={nodes}
+            edges={edges}
+            onNodesChange={onNodesChange}
+            onEdgesChange={onEdgesChange}
+            onConnect={onConnect}
+            nodeTypes={nodeTypes}
+            fitView
+            proOptions={{ hideAttribution: true }}
+          >
+            <Background color="#1c2333" gap={20} />
+            <Controls />
+            <MiniMap pannable zoomable />
+          </ReactFlow>
+        </div>
+        {showPreview && <FlowSimulator nodes={nodes} edges={edges} />}
       </div>
     </div>
   );

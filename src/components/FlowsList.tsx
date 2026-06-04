@@ -3,24 +3,24 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { TEMPLATES, type TemplateKey } from "@/lib/flow-templates";
 
 type Flow = { id: string; name: string; enabled: boolean; keyword: string | null; updatedAt: string };
 
 export default function FlowsList({ initial }: { initial: Flow[] }) {
   const router = useRouter();
   const [flows, setFlows] = useState(initial);
-  const [name, setName] = useState("");
-  const [creating, setCreating] = useState(false);
+  const [creating, setCreating] = useState<TemplateKey | null>(null);
 
-  async function create() {
-    if (!name.trim() || creating) return;
-    setCreating(true);
+  async function create(template: TemplateKey) {
+    if (creating) return;
+    setCreating(template);
     const res = await fetch("/api/flows", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name }),
+      body: JSON.stringify({ template }),
     });
-    setCreating(false);
+    setCreating(null);
     if (res.ok) {
       const { flow } = await res.json();
       router.push(`/flows/${flow.id}`);
@@ -42,25 +42,32 @@ export default function FlowsList({ initial }: { initial: Flow[] }) {
   }
 
   return (
-    <div className="max-w-3xl space-y-6">
-      <div className="flex gap-2">
-        <input
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && create()}
-          placeholder="New flow name, e.g. Lead qualification bot"
-          className="flex-1 rounded-lg border border-white/10 px-3 py-2 text-sm outline-none focus:border-brand-500"
-        />
-        <button
-          onClick={create}
-          disabled={creating || !name.trim()}
-          className="rounded-lg bg-brand-500 px-4 py-2 text-sm font-semibold text-slate-950 transition hover:bg-brand-600 disabled:opacity-50"
-        >
-          Create flow
-        </button>
+    <div className="max-w-3xl space-y-8">
+      <div>
+        <p className="mb-3 text-sm font-medium text-slate-300">Create a flow</p>
+        <div className="grid gap-3 sm:grid-cols-2">
+          {TEMPLATES.map((t) => (
+            <button
+              key={t.key}
+              onClick={() => create(t.key)}
+              disabled={creating !== null}
+              className="group flex items-start gap-3 rounded-xl border border-white/10 bg-surface-panel p-4 text-left transition hover:border-brand-500/50 hover:bg-white/5 disabled:opacity-60"
+            >
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-brand-500/15 text-xl">{t.icon}</span>
+              <div className="min-w-0">
+                <p className="font-medium text-slate-100">
+                  {t.label}
+                  {creating === t.key && <span className="ml-2 text-xs text-brand-300">creating…</span>}
+                </p>
+                <p className="mt-0.5 text-xs text-slate-400">{t.description}</p>
+              </div>
+            </button>
+          ))}
+        </div>
       </div>
 
       <div className="space-y-3">
+        <p className="text-sm font-medium text-slate-300">Your flows</p>
         {flows.length === 0 && (
           <p className="rounded-xl border border-dashed border-white/10 bg-surface-panel px-5 py-12 text-center text-slate-500">
             No flows yet. Create one to build a visual WhatsApp AI conversation.
