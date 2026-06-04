@@ -19,7 +19,7 @@ export default async function PublishedPage({ params }: { params: { slug: string
         ))}
       </div>
       <footer className="border-t border-white/10 px-6 py-8 text-center text-xs text-slate-500">
-        Powered by ALGO
+        Powered by AlgoVenture
       </footer>
     </main>
   );
