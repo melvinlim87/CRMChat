@@ -10,6 +10,7 @@ const NAV = [
   { href: "/pipeline", label: "Pipeline", icon: ColumnsIcon },
   { href: "/chat", label: "Chat", icon: ChatIcon },
   { href: "/website", label: "Website", icon: GlobeIcon },
+  { href: "/chat-widget", label: "Chat Widget", icon: WidgetIcon },
   { href: "/flows", label: "AI Flows", icon: FlowIcon },
   { href: "/knowledge", label: "Knowledge", icon: BookIcon },
   { href: "/automations", label: "Automations", icon: BoltIcon },
@@ -164,6 +165,15 @@ function GlobeIcon({ className }: { className?: string }) {
     <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
       <circle cx="12" cy="12" r="9" />
       <path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function WidgetIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" strokeLinecap="round" strokeLinejoin="round" />
+      <circle cx="9" cy="12" r="1" fill="currentColor" /><circle cx="13" cy="12" r="1" fill="currentColor" /><circle cx="17" cy="12" r="1" fill="currentColor" />
     </svg>
   );
 }

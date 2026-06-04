@@ -5,7 +5,7 @@ const secret = new TextEncoder().encode(
   process.env.AUTH_SECRET || "dev-insecure-secret-change-me"
 );
 
-const PUBLIC_PATHS = ["/login", "/api/auth/login", "/api/webhooks", "/api/forms", "/p/"];
+const PUBLIC_PATHS = ["/login", "/api/auth/login", "/api/webhooks", "/api/forms", "/api/widget", "/widget", "/p/"];
 
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;

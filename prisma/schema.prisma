@@ -64,6 +64,7 @@ model Conversation {
   leadId        String   @unique
   lead          Lead     @relation(fields: [leadId], references: [id], onDelete: Cascade)
   channel       String   @default("whatsapp")
+  sessionId     String?  @unique // for anonymous website-widget chats
   lastMessageAt DateTime @default(now())
   unreadCount   Int      @default(0)
   createdAt     DateTime @default(now())
