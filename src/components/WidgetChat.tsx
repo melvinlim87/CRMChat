@@ -46,7 +46,7 @@ export default function WidgetChat({ config }: { config: { title: string; welcom
   }
 
   return (
-    <div className="flex h-screen flex-col bg-white">
+    <div className="flex h-full flex-col bg-white">
       <header className="flex items-center gap-2 px-4 py-3 text-white" style={{ backgroundColor: config.color }}>
         <span className="flex h-7 w-7 items-center justify-center rounded-full bg-white/25 text-sm">💬</span>
         <p className="font-semibold">{config.title}</p>

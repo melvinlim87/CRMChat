@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import WidgetChat from "@/components/WidgetChat";
 
 type Config = { title: string; welcome: string; color: string };
 
@@ -91,23 +92,18 @@ export default function WidgetSetup() {
         </div>
       </div>
 
-      {/* Live preview */}
+      {/* Live preview — a real, working widget */}
       <div className="h-fit rounded-2xl border border-white/10 bg-surface-panel p-4">
-        <p className="mb-2 text-xs font-medium uppercase tracking-wide text-slate-400">Live preview</p>
-        <div className="overflow-hidden rounded-xl border border-white/10">
-          <div className="flex items-center gap-2 px-3 py-2.5 text-white" style={{ backgroundColor: config.color }}>
-            <span className="flex h-6 w-6 items-center justify-center rounded-full bg-white/25 text-xs">💬</span>
-            <span className="text-sm font-semibold">{config.title}</span>
-          </div>
-          <div className="space-y-2 bg-slate-50 p-3">
-            <div className="w-fit max-w-[85%] rounded-2xl rounded-bl-sm bg-white px-3 py-2 text-sm text-slate-800 shadow-sm">{config.welcome}</div>
-            <div className="ml-auto w-fit max-w-[85%] rounded-2xl rounded-br-sm px-3 py-2 text-sm text-white shadow-sm" style={{ backgroundColor: config.color }}>
-              What are your prices?
-            </div>
-          </div>
+        <p className="mb-2 text-xs font-medium uppercase tracking-wide text-slate-400">Live preview — try it</p>
+        <div className="h-[520px] overflow-hidden rounded-xl border border-white/10 shadow-lg">
+          {/* Remount when appearance changes so the welcome/colors refresh */}
+          <WidgetChat key={`${config.welcome}|${config.color}|${config.title}`} config={config} />
         </div>
         <p className="mt-3 text-xs text-slate-500">
-          The widget answers using your <a href="/knowledge" className="text-brand-300 underline">Knowledge Base</a> and logs chats to <a href="/chat" className="text-brand-300 underline">Chat</a>.
+          This is the real widget. Type a question — it answers using your{" "}
+          <a href="/knowledge" className="text-brand-300 underline">Knowledge Base</a> (add an AI key in{" "}
+          <a href="/settings" className="text-brand-300 underline">Settings</a>) and logs chats to{" "}
+          <a href="/chat" className="text-brand-300 underline">Chat</a>.
         </p>
       </div>
     </div>
