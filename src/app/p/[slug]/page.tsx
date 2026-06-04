@@ -15,7 +15,7 @@ export default async function PublishedPage({ params }: { params: { slug: string
     <main className="min-h-screen">
       <div className="mx-auto max-w-4xl py-10">
         {blocks.map((b) => (
-          <BlockView key={b.id} block={b} />
+          <BlockView key={b.id} block={b} slug={page.slug} />
         ))}
       </div>
       <footer className="border-t border-white/10 px-6 py-8 text-center text-xs text-slate-500">

@@ -1,9 +1,12 @@
 import { type Block, alignClass, flexAlign } from "@/lib/blocks";
+import PublicForm from "./PublicForm";
 
 // Read-only render of a single block — used by the public published page.
-export default function BlockView({ block }: { block: Block }) {
+export default function BlockView({ block, slug }: { block: Block; slug: string }) {
   const d = block.data || {};
   switch (block.type) {
+    case "form":
+      return <PublicForm slug={slug} data={d} />;
     case "hero":
       return (
         <section className={`px-6 py-20 ${alignClass(d.align)}`}>

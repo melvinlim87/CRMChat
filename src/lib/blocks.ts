@@ -1,6 +1,6 @@
 // Widget/block model for the drag-and-drop site builder.
 
-export type BlockType = "hero" | "heading" | "text" | "button" | "image" | "divider" | "spacer";
+export type BlockType = "hero" | "heading" | "text" | "button" | "image" | "form" | "divider" | "spacer";
 
 export type Block = {
   id: string;
@@ -14,6 +14,7 @@ export const WIDGETS: { type: BlockType; label: string; icon: string }[] = [
   { type: "text", label: "Text", icon: "¶" },
   { type: "button", label: "Button", icon: "▭" },
   { type: "image", label: "Image", icon: "▣" },
+  { type: "form", label: "Lead form", icon: "✉" },
   { type: "divider", label: "Divider", icon: "—" },
   { type: "spacer", label: "Spacer", icon: "⊞" },
 ];
@@ -34,6 +35,13 @@ export function defaultData(type: BlockType): Record<string, any> {
       return { text: "Write your paragraph here. Click to edit.", align: "left" };
     case "button":
       return { label: "Click me", href: "#", align: "left" };
+    case "form":
+      return {
+        heading: "Get in touch",
+        subtext: "Leave your details and we'll reach out shortly.",
+        buttonLabel: "Submit",
+        successMessage: "Thanks! We'll be in touch shortly.",
+      };
     case "image":
       return { src: "https://placehold.co/800x400/0c0d11/cda14a?text=Image", alt: "Image", align: "center" };
     case "spacer":

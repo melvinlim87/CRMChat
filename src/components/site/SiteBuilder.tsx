@@ -191,6 +191,24 @@ function EditableBlock({ block, onChange }: { block: Block; onChange: (patch: Re
           <img src={d.src} alt={d.alt || ""} className="max-w-full rounded-xl border border-white/10" />
         </div>
       );
+    case "form":
+      return (
+        <div className="px-6 py-8">
+          <div className="mx-auto max-w-md rounded-2xl border border-white/10 bg-white/5 p-6">
+            <Editable value={d.heading} onCommit={(v) => onChange({ heading: v })} className="font-display text-2xl font-semibold text-slate-100" />
+            <Editable value={d.subtext} onCommit={(v) => onChange({ subtext: v })} className="mt-1 text-sm text-slate-400" />
+            <div className="mt-4 space-y-2 opacity-70">
+              <div className="rounded-lg border border-white/15 bg-white/5 px-3 py-2.5 text-sm text-slate-500">Your name</div>
+              <div className="rounded-lg border border-white/15 bg-white/5 px-3 py-2.5 text-sm text-slate-500">Email</div>
+              <div className="rounded-lg border border-white/15 bg-white/5 px-3 py-2.5 text-sm text-slate-500">Phone (optional)</div>
+              <span className="inline-block rounded-full bg-gold px-6 py-2.5 text-sm font-semibold text-slate-950">
+                <Editable inline value={d.buttonLabel} onCommit={(v) => onChange({ buttonLabel: v })} />
+              </span>
+            </div>
+            <p className="mt-2 text-xs text-slate-500">Submissions create a lead in your CRM inbox.</p>
+          </div>
+        </div>
+      );
     case "divider":
       return <div className="px-6 py-3"><hr className="border-white/10" /></div>;
     case "spacer":
@@ -282,6 +300,12 @@ function Settings({
 
       {block.type === "spacer" && (
         <Field label="Height (px)"><input type="number" className={field} value={d.size ?? 32} onChange={(e) => onChange({ size: Number(e.target.value) })} /></Field>
+      )}
+
+      {block.type === "form" && (
+        <Field label="Success message">
+          <textarea className={field} rows={3} value={d.successMessage ?? ""} onChange={(e) => onChange({ successMessage: e.target.value })} />
+        </Field>
       )}
 
       <p className="rounded-lg bg-white/5 px-3 py-2 text-xs text-slate-500">
