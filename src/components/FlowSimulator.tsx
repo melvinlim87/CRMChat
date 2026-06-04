@@ -22,6 +22,7 @@ export default function FlowSimulator({ nodes, edges }: { nodes: Node[]; edges: 
   const [input, setInput] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
   const messagesRef = useRef<Msg[]>([]);
+  const runToken = useRef(0); // guards against duplicate/stale runs (e.g. StrictMode)
 
   const byId = (id?: string) => nodes.find((n) => n.id === id);
 
@@ -58,10 +59,11 @@ export default function FlowSimulator({ nodes, edges }: { nodes: Node[]; edges: 
   // Walk the graph from `startId`, using `userMsg` for condition checks, until
   // we hit a wait node (pause) or run out of nodes (end). Async so AI nodes can
   // fetch a real reply.
-  async function run(startId: string | undefined, userMsg: string) {
+  async function run(startId: string | undefined, userMsg: string, token: number) {
     let id = startId;
     let steps = 0;
-    while (id && steps < 30) {
+    while (id && steps < 40) {
+      if (token !== runToken.current) return; // a newer run/restart superseded this one
       steps++;
       const node = byId(id);
       if (!node) break;
@@ -82,8 +84,18 @@ export default function FlowSimulator({ nodes, edges }: { nodes: Node[]; edges: 
         await delay(350);
       } else if (node.type === "ai") {
         const reply = await aiReply(d.instruction || "");
+        if (token !== runToken.current) return;
         addMsg({ from: "bot", text: reply });
+        // An AI node with nothing after it keeps the conversation going:
+        // wait for the next message, then reply again.
+        const nxt = nextNode(edges, id);
+        if (!nxt) {
+          setWaitNodeId(id);
+          return;
+        }
         await delay(200);
+        id = nxt;
+        continue;
       } else if (node.type === "tag") {
         addMsg({ from: "system", text: `🏷️ Tagged "${d.tag || ""}"` });
       } else if (node.type === "status") {
@@ -96,13 +108,14 @@ export default function FlowSimulator({ nodes, edges }: { nodes: Node[]; edges: 
   }
 
   function restart() {
+    const token = ++runToken.current;
     messagesRef.current = [];
     setMessages([]);
     setEnded(false);
     setWaitNodeId(null);
     setTyping(false);
     const trigger = nodes.find((n) => n.type === "trigger");
-    setTimeout(() => run(trigger ? nextNode(edges, trigger.id) : undefined, ""), 0);
+    setTimeout(() => run(trigger ? nextNode(edges, trigger.id) : undefined, "", token), 0);
   }
 
   // Start (and restart whenever the graph structure changes meaningfully).
@@ -120,9 +133,12 @@ export default function FlowSimulator({ nodes, edges }: { nodes: Node[]; edges: 
     if (!text || !waitNodeId) return;
     setInput("");
     addMsg({ from: "user", text });
-    const resumeFrom = nextNode(edges, waitNodeId);
+    const paused = byId(waitNodeId);
+    // If paused on an AI node, re-enter it (it replies again). After a wait
+    // node, continue to whatever comes next.
+    const resumeFrom = paused?.type === "ai" ? waitNodeId : nextNode(edges, waitNodeId);
     setWaitNodeId(null);
-    setTimeout(() => run(resumeFrom, text), 150);
+    setTimeout(() => run(resumeFrom, text, runToken.current), 150);
   }
 
   return (

@@ -31,9 +31,11 @@ export async function runInboundFlows(params: {
     const flow = await prisma.flow.findUnique({ where: { id: activeRun.flowId } });
     if (flow?.enabled) {
       const graph = flow.graph as unknown as Graph;
-      // We were paused at a wait node; consume this message and continue past it.
-      const startId = nextNode(graph, activeRun.currentNodeId);
-      await execute({ ...params }, graph, startId);
+      const paused = graph.nodes.find((n) => n.id === activeRun.currentNodeId);
+      // After a wait node, continue past it. If paused on a looping AI node,
+      // re-enter it so it replies to this new message.
+      const startId = paused?.type === "ai" ? activeRun.currentNodeId : nextNode(graph, activeRun.currentNodeId);
+      await execute({ ...params }, graph, startId, activeRun.flowId);
       return;
     }
     // Flow gone or disabled — clear the stale run and fall through to a fresh start.
@@ -99,6 +101,19 @@ async function execute(
       } else if (node.type === "ai") {
         const reply = await aiReply(conversation.id, lead, String(node.data?.instruction ?? ""));
         if (reply) await deliver(conversation.id, lead, reply);
+        // An AI node with no next step keeps chatting: pause here and re-enter
+        // this node on the customer's next message.
+        if (!nextNode(graph, node.id)) {
+          const fid = flowId ?? (await prisma.flowRun.findUnique({ where: { conversationId: conversation.id } }))?.flowId;
+          if (fid) {
+            await prisma.flowRun.upsert({
+              where: { conversationId: conversation.id },
+              update: { currentNodeId: node.id, flowId: fid },
+              create: { conversationId: conversation.id, flowId: fid, currentNodeId: node.id },
+            });
+          }
+          return;
+        }
       } else if (node.type === "tag") {
         const tag = String(node.data?.tag ?? "").trim();
         if (tag && !lead.tags.includes(tag)) {
