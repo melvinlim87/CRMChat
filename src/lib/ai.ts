@@ -125,6 +125,10 @@ export async function saveAIConfig(input: {
   });
 }
 
+// Appended to every assistant system prompt so replies match the customer's language.
+export const REPLY_RULES =
+  "Always reply in the same language the customer is using (e.g. English, 中文, Malay). Mirror their tone.";
+
 export type ChatMessage = { role: "user" | "assistant"; content: string };
 export type AIResult = { text: string | null; error?: string };
 

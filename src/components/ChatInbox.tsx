@@ -20,6 +20,7 @@ export type ConversationDTO = {
   id: string;
   channel: string;
   unreadCount: number;
+  needsHuman?: boolean;
   lastMessageAt: string;
   lead: {
     id: string;
@@ -52,7 +53,7 @@ export default function ChatInbox({
   const [aiLoading, setAiLoading] = useState(false);
   const [aiError, setAiError] = useState<string | null>(null);
   const [search, setSearch] = useState("");
-  const [filter, setFilter] = useState<"all" | "unread">("all");
+  const [filter, setFilter] = useState<"all" | "unread" | "attention">("all");
   const [quickReplies, setQuickReplies] = useState<{ id: string; title: string; body: string }[]>([]);
   const [showQuick, setShowQuick] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -66,6 +67,7 @@ export default function ChatInbox({
     const q = search.trim().toLowerCase();
     return conversations.filter((c) => {
       if (filter === "unread" && c.unreadCount === 0) return false;
+      if (filter === "attention" && !c.needsHuman) return false;
       if (!q) return true;
       return (
         c.lead.name.toLowerCase().includes(q) ||
@@ -76,6 +78,7 @@ export default function ChatInbox({
   }, [conversations, search, filter]);
 
   const unreadTotal = useMemo(() => conversations.filter((c) => c.unreadCount > 0).length, [conversations]);
+  const attentionTotal = useMemo(() => conversations.filter((c) => c.needsHuman).length, [conversations]);
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight });
@@ -215,6 +218,13 @@ export default function ChatInbox({
               Unread
               {unreadTotal > 0 && <span className="rounded-full bg-brand-500 px-1.5 text-[10px] text-slate-950">{unreadTotal}</span>}
             </button>
+            <button
+              onClick={() => setFilter("attention")}
+              className={clsx("flex items-center gap-1 rounded-full px-3 py-1 text-xs font-medium transition", filter === "attention" ? "bg-red-500/20 text-red-300" : "text-slate-400 hover:bg-white/5")}
+            >
+              Needs you
+              {attentionTotal > 0 && <span className="rounded-full bg-red-500 px-1.5 text-[10px] text-white">{attentionTotal}</span>}
+            </button>
           </div>
         </div>
         <div className="flex-1 overflow-auto">
@@ -241,6 +251,7 @@ export default function ChatInbox({
                   </div>
                   <div className="flex items-center gap-1.5">
                     <ChannelBadge channel={c.channel} />
+                    {c.needsHuman && <span className="shrink-0 rounded bg-red-500/20 px-1.5 py-0.5 text-[10px] font-medium text-red-300">⚠ needs you</span>}
                     <p className="truncate text-sm text-slate-400">{last?.body ?? "No messages yet"}</p>
                   </div>
                 </div>
@@ -277,6 +288,12 @@ export default function ChatInbox({
             </div>
             <StatusBadge status={active.lead.status} />
           </div>
+
+          {active.needsHuman && (
+            <div className="border-b border-red-500/20 bg-red-500/10 px-6 py-2 text-xs text-red-300">
+              ⚠️ This customer may be frustrated — consider replying personally. Sending a message clears this flag.
+            </div>
+          )}
 
           <div ref={scrollRef} className="flex-1 space-y-2 overflow-auto px-6 py-6">
             {active.messages.map((m) => (

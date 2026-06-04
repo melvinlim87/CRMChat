@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
-import { generateReply, type ChatMessage } from "@/lib/ai";
+import { generateReply, REPLY_RULES, type ChatMessage } from "@/lib/ai";
 import { getKnowledgeContext } from "@/lib/knowledge";
 
 const SYSTEM = `You are a helpful, friendly sales and support assistant replying to a lead over WhatsApp on behalf of the business.
@@ -34,7 +34,7 @@ export async function POST(req: NextRequest) {
 
   const knowledge = await getKnowledgeContext();
   const system =
-    `${SYSTEM}\n\nLead name: ${conversation.lead.name}. Company: ${conversation.lead.company ?? "unknown"}.` +
+    `${SYSTEM} ${REPLY_RULES}\n\nLead name: ${conversation.lead.name}. Company: ${conversation.lead.company ?? "unknown"}.` +
     (knowledge ? `\n\nUse the following knowledge base to answer accurately. Only use it if relevant:\n${knowledge}` : "");
   const result = await generateReply(messages, system);
 

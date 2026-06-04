@@ -48,7 +48,7 @@ export async function POST(req: NextRequest) {
 
   await prisma.conversation.update({
     where: { id: conversationId },
-    data: { lastMessageAt: message.createdAt, unreadCount: 0 },
+    data: { lastMessageAt: message.createdAt, unreadCount: 0, needsHuman: false },
   });
 
   return NextResponse.json({

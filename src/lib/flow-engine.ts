@@ -9,7 +9,7 @@
 import type { Lead, Conversation } from "@prisma/client";
 import { prisma } from "./prisma";
 import { sendWhatsAppText } from "./whatsapp";
-import { generateReply, type ChatMessage } from "./ai";
+import { generateReply, REPLY_RULES, type ChatMessage } from "./ai";
 import { getKnowledgeContext } from "./knowledge";
 
 type FlowNode = { id: string; type: string; data: Record<string, any> };
@@ -158,7 +158,7 @@ async function aiReply(conversationId: string, lead: Lead, instruction: string):
   const knowledge = await getKnowledgeContext();
   const system =
     `You are a helpful assistant replying to a lead over WhatsApp on behalf of the business. ` +
-    `Lead: ${lead.name}. Reply concisely (1-3 sentences), warm and professional, no markdown.` +
+    `Lead: ${lead.name}. Reply concisely (1-3 sentences), warm and professional, no markdown. ${REPLY_RULES}` +
     (instruction ? `\n\nExtra instruction: ${instruction}` : "") +
     (knowledge ? `\n\nKnowledge base (use only if relevant):\n${knowledge}` : "");
   const result = await generateReply(history, system);

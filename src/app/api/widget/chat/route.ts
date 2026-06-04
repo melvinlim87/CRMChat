@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { generateReply, type ChatMessage } from "@/lib/ai";
+import { generateReply, REPLY_RULES, type ChatMessage } from "@/lib/ai";
 import { getKnowledgeContext } from "@/lib/knowledge";
+import { detectNegative } from "@/lib/sentiment";
+import { notifySlack } from "@/lib/slack";
 
 // Public endpoint the embeddable website widget calls. No auth — it's meant to
 // run on the customer's public site. Each browser session maps to one CRM
@@ -40,6 +42,12 @@ export async function POST(req: NextRequest) {
     data: { conversationId: conversation.id, direction: "INBOUND", body: message.trim(), status: "received" },
   });
 
+  // Flag for human attention if the message reads as frustrated/negative.
+  if (detectNegative(message)) {
+    await prisma.conversation.update({ where: { id: conversation.id }, data: { needsHuman: true } });
+    await notifySlack(`⚠️ A website visitor may need a human:\n> ${message.trim()}`);
+  }
+
   // Build history and generate a knowledge-grounded reply.
   const history: ChatMessage[] = conversation.messages.map((m) => ({
     role: m.direction === "INBOUND" ? "user" : "assistant",
@@ -50,7 +58,7 @@ export async function POST(req: NextRequest) {
   const knowledge = await getKnowledgeContext();
   const system =
     `You are the friendly AI assistant on a company's website. Answer the visitor's questions clearly and concisely (1-3 sentences), warm and helpful, no markdown. ` +
-    `If you don't know, offer to connect them with the team and politely ask for their name and email.` +
+    `If you don't know, offer to connect them with the team and politely ask for their name and email. ${REPLY_RULES}` +
     (knowledge ? `\n\nUse this knowledge base when relevant:\n${knowledge}` : "");
 
   const result = await generateReply(history, system);

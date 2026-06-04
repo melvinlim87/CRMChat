@@ -4,6 +4,7 @@ import { runInboundAutomations } from "@/lib/automations";
 import { runInboundFlows } from "@/lib/flow-engine";
 import { getWhatsAppVerifyToken } from "@/lib/whatsapp";
 import { notifySlack } from "@/lib/slack";
+import { detectNegative } from "@/lib/sentiment";
 
 // 1) Webhook verification handshake (Meta calls this once when you subscribe).
 export async function GET(req: NextRequest) {
@@ -73,6 +74,12 @@ export async function POST(req: NextRequest) {
 
           // Notify Slack (if connected) about the inbound message.
           await notifySlack(`💬 New WhatsApp message from *${profileName}* (${fromPhone}):\n> ${text}`);
+
+          // Flag for human attention on negative sentiment.
+          if (detectNegative(text)) {
+            await prisma.conversation.update({ where: { id: conversation.id }, data: { needsHuman: true } });
+            await notifySlack(`⚠️ *${profileName}* may need a human — message flagged as frustrated.`);
+          }
 
           // Apply any matching automation rules, then run AI flows.
           await runInboundAutomations({ lead, conversation, text });

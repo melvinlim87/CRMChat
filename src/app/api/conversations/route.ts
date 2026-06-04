@@ -20,6 +20,7 @@ export async function GET() {
       id: c.id,
       channel: c.channel,
       unreadCount: c.unreadCount,
+      needsHuman: c.needsHuman,
       lastMessageAt: c.lastMessageAt.toISOString(),
       lead: {
         id: c.lead.id,

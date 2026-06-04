@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
-import { generateReply, type ChatMessage } from "@/lib/ai";
+import { generateReply, REPLY_RULES, type ChatMessage } from "@/lib/ai";
 import { getKnowledgeContext } from "@/lib/knowledge";
 
 // Used by the flow editor's phone preview to generate a real AI reply,
@@ -23,7 +23,7 @@ export async function POST(req: NextRequest) {
   const knowledge = await getKnowledgeContext();
   const system =
     `You are a helpful sales/support assistant replying to a lead over WhatsApp on behalf of the business. ` +
-    `Reply concisely (1-3 short sentences), warm and professional, no markdown.` +
+    `Reply concisely (1-3 short sentences), warm and professional, no markdown. ${REPLY_RULES}` +
     (instruction ? `\n\nExtra instruction: ${instruction}` : "") +
     (knowledge ? `\n\nAnswer using this knowledge base when relevant:\n${knowledge}` : "");
 
