@@ -13,22 +13,42 @@ body {
 
 body {
   @apply text-slate-200 antialiased;
-  background-color: #0a0e1a;
+  background-color: #050507;
+  /* Faint gold glow + subtle starfield */
   background-image:
-    radial-gradient(900px 500px at 15% -10%, rgba(99, 102, 241, 0.18), transparent 60%),
-    radial-gradient(800px 500px at 100% 0%, rgba(217, 70, 239, 0.12), transparent 55%),
-    radial-gradient(700px 500px at 50% 120%, rgba(139, 92, 246, 0.1), transparent 60%);
+    radial-gradient(1100px 600px at 50% -15%, rgba(205, 161, 74, 0.12), transparent 60%),
+    radial-gradient(700px 500px at 100% 0%, rgba(205, 161, 74, 0.06), transparent 55%),
+    radial-gradient(1px 1px at 12% 18%, rgba(255, 255, 255, 0.35), transparent),
+    radial-gradient(1px 1px at 28% 62%, rgba(255, 255, 255, 0.22), transparent),
+    radial-gradient(1px 1px at 47% 28%, rgba(255, 255, 255, 0.3), transparent),
+    radial-gradient(1px 1px at 64% 74%, rgba(255, 255, 255, 0.2), transparent),
+    radial-gradient(1px 1px at 78% 38%, rgba(255, 255, 255, 0.28), transparent),
+    radial-gradient(1px 1px at 88% 66%, rgba(255, 255, 255, 0.18), transparent),
+    radial-gradient(1.5px 1.5px at 35% 85%, rgba(255, 255, 255, 0.25), transparent);
   background-attachment: fixed;
+}
+
+/* Elegant serif headings (Algo Venture vibe) */
+h1 {
+  font-family: var(--font-display), Georgia, serif;
+  letter-spacing: -0.01em;
 }
 
 /* Glassy panel helper */
 .glass {
-  background-color: rgba(14, 19, 34, 0.7);
+  background-color: rgba(12, 13, 17, 0.72);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
 }
 
-/* Unstyled form controls get a sensible dark base */
+/* Gold text accent */
+.text-gold {
+  background: linear-gradient(135deg, #f3d989 0%, #d9b15e 55%, #b2862f 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
 input,
 textarea,
 select {
@@ -39,7 +59,7 @@ textarea::placeholder {
   color: rgb(100 116 139);
 }
 select option {
-  background-color: #141a2c;
+  background-color: #14151b;
   color: #e2e8f0;
 }
 
@@ -62,7 +82,7 @@ select option {
   display: none;
 }
 .react-flow__controls-button {
-  background: #141a2c !important;
+  background: #14151b !important;
   border-color: rgba(255, 255, 255, 0.08) !important;
   color: #e2e8f0 !important;
 }

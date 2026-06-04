@@ -93,7 +93,7 @@ export default async function IntegrationsPage({
                       {s.href && (
                         <Link
                           href={s.href}
-                          className="w-full rounded-lg bg-brand-500 py-2 text-center text-sm font-semibold text-white transition hover:bg-brand-600"
+                          className="w-full rounded-lg bg-brand-500 py-2 text-center text-sm font-semibold text-slate-950 transition hover:bg-brand-600"
                         >
                           Open {s.name}
                         </Link>
@@ -103,7 +103,7 @@ export default async function IntegrationsPage({
                   ) : googleReady ? (
                     <a
                       href="/api/integrations/google/start"
-                      className="mt-4 block w-full rounded-lg bg-brand-500 py-2 text-center text-sm font-semibold text-white transition hover:bg-brand-600"
+                      className="mt-4 block w-full rounded-lg bg-brand-500 py-2 text-center text-sm font-semibold text-slate-950 transition hover:bg-brand-600"
                     >
                       Connect Google
                     </a>

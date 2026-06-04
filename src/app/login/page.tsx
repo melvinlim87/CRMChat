@@ -33,10 +33,10 @@ export default function LoginPage() {
     <div className="flex min-h-screen items-center justify-center px-4">
       <div className="w-full max-w-sm">
         <div className="mb-8 flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 via-violet-500 to-fuchsia-500 text-lg font-bold text-white shadow-glow">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-brand-300 via-brand-400 to-brand-600 text-lg font-bold text-slate-950 shadow-glow">
             C
           </div>
-          <span className="text-2xl font-semibold tracking-tight text-slate-100">CRMChat</span>
+          <span className="font-display text-2xl font-semibold tracking-tight text-slate-100">CRMChat</span>
         </div>
 
         <div className="glass rounded-2xl border border-white/10 p-7 shadow-xl shadow-black/40">
@@ -70,7 +70,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full rounded-lg bg-brand-500 py-2.5 text-sm font-semibold text-white transition hover:bg-brand-600 disabled:opacity-60"
+              className="w-full rounded-lg bg-brand-500 py-2.5 text-sm font-semibold text-slate-950 transition hover:bg-brand-600 disabled:opacity-60"
             >
               {loading ? "Signing in…" : "Sign in"}
             </button>

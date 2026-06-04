@@ -57,7 +57,7 @@ export default function IntegrationActions({
   }
 
   const brandBtn =
-    "rounded-lg bg-brand-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-brand-600 disabled:opacity-50";
+    "rounded-lg bg-brand-500 px-4 py-2 text-sm font-semibold text-slate-950 transition hover:bg-brand-600 disabled:opacity-50";
   const outlineBtn =
     "rounded-lg border border-white/10 px-4 py-2 text-sm font-medium text-slate-300 transition hover:bg-white/5";
   const field =

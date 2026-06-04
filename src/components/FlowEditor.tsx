@@ -142,7 +142,7 @@ function FlowEditorInner({ flow }: { flow: FlowData }) {
           <button
             onClick={save}
             disabled={saving}
-            className="rounded-lg bg-brand-500 px-4 py-1.5 text-sm font-semibold text-white transition hover:bg-brand-600 disabled:opacity-60"
+            className="rounded-lg bg-brand-500 px-4 py-1.5 text-sm font-semibold text-slate-950 transition hover:bg-brand-600 disabled:opacity-60"
           >
             {saving ? "Saving…" : "Save"}
           </button>

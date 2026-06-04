@@ -5,33 +5,35 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        // Violet/indigo "AI" accent
+        // Champagne / gold accent (Algo Venture style)
         brand: {
-          50: "#f5f3ff",
-          100: "#ede9fe",
-          200: "#ddd6fe",
-          300: "#c4b5fd",
-          400: "#a78bfa",
-          500: "#8b5cf6",
-          600: "#7c3aed",
-          700: "#6d28d9",
+          50: "#fbf6e9",
+          100: "#f6ebc8",
+          200: "#eed79a",
+          300: "#e7c97a",
+          400: "#d9b15e",
+          500: "#cda14a",
+          600: "#b2862f",
+          700: "#8a6622",
         },
-        // Dark surface palette
+        // Near-black luxury surfaces
         surface: {
-          DEFAULT: "#0a0e1a",
-          panel: "#0e1322",
-          raised: "#141a2c",
+          DEFAULT: "#050507",
+          panel: "#0c0d11",
+          raised: "#14151b",
           border: "rgba(255,255,255,0.08)",
         },
       },
       fontFamily: {
-        sans: ["ui-sans-serif", "system-ui", "-apple-system", "Segoe UI", "Roboto", "Helvetica", "Arial", "sans-serif"],
+        sans: ["var(--font-sans)", "ui-sans-serif", "system-ui", "-apple-system", "Segoe UI", "Roboto", "sans-serif"],
+        display: ["var(--font-display)", "Georgia", "ui-serif", "serif"],
       },
       boxShadow: {
-        glow: "0 0 0 1px rgba(139,92,246,0.25), 0 8px 30px -8px rgba(139,92,246,0.45)",
+        glow: "0 0 0 1px rgba(205,161,74,0.25), 0 10px 36px -10px rgba(205,161,74,0.45)",
       },
       backgroundImage: {
-        "ai-gradient": "linear-gradient(135deg, #6366f1 0%, #8b5cf6 45%, #d946ef 100%)",
+        "ai-gradient": "linear-gradient(135deg, #f3d989 0%, #d9b15e 50%, #b2862f 100%)",
+        gold: "linear-gradient(135deg, #f3d989 0%, #d9b15e 55%, #b2862f 100%)",
       },
     },
   },

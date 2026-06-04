@@ -25,10 +25,10 @@ export default async function DashboardPage() {
   const firstName = (session?.name || "there").split(" ")[0];
 
   const stats = [
-    { label: "Total leads", value: total, accent: "from-sky-500 to-blue-500" },
-    { label: "Open pipeline", value: openLeads, accent: "from-violet-500 to-purple-500" },
-    { label: "Unread messages", value: unread._sum.unreadCount ?? 0, accent: "from-indigo-500 via-violet-500 to-fuchsia-500" },
-    { label: "Won", value: won, accent: "from-emerald-500 to-green-500" },
+    { label: "Total leads", value: total, accent: "from-brand-300 to-brand-500" },
+    { label: "Open pipeline", value: openLeads, accent: "from-brand-200 to-brand-500" },
+    { label: "Unread messages", value: unread._sum.unreadCount ?? 0, accent: "from-brand-300 via-brand-400 to-brand-600" },
+    { label: "Won", value: won, accent: "from-brand-400 to-brand-700" },
   ];
 
   return (
@@ -74,7 +74,7 @@ export default async function DashboardPage() {
                       <p className="truncate text-sm text-slate-400">{c.messages[0]?.body ?? "No messages"}</p>
                     </div>
                     {c.unreadCount > 0 && (
-                      <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-brand-500 px-1.5 text-xs font-semibold text-white">
+                      <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-brand-500 px-1.5 text-xs font-semibold text-slate-950">
                         {c.unreadCount}
                       </span>
                     )}

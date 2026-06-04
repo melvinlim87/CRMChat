@@ -34,10 +34,10 @@ export default function Sidebar({ user }: { user: { name: string | null; email: 
   return (
     <aside className="glass flex h-screen w-60 shrink-0 flex-col border-r border-white/10">
       <div className="flex items-center gap-2.5 px-5 py-5">
-        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 via-violet-500 to-fuchsia-500 text-sm font-bold text-white shadow-sm shadow-violet-500/40">
+        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-brand-300 via-brand-400 to-brand-600 text-sm font-bold text-slate-950 shadow-sm shadow-brand-500/30">
           C
         </div>
-        <span className="text-lg font-semibold tracking-tight text-slate-100">CRMChat</span>
+        <span className="font-display text-lg font-semibold tracking-tight text-slate-100">CRMChat</span>
       </div>
 
       <nav className="flex-1 space-y-1 px-3 py-2">

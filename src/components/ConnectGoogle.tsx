@@ -19,7 +19,7 @@ export default function ConnectGoogle({
         {configured ? (
           <a
             href="/api/integrations/google/start"
-            className="mt-6 inline-flex w-full items-center justify-center rounded-lg bg-brand-500 py-2.5 text-sm font-semibold text-white transition hover:bg-brand-600"
+            className="mt-6 inline-flex w-full items-center justify-center rounded-lg bg-brand-500 py-2.5 text-sm font-semibold text-slate-950 transition hover:bg-brand-600"
           >
             Connect Google
           </a>

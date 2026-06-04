@@ -211,7 +211,7 @@ export default function ChatInbox({
                   <p className="truncate text-sm text-slate-400">{last?.body ?? "No messages yet"}</p>
                 </div>
                 {c.unreadCount > 0 && (
-                  <span className="ml-1 mt-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-brand-500 px-1.5 text-xs font-semibold text-white">
+                  <span className="ml-1 mt-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-brand-500 px-1.5 text-xs font-semibold text-slate-950">
                     {c.unreadCount}
                   </span>
                 )}
@@ -227,7 +227,7 @@ export default function ChatInbox({
       {/* Thread */}
       {active ? (
         <>
-        <div className="flex flex-1 flex-col bg-[#0a0e1a]">
+        <div className="flex flex-1 flex-col bg-[#070709]">
           <div className="flex items-center justify-between border-b border-white/10 bg-surface-panel px-6 py-3.5">
             <div className="flex items-center gap-3">
               <span className="flex h-9 w-9 items-center justify-center rounded-full bg-brand-500/20 text-sm font-semibold text-brand-300">
@@ -251,7 +251,7 @@ export default function ChatInbox({
                   className={clsx(
                     "max-w-[70%] rounded-2xl px-4 py-2 text-sm shadow-sm",
                     m.direction === "OUTBOUND"
-                      ? "rounded-br-sm bg-brand-500 text-white"
+                      ? "rounded-br-sm bg-brand-500 text-slate-950"
                       : "rounded-bl-sm bg-surface-panel text-slate-100"
                   )}
                 >
@@ -298,7 +298,7 @@ export default function ChatInbox({
               <button
                 onClick={send}
                 disabled={sending || !draft.trim()}
-                className="rounded-xl bg-brand-500 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-brand-600 disabled:opacity-50"
+                className="rounded-xl bg-brand-500 px-4 py-2.5 text-sm font-semibold text-slate-950 transition hover:bg-brand-600 disabled:opacity-50"
               >
                 Send
               </button>

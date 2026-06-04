@@ -52,7 +52,7 @@ export default function NotesPanel({ leadId }: { leadId: string }) {
         <button
           onClick={add}
           disabled={saving || !draft.trim()}
-          className="rounded-lg bg-brand-500 px-3 text-sm font-medium text-white transition hover:bg-brand-600 disabled:opacity-50"
+          className="rounded-lg bg-brand-500 px-3 text-sm font-medium text-slate-950 transition hover:bg-brand-600 disabled:opacity-50"
         >
           Add
         </button>

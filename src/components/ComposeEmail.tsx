@@ -39,7 +39,7 @@ export default function ComposeEmail() {
     <>
       <button
         onClick={() => setOpen(true)}
-        className="rounded-lg bg-brand-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-brand-600"
+        className="rounded-lg bg-brand-500 px-4 py-2 text-sm font-semibold text-slate-950 transition hover:bg-brand-600"
       >
         Compose
       </button>
@@ -87,7 +87,7 @@ export default function ComposeEmail() {
               <button
                 onClick={send}
                 disabled={sending || sent || !to.trim() || !body.trim()}
-                className="rounded-lg bg-brand-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-brand-600 disabled:opacity-50"
+                className="rounded-lg bg-brand-500 px-4 py-2 text-sm font-semibold text-slate-950 transition hover:bg-brand-600 disabled:opacity-50"
               >
                 {sent ? "Sent ✓" : sending ? "Sending…" : "Send"}
               </button>

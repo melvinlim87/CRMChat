@@ -39,7 +39,7 @@ export default async function LeadsPage({
           <OwnerFilter users={users} />
           <Link
             href="/chat"
-            className="rounded-lg bg-brand-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-brand-600"
+            className="rounded-lg bg-brand-500 px-4 py-2 text-sm font-semibold text-slate-950 transition hover:bg-brand-600"
           >
             Open inbox
           </Link>
