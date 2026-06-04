@@ -27,7 +27,7 @@ export default async function PipelinePage() {
       <header className="flex items-center justify-between border-b border-white/10 bg-surface-panel px-8 py-5">
         <div>
           <h1 className="text-xl font-semibold text-slate-100">Pipeline</h1>
-          <p className="text-sm text-slate-400">Drag leads between stages to update their status.</p>
+          <p className="text-sm text-slate-400">Drag students between stages to update their status.</p>
         </div>
         <NewLead users={users} />
       </header>

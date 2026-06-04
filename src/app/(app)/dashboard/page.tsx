@@ -56,7 +56,7 @@ export default async function DashboardPage() {
   const newLast7 = days.slice(7).reduce((sum, d) => sum + d.value, 0);
 
   const stats = [
-    { label: "Total leads", value: total, accent: "from-brand-300 to-brand-500" },
+    { label: "Total students", value: total, accent: "from-brand-300 to-brand-500" },
     { label: "New (7 days)", value: newLast7, accent: "from-brand-200 to-brand-400" },
     { label: "Unread messages", value: unread._sum.unreadCount ?? 0, accent: "from-brand-300 via-brand-400 to-brand-600" },
     { label: "Won", value: won, accent: "from-brand-400 to-brand-700" },
@@ -84,7 +84,7 @@ export default async function DashboardPage() {
         {/* Charts */}
         <div className="grid gap-6 lg:grid-cols-[1fr_360px]">
           <div className="rounded-2xl border border-white/10 bg-surface-panel p-6">
-            <h2 className="mb-4 font-semibold text-slate-100">New leads · last 14 days</h2>
+            <h2 className="mb-4 font-semibold text-slate-100">New students · last 14 days</h2>
             <BarChart data={days} />
           </div>
           <div className="rounded-2xl border border-white/10 bg-surface-panel p-6">

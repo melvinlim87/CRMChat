@@ -40,14 +40,14 @@ export default function NewLead({ users }: { users: User[] }) {
   return (
     <>
       <button onClick={() => setOpen(true)} className="rounded-lg bg-brand-500 px-4 py-2 text-sm font-semibold text-slate-950 transition hover:bg-brand-600">
-        + New lead
+        + New student
       </button>
 
       {open && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
           <div className="glass w-full max-w-md rounded-2xl border border-white/10 p-6 shadow-xl">
             <div className="mb-4 flex items-center justify-between">
-              <h3 className="text-lg font-semibold text-slate-100">Add a contact to the pipeline</h3>
+              <h3 className="text-lg font-semibold text-slate-100">Add a student to the pipeline</h3>
               <button onClick={() => setOpen(false)} className="text-slate-500 hover:text-slate-300">✕</button>
             </div>
             <div className="space-y-3">
@@ -71,7 +71,7 @@ export default function NewLead({ users }: { users: User[] }) {
             <div className="mt-5 flex justify-end gap-2">
               <button onClick={() => setOpen(false)} className="rounded-lg px-4 py-2 text-sm text-slate-300 hover:bg-white/5">Cancel</button>
               <button onClick={save} disabled={saving || !form.name.trim()} className="rounded-lg bg-brand-500 px-4 py-2 text-sm font-semibold text-slate-950 transition hover:bg-brand-600 disabled:opacity-50">
-                {saving ? "Adding…" : "Add contact"}
+                {saving ? "Adding…" : "Add student"}
               </button>
             </div>
           </div>

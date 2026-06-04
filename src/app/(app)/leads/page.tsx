@@ -4,6 +4,7 @@ import StatusBadge from "@/components/StatusBadge";
 import OwnerSelect from "@/components/OwnerSelect";
 import OwnerFilter from "@/components/OwnerFilter";
 import NewLead from "@/components/NewLead";
+import BulkImport from "@/components/BulkImport";
 import { initials, timeAgo } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
@@ -33,11 +34,12 @@ export default async function LeadsPage({
     <div className="flex h-full flex-col">
       <header className="flex items-center justify-between border-b border-white/10 bg-surface-panel px-8 py-5">
         <div>
-          <h1 className="text-xl font-semibold text-slate-100">Leads</h1>
-          <p className="text-sm text-slate-400">{leads.length} contacts in your pipeline</p>
+          <h1 className="text-xl font-semibold text-slate-100">Students</h1>
+          <p className="text-sm text-slate-400">{leads.length} students in your pipeline</p>
         </div>
         <div className="flex items-center gap-3">
           <OwnerFilter users={users} />
+          <BulkImport />
           <NewLead users={users} />
           <Link
             href="/chat"
@@ -107,7 +109,7 @@ export default async function LeadsPage({
               {leads.length === 0 && (
                 <tr>
                   <td colSpan={6} className="px-5 py-16 text-center text-slate-500">
-                    No leads found.
+                    No students found.
                   </td>
                 </tr>
               )}
