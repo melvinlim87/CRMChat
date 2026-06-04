@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Logo from "@/components/Logo";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -32,11 +33,8 @@ export default function LoginPage() {
   return (
     <div className="flex min-h-screen items-center justify-center px-4">
       <div className="w-full max-w-sm">
-        <div className="mb-8 flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-brand-300 via-brand-400 to-brand-600 text-lg font-bold text-slate-950 shadow-glow">
-            C
-          </div>
-          <span className="font-display text-2xl font-semibold tracking-tight text-slate-100">CRMChat</span>
+        <div className="mb-8 flex items-center">
+          <Logo large />
         </div>
 
         <div className="glass rounded-2xl border border-white/10 p-7 shadow-xl shadow-black/40">

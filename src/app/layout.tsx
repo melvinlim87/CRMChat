@@ -11,7 +11,7 @@ const playfair = Playfair_Display({
 });
 
 export const metadata: Metadata = {
-  title: "CRMChat — AI WhatsApp CRM",
+  title: "ALGO — AI CRM",
   description: "A chat-based CRM that connects WhatsApp Business and keeps all your leads in one inbox.",
 };
 
