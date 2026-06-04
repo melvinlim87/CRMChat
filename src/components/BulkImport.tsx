@@ -3,7 +3,7 @@
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 
-type Row = { name: string; phone?: string; email?: string; company?: string; status?: string };
+type Row = { name: string; phone?: string; email?: string; company?: string; status?: string; tags?: string; notes?: string };
 
 // Minimal CSV parser (handles quoted fields). Columns: name, phone, email,
 // company, status — by header if present, otherwise by position.
@@ -27,7 +27,7 @@ function parseCsv(text: string): Row[] {
     return out.map((s) => s.trim());
   };
 
-  const cols = ["name", "phone", "email", "company", "status"];
+  const cols = ["name", "phone", "email", "company", "status", "tags", "notes"];
   const first = splitLine(lines[0]).map((h) => h.toLowerCase());
   const hasHeader = first.some((h) => cols.includes(h));
   const headerMap = hasHeader ? first : cols;
@@ -96,7 +96,7 @@ export default function BulkImport() {
               <button onClick={() => setOpen(false)} className="text-slate-500 hover:text-slate-300">✕</button>
             </div>
             <p className="text-xs text-slate-400">
-              Upload a CSV or paste rows. Columns: <code className="rounded bg-black/30 px-1">name, phone, email, company, status</code> (a header row is optional).
+              Upload a CSV or paste rows. Columns: <code className="rounded bg-black/30 px-1">name, phone, email, company, status, tags, notes</code> (header optional). Separate multiple tags with <code className="rounded bg-black/30 px-1">;</code>.
             </p>
 
             <input ref={fileRef} type="file" accept=".csv,text/csv" className="hidden" onChange={(e) => onFile(e.target.files?.[0])} />
@@ -108,7 +108,7 @@ export default function BulkImport() {
               value={text}
               onChange={(e) => setText(e.target.value)}
               rows={7}
-              placeholder={"name, phone, email, company, status\nJohn Tan, 6591234567, john@x.com, Acme, NEW\nMary Lee, 6598765432, mary@y.com, , CONTACTED"}
+              placeholder={"name, phone, email, company, status, tags, notes\nJohn Tan, 6591234567, john@x.com, Acme, NEW, vip;forex, Met at seminar\nMary Lee, 6598765432, mary@y.com, , CONTACTED, beginner,"}
               className={`${field} mt-3 resize-none font-mono text-xs`}
             />
 

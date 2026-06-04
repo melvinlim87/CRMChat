@@ -39,6 +39,12 @@ export default async function LeadsPage({
         </div>
         <div className="flex items-center gap-3">
           <OwnerFilter users={users} />
+          <a
+            href="/api/leads/export"
+            className="rounded-lg border border-white/10 px-4 py-2 text-sm font-medium text-slate-200 transition hover:bg-white/5"
+          >
+            ⬇ Export
+          </a>
           <BulkImport />
           <NewLead users={users} />
           <Link
