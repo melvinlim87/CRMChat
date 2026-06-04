@@ -25,9 +25,11 @@ export async function GET() {
         id: c.lead.id,
         name: c.lead.name,
         phone: c.lead.phone,
+        email: c.lead.email,
         company: c.lead.company,
         status: c.lead.status,
         tags: c.lead.tags,
+        ownerId: c.lead.ownerId,
       },
       messages: c.messages.map((m) => ({
         id: m.id,

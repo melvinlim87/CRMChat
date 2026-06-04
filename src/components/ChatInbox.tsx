@@ -25,6 +25,7 @@ export type ConversationDTO = {
     id: string;
     name: string;
     phone: string | null;
+    email: string | null;
     company: string | null;
     status: LeadStatus;
     tags: string[];
@@ -51,6 +52,9 @@ export default function ChatInbox({
   const [aiLoading, setAiLoading] = useState(false);
   const [aiError, setAiError] = useState<string | null>(null);
   const [search, setSearch] = useState("");
+  const [filter, setFilter] = useState<"all" | "unread">("all");
+  const [quickReplies, setQuickReplies] = useState<{ id: string; title: string; body: string }[]>([]);
+  const [showQuick, setShowQuick] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const active = useMemo(
@@ -60,14 +64,18 @@ export default function ChatInbox({
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
-    if (!q) return conversations;
-    return conversations.filter(
-      (c) =>
+    return conversations.filter((c) => {
+      if (filter === "unread" && c.unreadCount === 0) return false;
+      if (!q) return true;
+      return (
         c.lead.name.toLowerCase().includes(q) ||
         (c.lead.company || "").toLowerCase().includes(q) ||
         (c.lead.phone || "").includes(q)
-    );
-  }, [conversations, search]);
+      );
+    });
+  }, [conversations, search, filter]);
+
+  const unreadTotal = useMemo(() => conversations.filter((c) => c.unreadCount > 0).length, [conversations]);
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight });
@@ -87,6 +95,14 @@ export default function ChatInbox({
       }
     }, 5000);
     return () => clearInterval(interval);
+  }, []);
+
+  // Load saved quick replies once.
+  useEffect(() => {
+    fetch("/api/canned-responses")
+      .then((r) => r.json())
+      .then((d) => setQuickReplies(d.responses ?? []))
+      .catch(() => {});
   }, []);
 
   // Mark the open conversation as read.
@@ -185,6 +201,21 @@ export default function ChatInbox({
             placeholder="Search conversations"
             className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm outline-none focus:border-brand-500 focus:bg-surface-panel"
           />
+          <div className="mt-3 flex gap-1.5">
+            <button
+              onClick={() => setFilter("all")}
+              className={clsx("rounded-full px-3 py-1 text-xs font-medium transition", filter === "all" ? "bg-brand-500/20 text-brand-300" : "text-slate-400 hover:bg-white/5")}
+            >
+              All
+            </button>
+            <button
+              onClick={() => setFilter("unread")}
+              className={clsx("flex items-center gap-1 rounded-full px-3 py-1 text-xs font-medium transition", filter === "unread" ? "bg-brand-500/20 text-brand-300" : "text-slate-400 hover:bg-white/5")}
+            >
+              Unread
+              {unreadTotal > 0 && <span className="rounded-full bg-brand-500 px-1.5 text-[10px] text-slate-950">{unreadTotal}</span>}
+            </button>
+          </div>
         </div>
         <div className="flex-1 overflow-auto">
           {filtered.map((c) => {
@@ -208,7 +239,10 @@ export default function ChatInbox({
                       {timeAgo(c.lastMessageAt)}
                     </span>
                   </div>
-                  <p className="truncate text-sm text-slate-400">{last?.body ?? "No messages yet"}</p>
+                  <div className="flex items-center gap-1.5">
+                    <ChannelBadge channel={c.channel} />
+                    <p className="truncate text-sm text-slate-400">{last?.body ?? "No messages yet"}</p>
+                  </div>
                 </div>
                 {c.unreadCount > 0 && (
                   <span className="ml-1 mt-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-brand-500 px-1.5 text-xs font-semibold text-slate-950">
@@ -235,7 +269,10 @@ export default function ChatInbox({
               </span>
               <div>
                 <p className="font-medium text-slate-100">{active.lead.name}</p>
-                <p className="text-xs text-slate-500">{active.lead.phone || "WhatsApp"}</p>
+                <div className="flex items-center gap-1.5">
+                  <ChannelBadge channel={active.channel} />
+                  <p className="text-xs text-slate-500">{active.lead.phone || active.lead.email || ""}</p>
+                </div>
               </div>
             </div>
             <StatusBadge status={active.lead.status} />
@@ -271,9 +308,38 @@ export default function ChatInbox({
             ))}
           </div>
 
-          <div className="border-t border-white/10 bg-surface-panel px-4 py-3">
+          <div className="relative border-t border-white/10 bg-surface-panel px-4 py-3">
             {aiError && <p className="mb-2 text-xs text-red-400">{aiError}</p>}
+
+            {showQuick && (
+              <div className="absolute bottom-full left-4 mb-2 max-h-64 w-80 overflow-auto rounded-xl border border-white/10 bg-surface-raised p-1.5 shadow-xl">
+                {quickReplies.length === 0 && (
+                  <p className="px-3 py-3 text-xs text-slate-500">No quick replies yet. Add them in Settings.</p>
+                )}
+                {quickReplies.map((q) => (
+                  <button
+                    key={q.id}
+                    onClick={() => {
+                      setDraft((d) => (d ? d + " " + q.body : q.body));
+                      setShowQuick(false);
+                    }}
+                    className="block w-full rounded-lg px-3 py-2 text-left transition hover:bg-white/5"
+                  >
+                    <p className="text-sm font-medium text-slate-200">{q.title}</p>
+                    <p className="truncate text-xs text-slate-500">{q.body}</p>
+                  </button>
+                ))}
+              </div>
+            )}
+
             <div className="flex items-end gap-2">
+              <button
+                onClick={() => setShowQuick((v) => !v)}
+                title="Quick replies"
+                className="rounded-xl border border-white/10 bg-white/5 px-3 py-2.5 text-sm font-medium text-slate-300 transition hover:bg-white/10"
+              >
+                💬
+              </button>
               <button
                 onClick={aiDraft}
                 disabled={aiLoading}
@@ -330,6 +396,16 @@ function mergeConversations(prev: ConversationDTO[], server: ConversationDTO[]):
     );
     return { ...sc, messages: [...sc.messages, ...pending] };
   });
+}
+
+function ChannelBadge({ channel }: { channel: string }) {
+  const map: Record<string, { label: string; cls: string }> = {
+    whatsapp: { label: "WhatsApp", cls: "bg-green-500/15 text-green-300" },
+    website: { label: "Website", cls: "bg-brand-500/20 text-brand-300" },
+    instagram: { label: "Instagram", cls: "bg-pink-500/15 text-pink-300" },
+  };
+  const c = map[channel] ?? { label: channel || "Chat", cls: "bg-white/10 text-slate-300" };
+  return <span className={`shrink-0 rounded px-1.5 py-0.5 text-[10px] font-medium ${c.cls}`}>{c.label}</span>;
 }
 
 function ContactPanel({ lead, users }: { lead: ConversationDTO["lead"]; users: TeamUser[] }) {

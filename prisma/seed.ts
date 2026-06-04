@@ -178,6 +178,17 @@ async function main() {
     });
   }
 
+  // Example quick replies for the chat composer.
+  if ((await prisma.cannedResponse.count()) === 0) {
+    await prisma.cannedResponse.createMany({
+      data: [
+        { title: "Greeting", body: "Hi there! Thanks for reaching out 👋 How can we help you today?" },
+        { title: "Pricing", body: "Our team plan is $49/mo for 5 users. Happy to walk you through it!" },
+        { title: "Book a demo", body: "Would you like to book a quick demo? Here's my calendar link: " },
+      ],
+    });
+  }
+
   console.log("Seed complete. Login with demo@crmchat.app / password123");
 }
 

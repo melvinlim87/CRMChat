@@ -28,6 +28,7 @@ export default async function ChatPage({
       id: c.lead.id,
       name: c.lead.name,
       phone: c.lead.phone,
+      email: c.lead.email,
       company: c.lead.company,
       status: c.lead.status,
       tags: c.lead.tags,

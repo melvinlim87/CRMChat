@@ -115,6 +115,14 @@ model Setting {
   updatedAt DateTime @updatedAt
 }
 
+// Saved canned responses / quick replies for the chat composer.
+model CannedResponse {
+  id        String   @id @default(cuid())
+  title     String
+  body      String
+  createdAt DateTime @default(now())
+}
+
 // A published/editable marketing page built in the drag-and-drop site builder.
 model Page {
   id        String   @id @default(cuid())
