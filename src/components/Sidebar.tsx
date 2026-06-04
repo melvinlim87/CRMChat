@@ -15,6 +15,7 @@ const NAV = [
   { href: "/knowledge", label: "Knowledge", icon: BookIcon },
   { href: "/automations", label: "Automations", icon: BoltIcon },
   { href: "/integrations", label: "Integrations", icon: PlugIcon },
+  { href: "/go-live", label: "Go Live", icon: RocketIcon },
   { href: "/settings", label: "Settings", icon: GearIcon },
 ];
 
@@ -185,6 +186,16 @@ function FlowIcon({ className }: { className?: string }) {
       <rect x="15" y="8" width="6" height="5" rx="1.5" />
       <rect x="3" y="16" width="6" height="5" rx="1.5" />
       <path d="M9 5.5h3a2 2 0 0 1 2 2v3M9 18.5h3a2 2 0 0 0 2-2v-3" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function RocketIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M12 15l-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
 }
