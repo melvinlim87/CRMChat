@@ -4,7 +4,13 @@ import { useEffect, useRef, useState } from "react";
 
 type Msg = { from: "bot" | "user"; text: string };
 
-export default function WidgetChat({ config }: { config: { title: string; welcome: string; color: string } }) {
+export default function WidgetChat({
+  config,
+  widgetKey = "public",
+}: {
+  config: { title: string; welcome: string; color: string };
+  widgetKey?: string;
+}) {
   const [messages, setMessages] = useState<Msg[]>([{ from: "bot", text: config.welcome }]);
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
@@ -12,13 +18,14 @@ export default function WidgetChat({ config }: { config: { title: string; welcom
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    let sid = localStorage.getItem("crmchat_widget_session");
+    const storeKey = `crmchat_widget_session_${widgetKey}`;
+    let sid = localStorage.getItem(storeKey);
     if (!sid) {
       sid = (crypto.randomUUID?.() ?? `s-${Date.now()}-${Math.random()}`);
-      localStorage.setItem("crmchat_widget_session", sid);
+      localStorage.setItem(storeKey, sid);
     }
     setSessionId(sid);
-  }, []);
+  }, [widgetKey]);
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight });
@@ -34,7 +41,7 @@ export default function WidgetChat({ config }: { config: { title: string; welcom
       const res = await fetch("/api/widget/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ sessionId, message: text }),
+        body: JSON.stringify({ sessionId, message: text, widget: widgetKey }),
       });
       const d = await res.json();
       setMessages((m) => [...m, { from: "bot", text: d.reply || "Thanks! We'll be in touch." }]);

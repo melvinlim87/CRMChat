@@ -5,6 +5,7 @@ import { getKnowledgeContext } from "@/lib/knowledge";
 import { detectNegative } from "@/lib/sentiment";
 import { notifySlack } from "@/lib/slack";
 import { runAutomations } from "@/lib/automation-engine";
+import { getWidget } from "@/lib/widget";
 
 // Public endpoint the embeddable website widget calls. No auth — it's meant to
 // run on the customer's public site. Each browser session maps to one CRM
@@ -12,10 +13,13 @@ import { runAutomations } from "@/lib/automation-engine";
 export const runtime = "nodejs";
 
 export async function POST(req: NextRequest) {
-  const { sessionId, message, name, email } = await req.json().catch(() => ({}));
+  const { sessionId, message, name, email, widget: widgetKey } = await req.json().catch(() => ({}));
   if (!sessionId || !message?.trim()) {
     return NextResponse.json({ error: "sessionId and message are required" }, { status: 400 });
   }
+
+  const widget = await getWidget(widgetKey || "public");
+  const leadTags = Array.from(new Set([widget.tag || "widget", "widget"]));
 
   // Find or create the conversation for this widget session.
   let conversation = await prisma.conversation.findUnique({
@@ -25,7 +29,7 @@ export async function POST(req: NextRequest) {
 
   if (!conversation) {
     const lead = await prisma.lead.create({
-      data: { name: name?.trim() || "Website Visitor", email: email?.trim() || null, source: "widget", status: "NEW", tags: ["widget"] },
+      data: { name: name?.trim() || "Website Visitor", email: email?.trim() || null, source: `widget:${widget.key}`, status: "NEW", tags: leadTags },
     });
     conversation = await prisma.conversation.create({
       data: { leadId: lead.id, channel: "widget", sessionId },
@@ -60,6 +64,7 @@ export async function POST(req: NextRequest) {
   const system =
     `You are the friendly AI assistant on a company's website. Answer the visitor's questions clearly and concisely (1-3 sentences), warm and helpful, no markdown. ` +
     `If you don't know, offer to connect them with the team and politely ask for their name and email. ${REPLY_RULES}` +
+    (widget.instruction ? `\n\n${widget.instruction}` : "") +
     (knowledge ? `\n\nUse this knowledge base when relevant:\n${knowledge}` : "");
 
   const result = await generateReply(history, system);

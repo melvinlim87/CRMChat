@@ -138,6 +138,20 @@ model Document {
   createdAt DateTime @default(now())
 }
 
+// An embeddable chat widget (e.g. "public" for leads, "students" for support).
+model Widget {
+  id          String   @id @default(cuid())
+  key         String   @unique // slug used in the embed snippet
+  name        String
+  title       String
+  welcome     String
+  color       String   @default("#cda14a")
+  instruction String? // extra AI persona/system instruction
+  tag         String? // tag applied to leads from this widget
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
 // A published/editable marketing page built in the drag-and-drop site builder.
 model Page {
   id        String   @id @default(cuid())

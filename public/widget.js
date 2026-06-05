@@ -10,6 +10,7 @@
   if (!cs) return;
   var origin = new URL(cs.src).origin;
   var color = cs.getAttribute("data-color") || "#cda14a";
+  var widgetKey = cs.getAttribute("data-widget") || "public";
 
   if (window.__crmchatWidgetLoaded) return;
   window.__crmchatWidgetLoaded = true;
@@ -27,7 +28,7 @@
 
   // Chat panel iframe
   var frame = document.createElement("iframe");
-  frame.src = origin + "/widget";
+  frame.src = origin + "/widget?w=" + encodeURIComponent(widgetKey);
   frame.title = "Chat";
   frame.style.cssText =
     "position:fixed;bottom:88px;right:20px;width:380px;max-width:calc(100vw - 32px);height:560px;" +
