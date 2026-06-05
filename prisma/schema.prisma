@@ -138,6 +138,14 @@ model Document {
   createdAt DateTime @default(now())
 }
 
+// Uploaded image assets used in the website builder (served via /api/assets/[id]).
+model Asset {
+  id        String   @id @default(cuid())
+  mimeType  String
+  data      Bytes
+  createdAt DateTime @default(now())
+}
+
 // An embeddable chat widget (e.g. "public" for leads, "students" for support).
 model Widget {
   id          String   @id @default(cuid())

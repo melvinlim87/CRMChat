@@ -291,12 +291,7 @@ function EditableBlock({ block, onChange, childOps }: { block: Block; onChange: 
         </div>
       );
     case "image":
-      return (
-        <div className={`flex px-6 py-3 ${flexAlign(d.align)}`}>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={d.src} alt={d.alt || ""} className="max-w-full rounded-xl border border-white/10" />
-        </div>
-      );
+      return <ImageBlockEditor d={d} onChange={onChange} />;
     case "form":
       return (
         <div className="px-6 py-8">
@@ -350,6 +345,81 @@ function Editable({
 
 function escapeHtml(s: string): string {
   return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
+function ImageBlockEditor({ d, onChange }: { d: Record<string, any>; onChange: (patch: Record<string, unknown>) => void }) {
+  const [open, setOpen] = useState(false);
+  const [url, setUrl] = useState(d.src || "");
+  const [uploading, setUploading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  async function upload(file?: File) {
+    if (!file) return;
+    setUploading(true);
+    setError(null);
+    const fd = new FormData();
+    fd.append("file", file);
+    const res = await fetch("/api/upload", { method: "POST", body: fd });
+    setUploading(false);
+    if (res.ok) {
+      const { url: u } = await res.json();
+      setUrl(u);
+      onChange({ src: u });
+      setOpen(false);
+    } else {
+      const e = await res.json().catch(() => ({}));
+      setError(e.error || "Upload failed");
+    }
+  }
+
+  return (
+    <div className={`group/img relative flex px-6 py-3 ${flexAlign(d.align)}`}>
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src={d.src} alt={d.alt || ""} className="max-w-full rounded-xl border border-white/10" />
+      <button
+        onClick={(e) => { e.stopPropagation(); setUrl(d.src || ""); setOpen(true); }}
+        className="absolute right-8 top-5 rounded-lg bg-black/60 px-2.5 py-1 text-xs font-medium text-white opacity-0 transition group-hover/img:opacity-100"
+      >
+        ✎ Edit image
+      </button>
+
+      {open && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={(e) => e.stopPropagation()}>
+          <div className="glass w-full max-w-md rounded-2xl border border-white/10 p-6 shadow-xl">
+            <div className="mb-3 flex items-center justify-between">
+              <h3 className="text-lg font-semibold text-slate-100">Image</h3>
+              <button onClick={() => setOpen(false)} className="text-slate-500 hover:text-slate-300">✕</button>
+            </div>
+            <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={(e) => upload(e.target.files?.[0])} />
+            <button
+              onClick={() => fileRef.current?.click()}
+              disabled={uploading}
+              className="w-full rounded-lg bg-brand-500 px-4 py-2.5 text-sm font-semibold text-slate-950 transition hover:bg-brand-600 disabled:opacity-60"
+            >
+              {uploading ? "Uploading…" : "⬆ Upload from computer"}
+            </button>
+            <div className="my-3 flex items-center gap-3 text-xs text-slate-500">
+              <span className="h-px flex-1 bg-white/10" /> or paste a URL <span className="h-px flex-1 bg-white/10" />
+            </div>
+            <input
+              value={url}
+              onChange={(e) => setUrl(e.target.value)}
+              placeholder="https://…/image.jpg"
+              className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-slate-100 outline-none focus:border-brand-500"
+            />
+            {error && <p className="mt-2 text-sm text-red-400">{error}</p>}
+            <div className="mt-4 flex justify-end gap-2">
+              <button onClick={() => setOpen(false)} className="rounded-lg px-4 py-2 text-sm text-slate-300 hover:bg-white/5">Cancel</button>
+              <button onClick={() => { onChange({ src: url.trim() }); setOpen(false); }} className="rounded-lg bg-brand-500 px-4 py-2 text-sm font-semibold text-slate-950 transition hover:bg-brand-600">
+                Use image
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
 }
 
 function Tbtn({ children, title, onClick }: { children: React.ReactNode; title: string; onClick: () => void }) {
