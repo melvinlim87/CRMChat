@@ -1,4 +1,4 @@
-import { type Block, alignClass, flexAlign } from "@/lib/blocks";
+import { type Block, alignClass, flexAlign, embedUrl } from "@/lib/blocks";
 import PublicForm from "./PublicForm";
 
 // Read-only render of a single block — used by the public published page.
@@ -7,6 +7,34 @@ export default function BlockView({ block, slug }: { block: Block; slug: string 
   switch (block.type) {
     case "form":
       return <PublicForm slug={slug} data={d} />;
+    case "columns": {
+      const cols: Block[][] = Array.isArray(d.columns) ? d.columns : [];
+      const count = Number(d.count) || cols.length || 2;
+      return (
+        <div className="px-6 py-4">
+          <div className={`grid gap-6 ${count === 3 ? "sm:grid-cols-3" : "sm:grid-cols-2"}`}>
+            {cols.map((col, i) => (
+              <div key={i}>
+                {col.map((child) => (
+                  <BlockView key={child.id} block={child} slug={slug} />
+                ))}
+              </div>
+            ))}
+          </div>
+        </div>
+      );
+    }
+    case "video": {
+      const src = embedUrl(d.url);
+      if (!src) return null;
+      return (
+        <div className="px-6 py-4">
+          <div className="mx-auto aspect-video w-full max-w-3xl overflow-hidden rounded-xl border border-white/10">
+            <iframe src={src} className="h-full w-full" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen title="Video" />
+          </div>
+        </div>
+      );
+    }
     case "hero":
       return (
         <section className={`px-6 py-20 ${alignClass(d.align)}`}>

@@ -3,9 +3,17 @@
 import { useRef, useState } from "react";
 import Link from "next/link";
 import clsx from "clsx";
-import { type Block, type BlockType, WIDGETS, newBlock, alignClass, flexAlign } from "@/lib/blocks";
+import { type Block, type BlockType, WIDGETS, COLUMN_WIDGETS, newBlock, alignClass, flexAlign, embedUrl } from "@/lib/blocks";
 
 type PageDTO = { id: string; title: string; slug: string; published: boolean; blocks: Block[] };
+
+type ChildOps = {
+  add: (colIndex: number, type: BlockType) => void;
+  update: (childId: string, patch: Record<string, unknown>) => void;
+  remove: (childId: string) => void;
+  move: (childId: string, dir: "up" | "down" | "left" | "right") => void;
+  setCount: (count: number) => void;
+};
 
 export default function SiteBuilder({ page }: { page: PageDTO }) {
   const [blocks, setBlocks] = useState<Block[]>(page.blocks?.length ? page.blocks : []);
@@ -40,6 +48,53 @@ export default function SiteBuilder({ page }: { page: PageDTO }) {
       return next;
     });
     dragIndex.current = index;
+  }
+
+  // --- Column child operations (nested blocks inside a "columns" block) ---
+  function mutateColumns(colId: string, fn: (cols: Block[][]) => Block[][], extra?: Record<string, unknown>) {
+    setBlocks((prev) =>
+      prev.map((b) =>
+        b.id === colId ? { ...b, data: { ...b.data, columns: fn((b.data.columns as Block[][]) ?? []), ...(extra ?? {}) } } : b
+      )
+    );
+  }
+  function makeChildOps(colId: string): ChildOps {
+    return {
+      add: (ci, type) => mutateColumns(colId, (cols) => cols.map((c, i) => (i === ci ? [...c, newBlock(type)] : c))),
+      update: (childId, patch) =>
+        mutateColumns(colId, (cols) => cols.map((c) => c.map((ch) => (ch.id === childId ? { ...ch, data: { ...ch.data, ...patch } } : ch)))),
+      remove: (childId) => mutateColumns(colId, (cols) => cols.map((c) => c.filter((ch) => ch.id !== childId))),
+      move: (childId, dir) =>
+        mutateColumns(colId, (cols) => {
+          let ci = -1, idx = -1;
+          cols.forEach((c, i) => { const j = c.findIndex((ch) => ch.id === childId); if (j >= 0) { ci = i; idx = j; } });
+          if (ci < 0) return cols;
+          const next = cols.map((c) => [...c]);
+          const [item] = next[ci].splice(idx, 1);
+          if (dir === "up") next[ci].splice(Math.max(0, idx - 1), 0, item);
+          else if (dir === "down") next[ci].splice(idx + 1, 0, item);
+          else if (dir === "left" && ci > 0) next[ci - 1].push(item);
+          else if (dir === "right" && ci < next.length - 1) next[ci + 1].push(item);
+          else next[ci].splice(idx, 0, item);
+          return next;
+        }),
+      setCount: (count) =>
+        mutateColumns(
+          colId,
+          (cols) => {
+            const next = cols.map((c) => [...c]);
+            if (count > next.length) while (next.length < count) next.push([]);
+            else if (count < next.length) {
+              const extra = next.slice(count).flat();
+              const kept = next.slice(0, count);
+              kept[count - 1] = [...kept[count - 1], ...extra];
+              return kept;
+            }
+            return next;
+          },
+          { count }
+        ),
+    };
   }
 
   async function save(nextPublished = published) {
@@ -136,7 +191,7 @@ export default function SiteBuilder({ page }: { page: PageDTO }) {
                 >
                   ⠿
                 </button>
-                <EditableBlock block={b} onChange={(patch) => updateData(b.id, patch)} />
+                <EditableBlock block={b} onChange={(patch) => updateData(b.id, patch)} childOps={b.type === "columns" ? makeChildOps(b.id) : undefined} />
               </div>
             ))}
           </div>
@@ -157,9 +212,60 @@ export default function SiteBuilder({ page }: { page: PageDTO }) {
 
 /* ----------------------------- Editable block ----------------------------- */
 
-function EditableBlock({ block, onChange }: { block: Block; onChange: (patch: Record<string, unknown>) => void }) {
+function EditableBlock({ block, onChange, childOps }: { block: Block; onChange: (patch: Record<string, unknown>) => void; childOps?: ChildOps }) {
   const d = block.data || {};
   switch (block.type) {
+    case "video": {
+      const src = embedUrl(d.url);
+      return (
+        <div className="px-6 py-4">
+          {src ? (
+            <div className="mx-auto aspect-video w-full max-w-2xl overflow-hidden rounded-xl border border-white/10">
+              <iframe src={src} className="h-full w-full" title="Video" allowFullScreen />
+            </div>
+          ) : (
+            <div className="mx-auto flex aspect-video max-w-2xl items-center justify-center rounded-xl border border-dashed border-white/15 text-sm text-slate-500">
+              ▶ Add a video URL in settings →
+            </div>
+          )}
+        </div>
+      );
+    }
+    case "columns": {
+      const cols: Block[][] = Array.isArray(d.columns) ? d.columns : [];
+      const count = Number(d.count) || cols.length || 2;
+      return (
+        <div className="px-4 py-4">
+          <div className={`grid gap-3 ${count === 3 ? "grid-cols-3" : "grid-cols-2"}`}>
+            {cols.map((col, ci) => (
+              <div key={ci} className="rounded-lg border border-dashed border-white/10 p-1.5">
+                {col.map((child) => (
+                  <div key={child.id} className="group/c relative rounded hover:bg-white/5">
+                    <div className="absolute right-1 top-1 z-10 flex gap-0.5 rounded bg-black/50 p-0.5 opacity-0 transition group-hover/c:opacity-100">
+                      <Tbtn title="Move left" onClick={() => childOps?.move(child.id, "left")}>◀</Tbtn>
+                      <Tbtn title="Up" onClick={() => childOps?.move(child.id, "up")}>▲</Tbtn>
+                      <Tbtn title="Down" onClick={() => childOps?.move(child.id, "down")}>▼</Tbtn>
+                      <Tbtn title="Move right" onClick={() => childOps?.move(child.id, "right")}>▶</Tbtn>
+                      <Tbtn title="Delete" onClick={() => childOps?.remove(child.id)}>✕</Tbtn>
+                    </div>
+                    <EditableBlock block={child} onChange={(patch) => childOps?.update(child.id, patch)} />
+                  </div>
+                ))}
+                <select
+                  value=""
+                  onClick={(e) => e.stopPropagation()}
+                  onChange={(e) => { if (e.target.value) childOps?.add(ci, e.target.value as BlockType); e.currentTarget.value = ""; }}
+                  className="nodrag mt-1 w-full rounded-md border border-white/10 bg-white/5 px-2 py-1 text-xs text-slate-400 outline-none"
+                >
+                  <option value="">+ Add element…</option>
+                  {COLUMN_WIDGETS.map((w) => <option key={w.type} value={w.type}>{w.label}</option>)}
+                </select>
+              </div>
+            ))}
+          </div>
+        </div>
+      );
+    }
     case "hero":
       return (
         <section className={`px-6 py-16 ${alignClass(d.align)}`}>
@@ -246,6 +352,14 @@ function escapeHtml(s: string): string {
   return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
 
+function Tbtn({ children, title, onClick }: { children: React.ReactNode; title: string; onClick: () => void }) {
+  return (
+    <button title={title} onClick={(e) => { e.stopPropagation(); onClick(); }} className="rounded px-1 text-[10px] text-slate-300 hover:bg-white/10 hover:text-white">
+      {children}
+    </button>
+  );
+}
+
 /* ------------------------------- Settings -------------------------------- */
 
 function Settings({
@@ -296,6 +410,34 @@ function Settings({
           <Field label="Image URL"><input className={field} value={d.src ?? ""} onChange={(e) => onChange({ src: e.target.value })} /></Field>
           <Field label="Alt text"><input className={field} value={d.alt ?? ""} onChange={(e) => onChange({ alt: e.target.value })} /></Field>
         </>
+      )}
+
+      {block.type === "video" && (
+        <Field label="Video URL (YouTube/Vimeo)">
+          <input className={field} value={d.url ?? ""} onChange={(e) => onChange({ url: e.target.value })} placeholder="https://youtube.com/watch?v=…" />
+        </Field>
+      )}
+
+      {block.type === "columns" && (
+        <Field label="Number of columns">
+          <div className="grid grid-cols-2 gap-1">
+            {[2, 3].map((n) => (
+              <button
+                key={n}
+                onClick={() => {
+                  const cols = ((d.columns as Block[][]) ?? []).map((c) => [...c]);
+                  let next = cols;
+                  if (n > next.length) { while (next.length < n) next.push([]); }
+                  else if (n < next.length) { const extra = next.slice(n).flat(); next = next.slice(0, n); next[n - 1] = [...next[n - 1], ...extra]; }
+                  onChange({ count: n, columns: next });
+                }}
+                className={clsx("rounded-md border px-2 py-1 text-xs", (Number(d.count) || 2) === n ? "border-brand-500 bg-brand-500/15 text-brand-300" : "border-white/10 text-slate-400 hover:bg-white/5")}
+              >
+                {n} columns
+              </button>
+            ))}
+          </div>
+        </Field>
       )}
 
       {block.type === "spacer" && (

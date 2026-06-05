@@ -1,6 +1,6 @@
 // Widget/block model for the drag-and-drop site builder.
 
-export type BlockType = "hero" | "heading" | "text" | "button" | "image" | "form" | "divider" | "spacer";
+export type BlockType = "hero" | "heading" | "text" | "button" | "image" | "video" | "form" | "columns" | "divider" | "spacer";
 
 export type Block = {
   id: string;
@@ -14,9 +14,20 @@ export const WIDGETS: { type: BlockType; label: string; icon: string }[] = [
   { type: "text", label: "Text", icon: "¶" },
   { type: "button", label: "Button", icon: "▭" },
   { type: "image", label: "Image", icon: "▣" },
+  { type: "video", label: "Video", icon: "▶" },
+  { type: "columns", label: "Columns", icon: "▥" },
   { type: "form", label: "Lead form", icon: "✉" },
   { type: "divider", label: "Divider", icon: "—" },
   { type: "spacer", label: "Spacer", icon: "⊞" },
+];
+
+// Leaf widgets that can go inside a column.
+export const COLUMN_WIDGETS: { type: BlockType; label: string }[] = [
+  { type: "heading", label: "Heading" },
+  { type: "text", label: "Text" },
+  { type: "button", label: "Button" },
+  { type: "image", label: "Image" },
+  { type: "video", label: "Video" },
 ];
 
 export function defaultData(type: BlockType): Record<string, any> {
@@ -44,6 +55,10 @@ export function defaultData(type: BlockType): Record<string, any> {
       };
     case "image":
       return { src: "https://placehold.co/800x400/0c0d11/cda14a?text=Image", alt: "Image", align: "center" };
+    case "video":
+      return { url: "" };
+    case "columns":
+      return { count: 2, columns: [[], []] };
     case "spacer":
       return { size: 48 };
     case "divider":
@@ -58,6 +73,16 @@ export function newBlock(type: BlockType): Block {
     type,
     data: defaultData(type),
   };
+}
+
+// Convert a YouTube/Vimeo/other URL into an embeddable iframe src.
+export function embedUrl(url?: string): string {
+  if (!url) return "";
+  const yt = url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|shorts\/))([\w-]{11})/);
+  if (yt) return `https://www.youtube.com/embed/${yt[1]}`;
+  const vimeo = url.match(/vimeo\.com\/(\d+)/);
+  if (vimeo) return `https://player.vimeo.com/video/${vimeo[1]}`;
+  return url;
 }
 
 export function alignClass(align?: string): string {
