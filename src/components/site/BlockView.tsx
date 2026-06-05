@@ -1,4 +1,4 @@
-import { type Block, alignClass, flexAlign, embedUrl } from "@/lib/blocks";
+import { type Block, alignClass, flexAlign, embedUrl, textStyle, spacingStyle } from "@/lib/blocks";
 import PublicForm from "./PublicForm";
 
 // Read-only render of a single block — used by the public published page.
@@ -11,8 +11,8 @@ export default function BlockView({ block, slug }: { block: Block; slug: string 
       const cols: Block[][] = Array.isArray(d.columns) ? d.columns : [];
       const count = Number(d.count) || cols.length || 2;
       return (
-        <div className="px-6 py-4">
-          <div className={`grid gap-6 ${count === 3 ? "sm:grid-cols-3" : "sm:grid-cols-2"}`}>
+        <div className="px-6 py-4" style={spacingStyle(d)}>
+          <div className={`grid ${count === 3 ? "sm:grid-cols-3" : "sm:grid-cols-2"}`} style={{ gap: `${d.gap ?? 24}px` }}>
             {cols.map((col, i) => (
               <div key={i}>
                 {col.map((child) => (
@@ -28,7 +28,7 @@ export default function BlockView({ block, slug }: { block: Block; slug: string 
       const src = embedUrl(d.url);
       if (!src) return null;
       return (
-        <div className="px-6 py-4">
+        <div className="px-6 py-4" style={spacingStyle(d)}>
           <div className="mx-auto aspect-video w-full max-w-3xl overflow-hidden rounded-xl border border-white/10">
             <iframe src={src} className="h-full w-full" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen title="Video" />
           </div>
@@ -55,15 +55,15 @@ export default function BlockView({ block, slug }: { block: Block; slug: string 
       );
     case "heading":
       return (
-        <h2 className={`px-6 py-3 font-display text-3xl font-semibold text-slate-100 ${alignClass(d.align)}`}>
+        <h2 className={`px-6 py-3 font-display text-3xl font-semibold text-slate-100 ${alignClass(d.align)}`} style={{ ...textStyle(d), ...spacingStyle(d) }}>
           {d.text}
         </h2>
       );
     case "text":
-      return <p className={`px-6 py-2 text-base leading-relaxed text-slate-300 ${alignClass(d.align)}`}>{d.text}</p>;
+      return <p className={`px-6 py-2 text-base leading-relaxed text-slate-300 ${alignClass(d.align)}`} style={{ ...textStyle(d), ...spacingStyle(d) }}>{d.text}</p>;
     case "button":
       return (
-        <div className={`flex px-6 py-3 ${flexAlign(d.align)}`}>
+        <div className={`flex px-6 py-3 ${flexAlign(d.align)}`} style={spacingStyle(d)}>
           <a href={d.href || "#"} className="rounded-full bg-gold px-6 py-2.5 text-sm font-semibold text-slate-950">
             {d.label}
           </a>
@@ -71,7 +71,7 @@ export default function BlockView({ block, slug }: { block: Block; slug: string 
       );
     case "image":
       return (
-        <div className={`flex px-6 py-3 ${flexAlign(d.align)}`}>
+        <div className={`flex px-6 py-3 ${flexAlign(d.align)}`} style={spacingStyle(d)}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={d.src} alt={d.alt || ""} className="max-w-full rounded-xl border border-white/10" />
         </div>

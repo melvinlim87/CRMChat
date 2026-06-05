@@ -1,4 +1,5 @@
 // Widget/block model for the drag-and-drop site builder.
+import type { CSSProperties } from "react";
 
 export type BlockType = "hero" | "heading" | "text" | "button" | "image" | "video" | "form" | "columns" | "divider" | "spacer";
 
@@ -73,6 +74,34 @@ export function newBlock(type: BlockType): Block {
     type,
     data: defaultData(type),
   };
+}
+
+export const FONTS: Record<string, string> = {
+  sans: "var(--font-sans), ui-sans-serif, sans-serif",
+  serif: "var(--font-display), Georgia, serif",
+  mono: "ui-monospace, SFMono-Regular, Menlo, monospace",
+};
+
+export const FONT_OPTIONS = [
+  { key: "sans", label: "Sans" },
+  { key: "serif", label: "Serif" },
+  { key: "mono", label: "Mono" },
+];
+
+// Inline style for a text block: font size + family overrides.
+export function textStyle(d: Record<string, any>): CSSProperties {
+  const s: CSSProperties = {};
+  if (d.fontSize) s.fontSize = `${d.fontSize}px`;
+  if (d.fontFamily && FONTS[d.fontFamily]) s.fontFamily = FONTS[d.fontFamily];
+  return s;
+}
+
+// Inline style for block spacing (vertical padding) overrides.
+export function spacingStyle(d: Record<string, any>): CSSProperties {
+  const s: CSSProperties = {};
+  if (d.padTop !== undefined && d.padTop !== "" && d.padTop !== null) s.paddingTop = `${Number(d.padTop)}px`;
+  if (d.padBottom !== undefined && d.padBottom !== "" && d.padBottom !== null) s.paddingBottom = `${Number(d.padBottom)}px`;
+  return s;
 }
 
 // Convert a YouTube/Vimeo/other URL into an embeddable iframe src.

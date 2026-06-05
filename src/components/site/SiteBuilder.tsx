@@ -3,7 +3,7 @@
 import { useRef, useState } from "react";
 import Link from "next/link";
 import clsx from "clsx";
-import { type Block, type BlockType, WIDGETS, COLUMN_WIDGETS, newBlock, alignClass, flexAlign, embedUrl } from "@/lib/blocks";
+import { type Block, type BlockType, WIDGETS, COLUMN_WIDGETS, FONT_OPTIONS, newBlock, alignClass, flexAlign, embedUrl, textStyle, spacingStyle } from "@/lib/blocks";
 
 type PageDTO = { id: string; title: string; slug: string; published: boolean; blocks: Block[] };
 
@@ -251,7 +251,7 @@ function EditableBlock({
       return (
         <div className="px-6 py-4">
           {src ? (
-            <div className="mx-auto aspect-video w-full max-w-2xl overflow-hidden rounded-xl border border-white/10">
+            <div className="mx-auto aspect-video w-full max-w-2xl overflow-hidden rounded-xl border border-white/10" style={spacingStyle(d)}>
               <iframe src={src} className="h-full w-full" title="Video" allowFullScreen />
             </div>
           ) : (
@@ -266,8 +266,8 @@ function EditableBlock({
       const cols: Block[][] = Array.isArray(d.columns) ? d.columns : [];
       const count = Number(d.count) || cols.length || 2;
       return (
-        <div className="px-4 py-4">
-          <div className={`grid gap-3 ${count === 3 ? "grid-cols-3" : "grid-cols-2"}`}>
+        <div className="px-4 py-4" style={spacingStyle(d)}>
+          <div className={`grid ${count === 3 ? "grid-cols-3" : "grid-cols-2"}`} style={{ gap: `${d.gap ?? 12}px` }}>
             {cols.map((col, ci) => (
               <div key={ci} className="rounded-lg border border-dashed border-white/10 p-1.5">
                 {col.map((child) => (
@@ -317,12 +317,12 @@ function EditableBlock({
         </section>
       );
     case "heading":
-      return <Editable value={d.text} onCommit={(v) => onChange({ text: v })} className={`px-6 py-3 font-display text-3xl font-semibold text-slate-100 ${alignClass(d.align)}`} />;
+      return <Editable value={d.text} onCommit={(v) => onChange({ text: v })} className={`px-6 py-3 font-display text-3xl font-semibold text-slate-100 ${alignClass(d.align)}`} style={{ ...textStyle(d), ...spacingStyle(d) }} />;
     case "text":
-      return <Editable value={d.text} onCommit={(v) => onChange({ text: v })} className={`px-6 py-2 text-base leading-relaxed text-slate-300 ${alignClass(d.align)}`} />;
+      return <Editable value={d.text} onCommit={(v) => onChange({ text: v })} className={`px-6 py-2 text-base leading-relaxed text-slate-300 ${alignClass(d.align)}`} style={{ ...textStyle(d), ...spacingStyle(d) }} />;
     case "button":
       return (
-        <div className={`flex px-6 py-3 ${flexAlign(d.align)}`}>
+        <div className={`flex px-6 py-3 ${flexAlign(d.align)}`} style={spacingStyle(d)}>
           <span className="rounded-full bg-gold px-6 py-2.5 text-sm font-semibold text-slate-950">
             <Editable inline value={d.label} onCommit={(v) => onChange({ label: v })} />
           </span>
@@ -362,17 +362,20 @@ function Editable({
   onCommit,
   className,
   inline,
+  style,
 }: {
   value: string;
   onCommit: (v: string) => void;
   className?: string;
   inline?: boolean;
+  style?: React.CSSProperties;
 }) {
   const Tag = inline ? "span" : "div";
   return (
     <Tag
       contentEditable
       suppressContentEditableWarning
+      style={style}
       onClick={(e) => e.stopPropagation()}
       onBlur={(e) => onCommit((e.currentTarget.textContent || "").trim())}
       className={clsx(className, "cursor-text rounded outline-none focus:ring-1 focus:ring-brand-500/60")}
@@ -412,7 +415,7 @@ function ImageBlockEditor({ d, onChange }: { d: Record<string, any>; onChange: (
   }
 
   return (
-    <div className={`group/img relative flex px-6 py-3 ${flexAlign(d.align)}`}>
+    <div className={`group/img relative flex px-6 py-3 ${flexAlign(d.align)}`} style={spacingStyle(d)}>
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img src={d.src} alt={d.alt || ""} className="max-w-full rounded-xl border border-white/10" />
       <button
@@ -556,6 +559,35 @@ function Settings({
         <Field label="Success message">
           <textarea className={field} rows={3} value={d.successMessage ?? ""} onChange={(e) => onChange({ successMessage: e.target.value })} />
         </Field>
+      )}
+
+      {["heading", "text"].includes(block.type) && (
+        <>
+          <Field label="Font size (px)">
+            <input type="number" className={field} value={d.fontSize ?? ""} onChange={(e) => onChange({ fontSize: e.target.value === "" ? undefined : Number(e.target.value) })} placeholder="default" />
+          </Field>
+          <Field label="Font">
+            <select className={field} value={d.fontFamily ?? "sans"} onChange={(e) => onChange({ fontFamily: e.target.value })}>
+              {FONT_OPTIONS.map((f) => <option key={f.key} value={f.key}>{f.label}</option>)}
+            </select>
+          </Field>
+        </>
+      )}
+
+      {block.type === "columns" && (
+        <Field label="Gap between columns (px)">
+          <input type="number" className={field} value={d.gap ?? 12} onChange={(e) => onChange({ gap: Number(e.target.value) })} />
+        </Field>
+      )}
+
+      {!["divider", "spacer"].includes(block.type) && (
+        <div>
+          <label className="mb-1 block text-xs font-medium text-slate-400">Spacing — padding (px)</label>
+          <div className="grid grid-cols-2 gap-2">
+            <input type="number" className={field} value={d.padTop ?? ""} onChange={(e) => onChange({ padTop: e.target.value === "" ? undefined : Number(e.target.value) })} placeholder="Top" />
+            <input type="number" className={field} value={d.padBottom ?? ""} onChange={(e) => onChange({ padBottom: e.target.value === "" ? undefined : Number(e.target.value) })} placeholder="Bottom" />
+          </div>
+        </div>
       )}
 
       <p className="rounded-lg bg-white/5 px-3 py-2 text-xs text-slate-500">
