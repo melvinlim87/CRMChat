@@ -15,6 +15,13 @@ type ChildOps = {
   setCount: (count: number) => void;
 };
 
+type SectionOps = {
+  add: (type: BlockType) => void;
+  update: (childId: string, patch: Record<string, unknown>) => void;
+  remove: (childId: string) => void;
+  move: (childId: string, dir: "up" | "down") => void;
+};
+
 export default function SiteBuilder({ page }: { page: PageDTO }) {
   const [blocks, setBlocks] = useState<Block[]>(page.blocks?.length ? page.blocks : []);
   const [title, setTitle] = useState(page.title);
@@ -31,12 +38,19 @@ export default function SiteBuilder({ page }: { page: PageDTO }) {
     const top = blocks.find((b) => b.id === selectedId);
     if (top) return { block: top, onChange: (p) => updateData(top.id, p), onDelete: () => removeBlock(top.id) };
     for (const b of blocks) {
-      if (b.type !== "columns") continue;
-      const cols = (b.data.columns as Block[][]) ?? [];
-      for (const col of cols) {
-        const child = col.find((ch) => ch.id === selectedId);
+      if (b.type === "columns") {
+        const cols = (b.data.columns as Block[][]) ?? [];
+        for (const col of cols) {
+          const child = col.find((ch) => ch.id === selectedId);
+          if (child) {
+            const ops = makeChildOps(b.id);
+            return { block: child, onChange: (p) => ops.update(child.id, p), onDelete: () => ops.remove(child.id) };
+          }
+        }
+      } else if (b.type === "section") {
+        const child = ((b.data.children as Block[]) ?? []).find((ch) => ch.id === selectedId);
         if (child) {
-          const ops = makeChildOps(b.id);
+          const ops = makeSectionOps(b.id);
           return { block: child, onChange: (p) => ops.update(child.id, p), onDelete: () => ops.remove(child.id) };
         }
       }
@@ -44,6 +58,7 @@ export default function SiteBuilder({ page }: { page: PageDTO }) {
     return null;
   }
   const selected = resolveSelected();
+  const sections = blocks.filter((b) => b.type === "section").map((b) => ({ id: b.id, name: (b.data.name as string) || "Section" }));
 
   function addBlock(type: BlockType) {
     const b = newBlock(type);
@@ -76,6 +91,25 @@ export default function SiteBuilder({ page }: { page: PageDTO }) {
         b.id === colId ? { ...b, data: { ...b.data, columns: fn((b.data.columns as Block[][]) ?? []), ...(extra ?? {}) } } : b
       )
     );
+  }
+  function mutateSection(secId: string, fn: (children: Block[]) => Block[]) {
+    setBlocks((prev) => prev.map((b) => (b.id === secId ? { ...b, data: { ...b.data, children: fn((b.data.children as Block[]) ?? []) } } : b)));
+  }
+  function makeSectionOps(secId: string): SectionOps {
+    return {
+      add: (type) => mutateSection(secId, (ch) => [...ch, newBlock(type)]),
+      update: (childId, patch) => mutateSection(secId, (ch) => ch.map((c) => (c.id === childId ? { ...c, data: { ...c.data, ...patch } } : c))),
+      remove: (childId) => mutateSection(secId, (ch) => ch.filter((c) => c.id !== childId)),
+      move: (childId, dir) =>
+        mutateSection(secId, (ch) => {
+          const idx = ch.findIndex((c) => c.id === childId);
+          if (idx < 0) return ch;
+          const next = [...ch];
+          const [item] = next.splice(idx, 1);
+          next.splice(dir === "up" ? Math.max(0, idx - 1) : idx + 1, 0, item);
+          return next;
+        }),
+    };
   }
   function makeChildOps(colId: string): ChildOps {
     return {
@@ -210,7 +244,7 @@ export default function SiteBuilder({ page }: { page: PageDTO }) {
                 >
                   ⠿
                 </button>
-                <EditableBlock block={b} onChange={(patch) => updateData(b.id, patch)} childOps={b.type === "columns" ? makeChildOps(b.id) : undefined} selectedId={selectedId} onSelect={setSelectedId} />
+                <EditableBlock block={b} onChange={(patch) => updateData(b.id, patch)} childOps={b.type === "columns" ? makeChildOps(b.id) : undefined} sectionOps={b.type === "section" ? makeSectionOps(b.id) : undefined} selectedId={selectedId} onSelect={setSelectedId} />
               </div>
             ))}
           </div>
@@ -219,7 +253,7 @@ export default function SiteBuilder({ page }: { page: PageDTO }) {
         {/* Settings panel */}
         <aside className="w-64 shrink-0 border-l border-white/10 bg-surface-panel p-4">
           {selected ? (
-            <Settings block={selected.block} onChange={selected.onChange} onDelete={selected.onDelete} />
+            <Settings block={selected.block} onChange={selected.onChange} onDelete={selected.onDelete} sections={sections} />
           ) : (
             <p className="text-sm text-slate-500">Select a block to edit its settings.</p>
           )}
@@ -235,17 +269,52 @@ function EditableBlock({
   block,
   onChange,
   childOps,
+  sectionOps,
   selectedId,
   onSelect,
 }: {
   block: Block;
   onChange: (patch: Record<string, unknown>) => void;
   childOps?: ChildOps;
+  sectionOps?: SectionOps;
   selectedId?: string | null;
   onSelect?: (id: string) => void;
 }) {
   const d = block.data || {};
   switch (block.type) {
+    case "section": {
+      const children = (d.children as Block[]) ?? [];
+      return (
+        <section className="px-6" style={{ background: d.bg || undefined, ...spacingStyle(d) }}>
+          <div className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-slate-500">▦ {d.name || "Section"}</div>
+          <div className="mx-auto max-w-3xl">
+            {children.map((child) => (
+              <div
+                key={child.id}
+                onClick={(e) => { e.stopPropagation(); onSelect?.(child.id); }}
+                className={clsx("group/s relative rounded hover:bg-white/5", selectedId === child.id && "ring-2 ring-inset ring-brand-500/60")}
+              >
+                <div className="absolute right-1 top-1 z-10 flex gap-0.5 rounded bg-black/50 p-0.5 opacity-0 transition group-hover/s:opacity-100">
+                  <Tbtn title="Up" onClick={() => sectionOps?.move(child.id, "up")}>▲</Tbtn>
+                  <Tbtn title="Down" onClick={() => sectionOps?.move(child.id, "down")}>▼</Tbtn>
+                  <Tbtn title="Delete" onClick={() => sectionOps?.remove(child.id)}>✕</Tbtn>
+                </div>
+                <EditableBlock block={child} onChange={(patch) => sectionOps?.update(child.id, patch)} childOps={child.type === "columns" ? undefined : undefined} selectedId={selectedId} onSelect={onSelect} />
+              </div>
+            ))}
+            <select
+              value=""
+              onClick={(e) => e.stopPropagation()}
+              onChange={(e) => { if (e.target.value) sectionOps?.add(e.target.value as BlockType); e.currentTarget.value = ""; }}
+              className="nodrag mt-2 w-full rounded-md border border-white/10 bg-white/5 px-2 py-1.5 text-xs text-slate-400 outline-none"
+            >
+              <option value="">+ Add element to section…</option>
+              {COLUMN_WIDGETS.map((w) => <option key={w.type} value={w.type}>{w.label}</option>)}
+            </select>
+          </div>
+        </section>
+      );
+    }
     case "video": {
       const src = embedUrl(d.url);
       return (
@@ -477,10 +546,12 @@ function Settings({
   block,
   onChange,
   onDelete,
+  sections,
 }: {
   block: Block;
   onChange: (patch: Record<string, unknown>) => void;
   onDelete: () => void;
+  sections?: { id: string; name: string }[];
 }) {
   const d = block.data || {};
   const field = "w-full rounded-lg border border-white/10 bg-white/5 px-2.5 py-1.5 text-sm text-slate-100 outline-none focus:border-brand-500";
@@ -510,9 +581,33 @@ function Settings({
         </div>
       )}
 
+      {block.type === "section" && (
+        <>
+          <Field label="Section name (used for jump links)">
+            <input className={field} value={d.name ?? ""} onChange={(e) => onChange({ name: e.target.value })} placeholder="e.g. Pricing" />
+          </Field>
+          <Field label="Background color">
+            <div className="flex items-center gap-2">
+              <input type="color" value={d.bg || "#0c0d11"} onChange={(e) => onChange({ bg: e.target.value })} className="h-9 w-12 cursor-pointer rounded border border-white/10 bg-transparent" />
+              <input className={field} value={d.bg ?? ""} onChange={(e) => onChange({ bg: e.target.value })} placeholder="transparent" />
+              <button onClick={() => onChange({ bg: "" })} className="rounded-md border border-white/10 px-2 py-1 text-xs text-slate-400 hover:bg-white/5">clear</button>
+            </div>
+          </Field>
+        </>
+      )}
+
       {(block.type === "button" || block.type === "hero") && (
         <Field label="Button link">
           <input className={field} value={block.type === "hero" ? d.buttonHref ?? "" : d.href ?? ""} onChange={(e) => onChange(block.type === "hero" ? { buttonHref: e.target.value } : { href: e.target.value })} placeholder="https://…" />
+        </Field>
+      )}
+
+      {block.type === "button" && sections && sections.length > 0 && (
+        <Field label="…or jump to a section">
+          <select className={field} value="" onChange={(e) => { if (e.target.value) onChange({ href: e.target.value }); }}>
+            <option value="">Choose a section…</option>
+            {sections.map((s) => <option key={s.id} value={`#sec-${s.id}`}>{s.name}</option>)}
+          </select>
         </Field>
       )}
 

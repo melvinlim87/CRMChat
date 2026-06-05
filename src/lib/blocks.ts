@@ -1,7 +1,7 @@
 // Widget/block model for the drag-and-drop site builder.
 import type { CSSProperties } from "react";
 
-export type BlockType = "hero" | "heading" | "text" | "button" | "image" | "video" | "form" | "columns" | "divider" | "spacer";
+export type BlockType = "section" | "hero" | "heading" | "text" | "button" | "image" | "video" | "form" | "columns" | "divider" | "spacer";
 
 export type Block = {
   id: string;
@@ -10,6 +10,7 @@ export type Block = {
 };
 
 export const WIDGETS: { type: BlockType; label: string; icon: string }[] = [
+  { type: "section", label: "Section", icon: "▦" },
   { type: "hero", label: "Hero", icon: "★" },
   { type: "heading", label: "Heading", icon: "H" },
   { type: "text", label: "Text", icon: "¶" },
@@ -60,6 +61,8 @@ export function defaultData(type: BlockType): Record<string, any> {
       return { url: "" };
     case "columns":
       return { count: 2, columns: [[], []] };
+    case "section":
+      return { name: "Section", bg: "", padTop: 48, padBottom: 48, children: [] };
     case "spacer":
       return { size: 48 };
     case "divider":

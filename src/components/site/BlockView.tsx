@@ -5,6 +5,18 @@ import PublicForm from "./PublicForm";
 export default function BlockView({ block, slug }: { block: Block; slug: string }) {
   const d = block.data || {};
   switch (block.type) {
+    case "section": {
+      const children = (d.children as Block[]) ?? [];
+      return (
+        <section id={`sec-${block.id}`} className="scroll-mt-4 px-6" style={{ background: d.bg || undefined, ...spacingStyle(d) }}>
+          <div className="mx-auto max-w-4xl">
+            {children.map((child) => (
+              <BlockView key={child.id} block={child} slug={slug} />
+            ))}
+          </div>
+        </section>
+      );
+    }
     case "form":
       return <PublicForm slug={slug} data={d} />;
     case "columns": {

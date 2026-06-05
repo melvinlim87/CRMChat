@@ -11,6 +11,10 @@ body {
   height: 100%;
 }
 
+html {
+  scroll-behavior: smooth;
+}
+
 body {
   @apply text-slate-200 antialiased;
   background-color: #050507;
