@@ -24,7 +24,26 @@ export default function SiteBuilder({ page }: { page: PageDTO }) {
   const [saved, setSaved] = useState(false);
   const dragIndex = useRef<number | null>(null);
 
-  const selected = blocks.find((b) => b.id === selectedId) || null;
+  // Resolve the selected block whether it's top-level or nested in a column,
+  // returning the right change/delete handlers for it.
+  function resolveSelected(): { block: Block; onChange: (p: Record<string, unknown>) => void; onDelete: () => void } | null {
+    if (!selectedId) return null;
+    const top = blocks.find((b) => b.id === selectedId);
+    if (top) return { block: top, onChange: (p) => updateData(top.id, p), onDelete: () => removeBlock(top.id) };
+    for (const b of blocks) {
+      if (b.type !== "columns") continue;
+      const cols = (b.data.columns as Block[][]) ?? [];
+      for (const col of cols) {
+        const child = col.find((ch) => ch.id === selectedId);
+        if (child) {
+          const ops = makeChildOps(b.id);
+          return { block: child, onChange: (p) => ops.update(child.id, p), onDelete: () => ops.remove(child.id) };
+        }
+      }
+    }
+    return null;
+  }
+  const selected = resolveSelected();
 
   function addBlock(type: BlockType) {
     const b = newBlock(type);
@@ -191,7 +210,7 @@ export default function SiteBuilder({ page }: { page: PageDTO }) {
                 >
                   ⠿
                 </button>
-                <EditableBlock block={b} onChange={(patch) => updateData(b.id, patch)} childOps={b.type === "columns" ? makeChildOps(b.id) : undefined} />
+                <EditableBlock block={b} onChange={(patch) => updateData(b.id, patch)} childOps={b.type === "columns" ? makeChildOps(b.id) : undefined} selectedId={selectedId} onSelect={setSelectedId} />
               </div>
             ))}
           </div>
@@ -200,7 +219,7 @@ export default function SiteBuilder({ page }: { page: PageDTO }) {
         {/* Settings panel */}
         <aside className="w-64 shrink-0 border-l border-white/10 bg-surface-panel p-4">
           {selected ? (
-            <Settings block={selected} onChange={(patch) => updateData(selected.id, patch)} onDelete={() => removeBlock(selected.id)} />
+            <Settings block={selected.block} onChange={selected.onChange} onDelete={selected.onDelete} />
           ) : (
             <p className="text-sm text-slate-500">Select a block to edit its settings.</p>
           )}
@@ -212,7 +231,19 @@ export default function SiteBuilder({ page }: { page: PageDTO }) {
 
 /* ----------------------------- Editable block ----------------------------- */
 
-function EditableBlock({ block, onChange, childOps }: { block: Block; onChange: (patch: Record<string, unknown>) => void; childOps?: ChildOps }) {
+function EditableBlock({
+  block,
+  onChange,
+  childOps,
+  selectedId,
+  onSelect,
+}: {
+  block: Block;
+  onChange: (patch: Record<string, unknown>) => void;
+  childOps?: ChildOps;
+  selectedId?: string | null;
+  onSelect?: (id: string) => void;
+}) {
   const d = block.data || {};
   switch (block.type) {
     case "video": {
@@ -240,7 +271,14 @@ function EditableBlock({ block, onChange, childOps }: { block: Block; onChange: 
             {cols.map((col, ci) => (
               <div key={ci} className="rounded-lg border border-dashed border-white/10 p-1.5">
                 {col.map((child) => (
-                  <div key={child.id} className="group/c relative rounded hover:bg-white/5">
+                  <div
+                    key={child.id}
+                    onClick={(e) => { e.stopPropagation(); onSelect?.(child.id); }}
+                    className={clsx(
+                      "group/c relative rounded hover:bg-white/5",
+                      selectedId === child.id && "ring-2 ring-inset ring-brand-500/60"
+                    )}
+                  >
                     <div className="absolute right-1 top-1 z-10 flex gap-0.5 rounded bg-black/50 p-0.5 opacity-0 transition group-hover/c:opacity-100">
                       <Tbtn title="Move left" onClick={() => childOps?.move(child.id, "left")}>◀</Tbtn>
                       <Tbtn title="Up" onClick={() => childOps?.move(child.id, "up")}>▲</Tbtn>
