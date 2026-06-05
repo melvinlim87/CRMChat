@@ -216,7 +216,6 @@ export default function ChatInbox({
               { key: "all", label: "All" },
               { key: "whatsapp", label: "WhatsApp" },
               { key: "widget", label: "Widget" },
-              { key: "website", label: "Web" },
             ] as const).map((t) => (
               <button
                 key={t.key}
