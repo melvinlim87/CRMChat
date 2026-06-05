@@ -2,58 +2,64 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import StatusBadge from "@/components/StatusBadge";
 import OwnerSelect from "@/components/OwnerSelect";
-import OwnerFilter from "@/components/OwnerFilter";
+import StudentsFilters from "@/components/StudentsFilters";
 import NewLead from "@/components/NewLead";
 import BulkImport from "@/components/BulkImport";
 import { initials, timeAgo } from "@/lib/format";
+import type { LeadStatus, Prisma } from "@prisma/client";
 
 export const dynamic = "force-dynamic";
+
+const VALID_STATUS = ["NEW", "CONTACTED", "QUALIFIED", "WON", "LOST"];
 
 export default async function LeadsPage({
   searchParams,
 }: {
-  searchParams: { owner?: string };
+  searchParams: { owner?: string; q?: string; status?: string; tag?: string };
 }) {
-  const ownerFilter =
-    searchParams.owner === "unassigned"
-      ? { ownerId: null }
-      : searchParams.owner
-        ? { ownerId: searchParams.owner }
-        : {};
+  const where: Prisma.LeadWhereInput = {};
+  if (searchParams.owner === "unassigned") where.ownerId = null;
+  else if (searchParams.owner) where.ownerId = searchParams.owner;
+  if (searchParams.status && VALID_STATUS.includes(searchParams.status)) where.status = searchParams.status as LeadStatus;
+  if (searchParams.tag) where.tags = { has: searchParams.tag };
+  const q = searchParams.q?.trim();
+  if (q) {
+    const digits = q.replace(/[^\d+]/g, "");
+    where.OR = [
+      { name: { contains: q, mode: "insensitive" } },
+      { email: { contains: q, mode: "insensitive" } },
+      { company: { contains: q, mode: "insensitive" } },
+      ...(digits ? [{ phone: { contains: digits } } as Prisma.LeadWhereInput] : []),
+    ];
+  }
 
-  const [leads, users] = await Promise.all([
-    prisma.lead.findMany({
-      where: ownerFilter,
-      orderBy: { updatedAt: "desc" },
-      include: { conversation: true },
-    }),
+  const [leads, users, tagRows] = await Promise.all([
+    prisma.lead.findMany({ where, orderBy: { updatedAt: "desc" }, include: { conversation: true } }),
     prisma.user.findMany({ orderBy: { name: "asc" }, select: { id: true, name: true, email: true } }),
+    prisma.lead.findMany({ select: { tags: true } }),
   ]);
+  const allTags = Array.from(new Set(tagRows.flatMap((l) => l.tags))).sort();
 
   return (
     <div className="flex h-full flex-col">
-      <header className="flex items-center justify-between border-b border-white/10 bg-surface-panel px-8 py-5">
-        <div>
-          <h1 className="text-xl font-semibold text-slate-100">Students</h1>
-          <p className="text-sm text-slate-400">{leads.length} students in your pipeline</p>
+      <header className="space-y-4 border-b border-white/10 bg-surface-panel px-8 py-5">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-xl font-semibold text-slate-100">Students</h1>
+            <p className="text-sm text-slate-400">{leads.length} students</p>
+          </div>
+          <div className="flex items-center gap-3">
+            <a
+              href="/api/leads/export"
+              className="rounded-lg border border-white/10 px-4 py-2 text-sm font-medium text-slate-200 transition hover:bg-white/5"
+            >
+              ⬇ Export
+            </a>
+            <BulkImport />
+            <NewLead users={users} />
+          </div>
         </div>
-        <div className="flex items-center gap-3">
-          <OwnerFilter users={users} />
-          <a
-            href="/api/leads/export"
-            className="rounded-lg border border-white/10 px-4 py-2 text-sm font-medium text-slate-200 transition hover:bg-white/5"
-          >
-            ⬇ Export
-          </a>
-          <BulkImport />
-          <NewLead users={users} />
-          <Link
-            href="/chat"
-            className="rounded-lg border border-white/10 px-4 py-2 text-sm font-medium text-slate-200 transition hover:bg-white/5"
-          >
-            Open inbox
-          </Link>
-        </div>
+        <StudentsFilters users={users} tags={allTags} />
       </header>
 
       <div className="flex-1 overflow-auto p-8">
