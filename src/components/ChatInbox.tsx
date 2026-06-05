@@ -54,6 +54,7 @@ export default function ChatInbox({
   const [aiError, setAiError] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<"all" | "unread" | "attention">("all");
+  const [channel, setChannel] = useState<"all" | "whatsapp" | "widget" | "website">("all");
   const [quickReplies, setQuickReplies] = useState<{ id: string; title: string; body: string }[]>([]);
   const [showQuick, setShowQuick] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -68,6 +69,7 @@ export default function ChatInbox({
     return conversations.filter((c) => {
       if (filter === "unread" && c.unreadCount === 0) return false;
       if (filter === "attention" && !c.needsHuman) return false;
+      if (channel !== "all" && c.channel !== channel) return false;
       if (!q) return true;
       const digits = q.replace(/[^\d]/g, "");
       return (
@@ -78,10 +80,11 @@ export default function ChatInbox({
         c.messages.some((m) => m.body.toLowerCase().includes(q))
       );
     });
-  }, [conversations, search, filter]);
+  }, [conversations, search, filter, channel]);
 
   const unreadTotal = useMemo(() => conversations.filter((c) => c.unreadCount > 0).length, [conversations]);
   const attentionTotal = useMemo(() => conversations.filter((c) => c.needsHuman).length, [conversations]);
+  const channelCount = (ch: string) => conversations.filter((c) => c.channel === ch).length;
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight });
@@ -207,7 +210,28 @@ export default function ChatInbox({
             placeholder="Search name, number or message"
             className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm outline-none focus:border-brand-500 focus:bg-surface-panel"
           />
-          <div className="mt-3 flex gap-1.5">
+          {/* Channel sub-tabs */}
+          <div className="mt-3 flex gap-1 rounded-lg bg-white/5 p-1">
+            {([
+              { key: "all", label: "All" },
+              { key: "whatsapp", label: "WhatsApp" },
+              { key: "widget", label: "Widget" },
+              { key: "website", label: "Web" },
+            ] as const).map((t) => (
+              <button
+                key={t.key}
+                onClick={() => setChannel(t.key)}
+                className={clsx(
+                  "flex-1 rounded-md px-2 py-1 text-xs font-medium transition",
+                  channel === t.key ? "bg-brand-500/25 text-brand-200" : "text-slate-400 hover:text-slate-200"
+                )}
+              >
+                {t.label}
+                {t.key !== "all" && channelCount(t.key) > 0 && <span className="ml-1 text-[10px] text-slate-500">{channelCount(t.key)}</span>}
+              </button>
+            ))}
+          </div>
+          <div className="mt-2 flex gap-1.5">
             <button
               onClick={() => setFilter("all")}
               className={clsx("rounded-full px-3 py-1 text-xs font-medium transition", filter === "all" ? "bg-brand-500/20 text-brand-300" : "text-slate-400 hover:bg-white/5")}
