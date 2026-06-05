@@ -73,15 +73,12 @@ export default async function LeadsPage({
               {leads.map((lead) => (
                 <tr key={lead.id} className="transition hover:bg-white/5">
                   <td className="px-5 py-3">
-                    <Link
-                      href={lead.conversation ? `/chat?c=${lead.conversation.id}` : "/chat"}
-                      className="flex items-center gap-3"
-                    >
+                    <Link href={`/leads/${lead.id}`} className="flex items-center gap-3">
                       <span className="flex h-9 w-9 items-center justify-center rounded-full bg-brand-500/20 text-xs font-semibold text-brand-300">
                         {initials(lead.name)}
                       </span>
                       <div>
-                        <p className="font-medium text-slate-100">{lead.name}</p>
+                        <p className="font-medium text-slate-100 hover:text-brand-300">{lead.name}</p>
                         <p className="text-xs text-slate-500">{lead.phone || lead.email || "—"}</p>
                       </div>
                     </Link>
