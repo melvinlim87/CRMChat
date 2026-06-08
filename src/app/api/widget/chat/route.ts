@@ -28,13 +28,33 @@ export async function POST(req: NextRequest) {
   });
 
   if (!conversation) {
-    const lead = await prisma.lead.create({
-      data: { name: name?.trim() || "Website Visitor", email: email?.trim() || null, source: `widget:${widget.key}`, status: "NEW", tags: leadTags },
-    });
-    conversation = await prisma.conversation.create({
-      data: { leadId: lead.id, channel: "widget", sessionId },
-      include: { lead: true, messages: true },
-    });
+    // For a verified student (email provided), attach the chat to their existing
+    // CRM record instead of creating a brand-new "Website Visitor" lead.
+    let existing = email?.trim()
+      ? await prisma.lead.findFirst({
+          where: { email: { equals: email.trim(), mode: "insensitive" } },
+          include: { conversation: { include: { messages: { orderBy: { createdAt: "asc" }, take: 20 } } } },
+        })
+      : null;
+
+    if (existing?.conversation) {
+      // Each lead can have only one conversation — reuse it and adopt this session.
+      conversation = await prisma.conversation.update({
+        where: { id: existing.conversation.id },
+        data: { sessionId: existing.conversation.sessionId ?? sessionId },
+        include: { lead: true, messages: { orderBy: { createdAt: "asc" }, take: 20 } },
+      });
+    } else {
+      const lead =
+        existing ||
+        (await prisma.lead.create({
+          data: { name: name?.trim() || "Website Visitor", email: email?.trim() || null, source: `widget:${widget.key}`, status: "NEW", tags: leadTags },
+        }));
+      conversation = await prisma.conversation.create({
+        data: { leadId: lead.id, channel: "widget", sessionId },
+        include: { lead: true, messages: { orderBy: { createdAt: "asc" }, take: 20 } },
+      });
+    }
   } else if ((name?.trim() || email?.trim()) && conversation.lead.name === "Website Visitor") {
     await prisma.lead.update({
       where: { id: conversation.leadId },
