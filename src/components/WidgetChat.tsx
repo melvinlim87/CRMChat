@@ -38,8 +38,9 @@ export default function WidgetChat({
   const scrollRef = useRef<HTMLDivElement>(null);
   const choiceKey = `crmchat_widget_choice_${widgetKey}`;
 
-  // Restore a previous choice (visitor vs verified student) so the gate doesn't
-  // reappear on every reload.
+  // Always show the gate first when gating is on, so the "Are you a student?"
+  // buttons appear at the very start every time the chat is opened. We only
+  // pre-fill a returning student's email for convenience.
   useEffect(() => {
     if (!gate || !studentConfig) {
       enterChat(config, widgetKey);
@@ -47,12 +48,7 @@ export default function WidgetChat({
     }
     try {
       const saved = JSON.parse(localStorage.getItem(choiceKey) || "null");
-      if (saved?.mode === "student" && saved.email) {
-        setStudentEmail(saved.email);
-        enterChat(studentConfig, studentConfig.key || "students", saved.name);
-      } else if (saved?.mode === "public") {
-        enterChat(config, config.key || "public");
-      }
+      if (saved?.email) setEmailInput(saved.email);
     } catch {}
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
