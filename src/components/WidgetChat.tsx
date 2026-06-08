@@ -176,13 +176,13 @@ export default function WidgetChat({
               className="rounded-xl px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:opacity-90"
               style={{ backgroundColor: studentConfig?.color || config.color }}
             >
-              🎓 I&apos;m a student
+              🎓 Existing Student
             </button>
             <button
               onClick={chooseVisitor}
               className="rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-100"
             >
-              I&apos;m just browsing
+              💬 General Enquiry
             </button>
           </div>
         </div>
