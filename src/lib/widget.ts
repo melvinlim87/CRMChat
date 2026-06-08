@@ -9,7 +9,26 @@ export type WidgetConfig = {
   instruction: string | null;
   tag: string | null;
   starters: string[];
+  tone: string;
+  gateEnabled: boolean;
+  gateHeading: string;
+  studentLabel: string;
+  visitorLabel: string;
 };
+
+// AI tone presets → guidance appended to the system prompt.
+export const TONES: { key: string; label: string; guidance: string }[] = [
+  { key: "friendly", label: "Friendly", guidance: "Keep a warm, friendly, approachable tone." },
+  { key: "professional", label: "Professional", guidance: "Keep a polished, professional, businesslike tone." },
+  { key: "casual", label: "Casual", guidance: "Keep a relaxed, casual, conversational tone — like texting a friend." },
+  { key: "enthusiastic", label: "Enthusiastic", guidance: "Be upbeat, positive and enthusiastic." },
+  { key: "empathetic", label: "Empathetic", guidance: "Be especially warm, patient and empathetic." },
+  { key: "concise", label: "Concise", guidance: "Be brief and to the point — minimal words, no fluff." },
+];
+
+export function toneGuidance(tone?: string): string {
+  return (TONES.find((t) => t.key === tone) ?? TONES[0]).guidance;
+}
 
 // The two widgets every workspace starts with.
 const DEFAULTS: WidgetConfig[] = [
@@ -22,6 +41,11 @@ const DEFAULTS: WidgetConfig[] = [
     instruction: null,
     tag: "website",
     starters: ["What do you offer?", "How do I get started?", "Pricing & plans"],
+    tone: "friendly",
+    gateEnabled: true,
+    gateHeading: "Welcome! How can we help?",
+    studentLabel: "🎓 Existing Student",
+    visitorLabel: "💬 General Enquiry",
   },
   {
     key: "students",
@@ -32,6 +56,11 @@ const DEFAULTS: WidgetConfig[] = [
     instruction: "You are assisting an existing student of the academy. Be supportive and reference their course where relevant.",
     tag: "student",
     starters: ["Help with my account", "Where are my course materials?", "Payment & billing"],
+    tone: "friendly",
+    gateEnabled: false,
+    gateHeading: "Welcome! How can we help?",
+    studentLabel: "🎓 Existing Student",
+    visitorLabel: "💬 General Enquiry",
   },
 ];
 
@@ -54,7 +83,16 @@ export async function getWidget(key: string): Promise<WidgetConfig> {
 }
 
 function toConfig(w: {
-  key: string; name: string; title: string; welcome: string; color: string; instruction: string | null; tag: string | null; starters?: string[];
+  key: string; name: string; title: string; welcome: string; color: string; instruction: string | null; tag: string | null;
+  starters?: string[]; tone?: string; gateEnabled?: boolean; gateHeading?: string; studentLabel?: string; visitorLabel?: string;
 }): WidgetConfig {
-  return { key: w.key, name: w.name, title: w.title, welcome: w.welcome, color: w.color, instruction: w.instruction, tag: w.tag, starters: w.starters ?? [] };
+  return {
+    key: w.key, name: w.name, title: w.title, welcome: w.welcome, color: w.color, instruction: w.instruction, tag: w.tag,
+    starters: w.starters ?? [],
+    tone: w.tone ?? "friendly",
+    gateEnabled: w.gateEnabled ?? false,
+    gateHeading: w.gateHeading ?? "Welcome! How can we help?",
+    studentLabel: w.studentLabel ?? "🎓 Existing Student",
+    visitorLabel: w.visitorLabel ?? "💬 General Enquiry",
+  };
 }

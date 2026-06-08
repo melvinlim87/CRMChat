@@ -27,6 +27,11 @@ export async function POST(req: NextRequest) {
     starters: Array.isArray(b.starters)
       ? b.starters.map((s: unknown) => String(s).trim()).filter(Boolean).slice(0, 6)
       : [],
+    tone: typeof b.tone === "string" && b.tone.trim() ? b.tone.trim() : "friendly",
+    gateEnabled: Boolean(b.gateEnabled),
+    gateHeading: typeof b.gateHeading === "string" && b.gateHeading.trim() ? b.gateHeading.trim() : "Welcome! How can we help?",
+    studentLabel: typeof b.studentLabel === "string" && b.studentLabel.trim() ? b.studentLabel.trim() : "🎓 Existing Student",
+    visitorLabel: typeof b.visitorLabel === "string" && b.visitorLabel.trim() ? b.visitorLabel.trim() : "💬 General Enquiry",
   };
 
   await prisma.widget.upsert({

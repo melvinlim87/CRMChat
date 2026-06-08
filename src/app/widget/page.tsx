@@ -12,9 +12,8 @@ export default async function WidgetPage({ searchParams }: { searchParams: { w?:
   const config = await getWidget(key);
   const theme = searchParams.theme === "dark" ? "dark" : "light";
 
-  // The public widget is the unified front door: it gates students through a
-  // quick email sign-in, while general enquiries chat straight away.
-  const gated = key === "public";
+  // The intro "Are you a student?" flow is toggled per-widget in the admin.
+  const gated = config.gateEnabled;
   const studentConfig = gated ? await getWidget("students") : undefined;
 
   return (

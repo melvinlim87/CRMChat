@@ -157,6 +157,11 @@ model Widget {
   instruction String? // extra AI persona/system instruction
   tag         String? // tag applied to leads from this widget
   starters    String[] @default([]) // suggested starter prompts shown on open
+  tone        String   @default("friendly") // AI tone of voice
+  gateEnabled Boolean  @default(false) // show the "Are you a student?" intro flow
+  gateHeading String   @default("Welcome! How can we help?")
+  studentLabel String  @default("🎓 Existing Student")
+  visitorLabel String  @default("💬 General Enquiry")
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }

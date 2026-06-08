@@ -5,7 +5,7 @@ import { getKnowledgeContext } from "@/lib/knowledge";
 import { detectNegative, detectHumanRequest } from "@/lib/sentiment";
 import { notifySlack } from "@/lib/slack";
 import { runAutomations } from "@/lib/automation-engine";
-import { getWidget } from "@/lib/widget";
+import { getWidget, toneGuidance } from "@/lib/widget";
 
 // Public endpoint the embeddable website widget calls. No auth — it's meant to
 // run on the customer's public site. Each browser session maps to one CRM
@@ -103,7 +103,7 @@ export async function POST(req: NextRequest) {
 
   const knowledge = await getKnowledgeContext();
   const system =
-    `You are a warm, friendly human support agent chatting on a company's website — not a robot. Sound natural and conversational, like a real person texting. No markdown, no bullet points, no emoji spam. ` +
+    `You are a human support agent chatting on a company's website — not a robot. Sound natural and conversational, like a real person texting. ${toneGuidance(widget.tone)} No markdown, no bullet points, no emoji spam. ` +
     `Reply with one to three SHORT messages, the way a person would split their thoughts across a few chat bubbles instead of one long paragraph. ` +
     `Put each separate message on its own line, separated by a line containing only "---". Most simple answers need just one message; use a second or third only when it genuinely helps (e.g. a quick greeting, then the answer, then a follow-up question). Keep every message to 1-2 sentences. ` +
     `Only answer using the knowledge base below and the conversation. If you don't know or it's not covered, warmly say you'll connect them with the team and ask for their name and email. ` +

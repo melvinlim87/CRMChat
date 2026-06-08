@@ -3,6 +3,17 @@
 import { useEffect, useState } from "react";
 import WidgetChat from "@/components/WidgetChat";
 
+// Tone presets (kept in sync with TONES in lib/widget.ts; defined here to keep
+// the server-only widget module out of this client bundle).
+const TONES = [
+  { key: "friendly", label: "Friendly" },
+  { key: "professional", label: "Professional" },
+  { key: "casual", label: "Casual" },
+  { key: "enthusiastic", label: "Enthusiastic" },
+  { key: "empathetic", label: "Empathetic" },
+  { key: "concise", label: "Concise" },
+];
+
 type Widget = {
   key: string;
   name: string;
@@ -12,6 +23,11 @@ type Widget = {
   instruction: string | null;
   tag: string | null;
   starters: string[];
+  tone: string;
+  gateEnabled: boolean;
+  gateHeading: string;
+  studentLabel: string;
+  visitorLabel: string;
 };
 
 export default function WidgetSetup() {
@@ -140,6 +156,13 @@ export default function WidgetSetup() {
               <Field label="Display name (internal)"><input className={field} value={active.name} onChange={(e) => update({ name: e.target.value })} /></Field>
               <Field label="Header title"><input className={field} value={active.title} onChange={(e) => update({ title: e.target.value })} /></Field>
               <Field label="Welcome message"><input className={field} value={active.welcome} onChange={(e) => update({ welcome: e.target.value })} /></Field>
+              <Field label="AI tone of voice">
+                <select className={field} value={active.tone ?? "friendly"} onChange={(e) => update({ tone: e.target.value })}>
+                  {TONES.map((t) => (
+                    <option key={t.key} value={t.key}>{t.label}</option>
+                  ))}
+                </select>
+              </Field>
               <Field label="AI instruction (persona for this widget)">
                 <textarea rows={2} className={field} value={active.instruction ?? ""} onChange={(e) => update({ instruction: e.target.value })} placeholder="e.g. You are helping existing students." />
               </Field>
@@ -161,6 +184,31 @@ export default function WidgetSetup() {
                   </div>
                 </Field>
               </div>
+              {/* Intro flow */}
+              <div className="rounded-xl border border-white/10 bg-white/[0.02] p-4">
+                <label className="flex items-center justify-between gap-3">
+                  <span>
+                    <span className="block text-sm font-medium text-slate-200">Intro flow (“Are you a student?” gate)</span>
+                    <span className="block text-xs text-slate-400">Ask visitors who they are first. Students sign in with their email; others chat straight away.</span>
+                  </span>
+                  <input
+                    type="checkbox"
+                    checked={active.gateEnabled}
+                    onChange={(e) => update({ gateEnabled: e.target.checked })}
+                    className="h-5 w-5 shrink-0 accent-brand-500"
+                  />
+                </label>
+                {active.gateEnabled && (
+                  <div className="mt-3 space-y-3 border-t border-white/10 pt-3">
+                    <Field label="Gate heading"><input className={field} value={active.gateHeading} onChange={(e) => update({ gateHeading: e.target.value })} /></Field>
+                    <div className="grid grid-cols-2 gap-3">
+                      <Field label="Student button"><input className={field} value={active.studentLabel} onChange={(e) => update({ studentLabel: e.target.value })} /></Field>
+                      <Field label="Visitor button"><input className={field} value={active.visitorLabel} onChange={(e) => update({ visitorLabel: e.target.value })} /></Field>
+                    </div>
+                  </div>
+                )}
+              </div>
+
               <div className="flex items-center gap-3 pt-1">
                 <button onClick={save} disabled={saving} className="rounded-lg bg-brand-500 px-5 py-2 text-sm font-semibold text-slate-950 transition hover:bg-brand-600 disabled:opacity-60">
                   {saving ? "Saving…" : "Save"}
@@ -174,16 +222,16 @@ export default function WidgetSetup() {
         {/* Live preview — real widget */}
         <div className="h-fit rounded-2xl border border-white/10 bg-surface-panel p-4">
           <p className="mb-2 text-xs font-medium uppercase tracking-wide text-slate-400">Live preview — try it</p>
-          {active.key === "public" && (
-            <p className="mb-2 text-xs text-brand-300">This widget greets visitors with the “Are you a student?” gate.</p>
+          {active.gateEnabled && (
+            <p className="mb-2 text-xs text-brand-300">This widget greets visitors with the intro flow first.</p>
           )}
           <div className="h-[520px] overflow-hidden rounded-xl border border-white/10 shadow-lg">
             <WidgetChat
-              key={`${active.key}|${active.welcome}|${active.color}|${active.title}|${previewTheme}`}
+              key={`${active.key}|${active.welcome}|${active.color}|${active.title}|${previewTheme}|${active.gateEnabled}|${active.tone}|${active.gateHeading}|${active.studentLabel}|${active.visitorLabel}`}
               config={active}
               widgetKey={active.key}
-              gate={active.key === "public"}
-              studentConfig={active.key === "public" ? widgets.find((w) => w.key === "students") : undefined}
+              gate={active.gateEnabled}
+              studentConfig={active.gateEnabled ? widgets.find((w) => w.key === "students") : undefined}
               theme={previewTheme}
             />
           </div>

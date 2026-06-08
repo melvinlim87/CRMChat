@@ -3,7 +3,10 @@
 import { useEffect, useRef, useState, Fragment } from "react";
 
 type Msg = { from: "bot" | "user"; text: string };
-type WConfig = { key?: string; title: string; welcome: string; color: string; starters?: string[] };
+type WConfig = {
+  key?: string; title: string; welcome: string; color: string; starters?: string[];
+  gateHeading?: string; studentLabel?: string; visitorLabel?: string;
+};
 type View = "gate" | "studentAuth" | "chat";
 type Theme = "light" | "dark";
 
@@ -206,7 +209,7 @@ export default function WidgetChat({
         </header>
         <div className={`flex flex-1 flex-col items-center justify-center gap-4 px-6 text-center ${ui.body}`}>
           <div className="text-3xl">👋</div>
-          <p className={`text-base font-semibold ${ui.title}`}>Welcome! How can we help?</p>
+          <p className={`text-base font-semibold ${ui.title}`}>{config.gateHeading || "Welcome! How can we help?"}</p>
           <p className={`-mt-2 text-sm ${ui.sub}`}>Students sign in for personalised help with their course.</p>
           <div className="mt-2 flex w-full max-w-xs flex-col gap-2">
             <button
@@ -214,10 +217,10 @@ export default function WidgetChat({
               className="rounded-xl px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:opacity-90"
               style={{ backgroundColor: studentConfig?.color || config.color }}
             >
-              🎓 Existing Student
+              {config.studentLabel || "🎓 Existing Student"}
             </button>
             <button onClick={chooseVisitor} className={`rounded-xl border px-4 py-3 text-sm font-semibold transition ${ui.outline}`}>
-              💬 General Enquiry
+              {config.visitorLabel || "💬 General Enquiry"}
             </button>
           </div>
         </div>
