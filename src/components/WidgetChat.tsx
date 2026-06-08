@@ -44,12 +44,26 @@ export default function WidgetChat({
         body: JSON.stringify({ sessionId, message: text, widget: widgetKey }),
       });
       const d = await res.json();
-      setMessages((m) => [...m, { from: "bot", text: d.reply || "Thanks! We'll be in touch." }]);
+      const replies: string[] = Array.isArray(d.replies) && d.replies.length
+        ? d.replies
+        : [d.reply || "Thanks! We'll be in touch."];
+
+      // Drip each bubble in one at a time with a short "typing" pause so the
+      // assistant feels like a real person replying across a few messages.
+      for (let i = 0; i < replies.length; i++) {
+        if (i > 0) await new Promise((r) => setTimeout(r, typingDelay(replies[i])));
+        setMessages((m) => [...m, { from: "bot", text: replies[i] }]);
+      }
     } catch {
       setMessages((m) => [...m, { from: "bot", text: "Sorry, something went wrong. Please try again." }]);
     } finally {
       setSending(false);
     }
+  }
+
+  // Roughly mimic reading/typing time, capped so it never feels sluggish.
+  function typingDelay(text: string) {
+    return Math.min(1600, 500 + text.length * 18);
   }
 
   return (
