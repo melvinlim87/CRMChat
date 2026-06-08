@@ -3,10 +3,14 @@
 import { useEffect, useRef, useState, Fragment } from "react";
 
 type Msg = { from: "bot" | "user"; text: string };
+type FNode = { id: string; type: string; data: Record<string, any> };
+type FEdge = { source: string; target: string; sourceHandle?: string | null };
 type WConfig = {
   key?: string; title: string; welcome: string; color: string; starters?: string[]; avatar?: string | null;
   gateHeading?: string; studentLabel?: string; visitorLabel?: string;
+  flowEnabled?: boolean; flow?: { nodes?: FNode[]; edges?: FEdge[] };
 };
+type FlowBtn = { label: string; target?: string; url?: string };
 type View = "gate" | "studentAuth" | "chat";
 type Theme = "light" | "dark";
 
@@ -38,7 +42,16 @@ export default function WidgetChat({
   const [verifying, setVerifying] = useState(false);
   const [authError, setAuthError] = useState("");
 
+  // Visual flow runtime state.
+  const [flowActive, setFlowActive] = useState(false);
+  const [flowButtons, setFlowButtons] = useState<FlowBtn[]>([]);
+  const [flowCollect, setFlowCollect] = useState<{ next?: string } | null>(null);
+  const [collectName, setCollectName] = useState("");
+  const [collectEmail, setCollectEmail] = useState("");
+
   const scrollRef = useRef<HTMLDivElement>(null);
+  const sidRef = useRef("");
+  const flowStartedRef = useRef(false);
   const choiceKey = `crmchat_widget_choice_${widgetKey}`;
   const dark = theme === "dark";
 
@@ -65,10 +78,16 @@ export default function WidgetChat({
       localStorage.setItem(storeKey, sid);
     }
     setSessionId(sid);
+    sidRef.current = sid;
     fetch(`/api/widget/chat?sessionId=${encodeURIComponent(sid)}`)
       .then((r) => r.json())
       .then((d) => {
-        if (Array.isArray(d.messages) && d.messages.length) setMessages(d.messages);
+        if (Array.isArray(d.messages) && d.messages.length) {
+          setMessages(d.messages); // returning visitor — keep their history
+        } else if (!flowStartedRef.current && active.flowEnabled && (active.flow?.nodes?.length ?? 0) > 0) {
+          flowStartedRef.current = true;
+          startFlow();
+        }
       })
       .catch(() => {});
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -81,6 +100,8 @@ export default function WidgetChat({
   function enterChat(cfg: WConfig, key: string, name?: string) {
     setActive(cfg);
     setActiveKey(key);
+    flowStartedRef.current = false;
+    endFlow();
     const welcome = name ? `Welcome back, ${name}! 👋 ${cfg.welcome}` : cfg.welcome;
     setMessages([{ from: "bot", text: welcome }]);
     setSuggestions([]);
@@ -131,8 +152,122 @@ export default function WidgetChat({
     const sid = crypto.randomUUID?.() ?? `s-${Date.now()}-${Math.random()}`;
     localStorage.setItem(`crmchat_widget_session_${activeKey}`, sid);
     setSessionId(sid);
-    setMessages([{ from: "bot", text: active.welcome }]);
+    sidRef.current = sid;
     setSuggestions([]);
+    endFlow();
+    if (active.flowEnabled && (active.flow?.nodes?.length ?? 0) > 0) {
+      flowStartedRef.current = true;
+      startFlow();
+    } else {
+      setMessages([{ from: "bot", text: active.welcome }]);
+    }
+  }
+
+  /* ----------------------------- Flow runtime ----------------------------- */
+  function flowGraph() {
+    return { nodes: active.flow?.nodes ?? [], edges: active.flow?.edges ?? [] };
+  }
+  function fnode(id?: string) {
+    return id ? flowGraph().nodes.find((n) => n.id === id) : undefined;
+  }
+  function ftarget(id: string, handle?: string) {
+    const e = flowGraph().edges.find((x) => x.source === id && (handle ? (x.sourceHandle || "") === handle : true));
+    return e?.target;
+  }
+  function logMsg(direction: "INBOUND" | "OUTBOUND", body: string, extra?: Record<string, unknown>) {
+    if (!sidRef.current) return;
+    fetch("/api/widget/log", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ sessionId: sidRef.current, widget: activeKey, direction, body, ...extra }),
+    }).catch(() => {});
+  }
+  function botSay(text: string) {
+    if (!text) return;
+    setMessages((m) => [...m, { from: "bot", text }]);
+    logMsg("OUTBOUND", text);
+  }
+  function endFlow() {
+    setFlowActive(false);
+    setFlowButtons([]);
+    setFlowCollect(null);
+  }
+  function startFlow() {
+    const { nodes } = flowGraph();
+    const startNode = nodes.find((n) => n.type === "start") ?? nodes[0];
+    if (!startNode) return;
+    setMessages([]);
+    setFlowActive(true);
+    const first = startNode.type === "start" ? ftarget(startNode.id, "out") : startNode.id;
+    stepFlow(first);
+  }
+  function stepFlow(nodeId?: string) {
+    const node = fnode(nodeId);
+    if (!node) return endFlow();
+    switch (node.type) {
+      case "message": {
+        botSay(node.data?.text || "");
+        const next = ftarget(node.id, "out");
+        if (next) setTimeout(() => stepFlow(next), 650);
+        else endFlow();
+        break;
+      }
+      case "choice": {
+        if (node.data?.text) botSay(node.data.text);
+        const options: string[] = Array.isArray(node.data?.options) ? node.data.options : [];
+        setFlowButtons(
+          options
+            .map((label, i) => ({ label: String(label).trim(), target: ftarget(node.id, `opt-${i}`) }))
+            .filter((b) => b.label)
+        );
+        break;
+      }
+      case "collect": {
+        if (node.data?.text) botSay(node.data.text);
+        setFlowCollect({ next: ftarget(node.id, "out") });
+        break;
+      }
+      case "link": {
+        if (node.data?.text) botSay(node.data.text);
+        setFlowButtons([{ label: node.data?.label || "Open", url: node.data?.url || "#", target: ftarget(node.id, "out") }]);
+        break;
+      }
+      case "handoff": {
+        botSay(node.data?.text || "No problem — I'll connect you with our team. 🙌");
+        logMsg("OUTBOUND", "", { needsHuman: true });
+        endFlow();
+        break;
+      }
+      case "ai":
+      default:
+        endFlow(); // hand off to the AI: free typing now answers from the KB
+    }
+  }
+  function onFlowButton(btn: FlowBtn) {
+    setFlowButtons([]);
+    if (btn.url) {
+      window.open(btn.url, "_blank", "noopener,noreferrer");
+    } else {
+      setMessages((m) => [...m, { from: "user", text: btn.label }]);
+      logMsg("INBOUND", btn.label);
+    }
+    if (btn.target) setTimeout(() => stepFlow(btn.target), 400);
+    else endFlow();
+  }
+  function submitCollect() {
+    const name = collectName.trim();
+    const email = collectEmail.trim();
+    if (!name && !email) return;
+    const summary = [name, email].filter(Boolean).join(" · ");
+    setMessages((m) => [...m, { from: "user", text: summary }]);
+    logMsg("INBOUND", summary, { name, email });
+    if (email) setStudentEmail(email);
+    const next = flowCollect?.next;
+    setFlowCollect(null);
+    setCollectName("");
+    setCollectEmail("");
+    if (next) setTimeout(() => stepFlow(next), 400);
+    else endFlow();
   }
 
   async function send(textArg?: string) {
@@ -140,6 +275,7 @@ export default function WidgetChat({
     if (!text || sending || !sessionId) return;
     setInput("");
     setSuggestions([]);
+    if (flowActive || flowButtons.length || flowCollect) endFlow(); // typing exits the scripted flow
     setMessages((m) => [...m, { from: "user", text }]);
     setSending(true);
     try {
@@ -277,7 +413,7 @@ export default function WidgetChat({
   }
 
   // ---- Chat -------------------------------------------------------------------
-  const showStarters = !sending && messages.length <= 1 && suggestions.length === 0;
+  const showStarters = !sending && !flowActive && !flowButtons.length && !flowCollect && messages.length <= 1 && suggestions.length === 0;
   return (
     <div className={`flex h-full flex-col ${ui.panel}`}>
       <header className="flex items-center gap-2 px-4 py-3 text-white" style={{ backgroundColor: active.color }}>
@@ -338,6 +474,50 @@ export default function WidgetChat({
                 {s}
               </button>
             ))}
+          </div>
+        )}
+
+        {/* Flow buttons (choice / link nodes) */}
+        {flowButtons.length > 0 && (
+          <div className="flex flex-wrap gap-1.5 pt-1">
+            {flowButtons.map((b, i) => (
+              <button
+                key={i}
+                onClick={() => onFlowButton(b)}
+                className="rounded-full px-3.5 py-1.5 text-xs font-semibold text-white shadow-sm transition hover:opacity-90"
+                style={{ backgroundColor: active.color }}
+              >
+                {b.label}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* Flow collect-info form */}
+        {flowCollect && (
+          <div className="space-y-1.5 pt-1">
+            <input
+              value={collectName}
+              onChange={(e) => setCollectName(e.target.value)}
+              placeholder="Your name"
+              className={`w-full rounded-xl border px-3 py-2 text-sm outline-none ${ui.input}`}
+            />
+            <input
+              type="email"
+              value={collectEmail}
+              onChange={(e) => setCollectEmail(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && submitCollect()}
+              placeholder="Email"
+              className={`w-full rounded-xl border px-3 py-2 text-sm outline-none ${ui.input}`}
+            />
+            <button
+              onClick={submitCollect}
+              disabled={!collectName.trim() && !collectEmail.trim()}
+              className="w-full rounded-xl px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:opacity-90 disabled:opacity-50"
+              style={{ backgroundColor: active.color }}
+            >
+              Send
+            </button>
           </div>
         )}
 

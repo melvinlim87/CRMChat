@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import WidgetChat from "@/components/WidgetChat";
 
 // Tone presets (kept in sync with TONES in lib/widget.ts; defined here to keep
@@ -26,7 +27,8 @@ type Widget = {
   avatar: string | null;
   tone: string;
   flowEnabled: boolean;
-  flow: { nodes?: unknown[]; edges?: unknown[] };
+  // Opaque flow graph — edited in the dedicated builder, passed through to the widget.
+  flow: { nodes?: any[]; edges?: any[] };
   gateEnabled: boolean;
   gateHeading: string;
   studentLabel: string;
@@ -245,6 +247,17 @@ export default function WidgetSetup() {
                 )}
               </div>
 
+              {/* Visual flow */}
+              <div className="flex items-center justify-between gap-3 rounded-xl border border-white/10 bg-white/[0.02] p-4">
+                <span>
+                  <span className="block text-sm font-medium text-slate-200">Visual flow builder {active.flowEnabled && <span className="ml-1 rounded-full bg-emerald-500/15 px-2 py-0.5 text-[11px] text-emerald-400">On</span>}</span>
+                  <span className="block text-xs text-slate-400">Design a guided conversation with buttons, branches, lead capture and AI handoff.</span>
+                </span>
+                <Link href={`/chat-widget/flow/${active.key}`} className="shrink-0 rounded-lg border border-brand-500/50 bg-brand-500/15 px-3 py-1.5 text-xs font-semibold text-brand-300 transition hover:bg-brand-500/25">
+                  Open builder →
+                </Link>
+              </div>
+
               <div className="flex items-center gap-3 pt-1">
                 <button onClick={save} disabled={saving} className="rounded-lg bg-brand-500 px-5 py-2 text-sm font-semibold text-slate-950 transition hover:bg-brand-600 disabled:opacity-60">
                   {saving ? "Saving…" : "Save"}
@@ -263,7 +276,7 @@ export default function WidgetSetup() {
           )}
           <div className="h-[520px] overflow-hidden rounded-xl border border-white/10 shadow-lg">
             <WidgetChat
-              key={`${active.key}|${active.welcome}|${active.color}|${active.title}|${previewTheme}|${active.gateEnabled}|${active.tone}|${active.gateHeading}|${active.studentLabel}|${active.visitorLabel}|${active.avatar}`}
+              key={`${active.key}|${active.welcome}|${active.color}|${active.title}|${previewTheme}|${active.gateEnabled}|${active.tone}|${active.gateHeading}|${active.studentLabel}|${active.visitorLabel}|${active.avatar}|${active.flowEnabled}`}
               config={active}
               widgetKey={active.key}
               gate={active.gateEnabled}
