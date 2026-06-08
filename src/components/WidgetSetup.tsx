@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import WidgetChat from "@/components/WidgetChat";
+import KnowledgeBase from "@/components/KnowledgeBase";
 
 // Tone presets (kept in sync with TONES in lib/widget.ts; defined here to keep
 // the server-only widget module out of this client bundle).
@@ -320,6 +321,17 @@ export default function WidgetSetup() {
             />
           </div>
           <p className="mt-3 text-xs text-slate-500">Chats from this widget are tagged <span className="text-brand-300">{active.tag || "widget"}</span> in your inbox.</p>
+        </div>
+      </div>
+
+      {/* Knowledge base — what the assistant answers from */}
+      <div className="rounded-2xl border border-white/10 bg-surface-panel p-6">
+        <h2 className="font-semibold text-slate-100">Knowledge base</h2>
+        <p className="mt-1 text-sm text-slate-400">
+          Upload PDFs (handbooks, pricing, policies) so the assistant can answer from them. Shared across all widgets, alongside your <Link href="/faq" className="text-brand-300 hover:underline">FAQs</Link>.
+        </p>
+        <div className="mt-4">
+          <KnowledgeBase />
         </div>
       </div>
     </div>
