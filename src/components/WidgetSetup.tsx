@@ -123,8 +123,17 @@ export default function WidgetSetup() {
         {/* Live preview — real widget */}
         <div className="h-fit rounded-2xl border border-white/10 bg-surface-panel p-4">
           <p className="mb-2 text-xs font-medium uppercase tracking-wide text-slate-400">Live preview — try it</p>
+          {active.key === "public" && (
+            <p className="mb-2 text-xs text-brand-300">This widget greets visitors with the “Are you a student?” gate.</p>
+          )}
           <div className="h-[520px] overflow-hidden rounded-xl border border-white/10 shadow-lg">
-            <WidgetChat key={`${active.key}|${active.welcome}|${active.color}|${active.title}`} config={active} widgetKey={active.key} />
+            <WidgetChat
+              key={`${active.key}|${active.welcome}|${active.color}|${active.title}`}
+              config={active}
+              widgetKey={active.key}
+              gate={active.key === "public"}
+              studentConfig={active.key === "public" ? widgets.find((w) => w.key === "students") : undefined}
+            />
           </div>
           <p className="mt-3 text-xs text-slate-500">Chats from this widget are tagged <span className="text-brand-300">{active.tag || "widget"}</span> in your inbox.</p>
         </div>
