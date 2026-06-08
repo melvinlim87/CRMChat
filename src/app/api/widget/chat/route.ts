@@ -67,10 +67,21 @@ export async function POST(req: NextRequest) {
     data: { conversationId: conversation.id, direction: "INBOUND", body: message.trim(), status: "received" },
   });
 
+  // If a human has taken over, don't let the AI reply. Just record the visitor's
+  // message and re-flag for attention so the agent sees it in the inbox.
+  if (conversation.humanTakeover) {
+    await prisma.conversation.update({
+      where: { id: conversation.id },
+      data: { lastMessageAt: new Date(), unreadCount: { increment: 1 }, needsHuman: true },
+    });
+    await runAutomations("MESSAGE_RECEIVED", { lead: conversation.lead, conversation, text: message.trim() }).catch(() => {});
+    return NextResponse.json({ replies: [], suggestions: [], reply: "", humanTakeover: true });
+  }
+
   // Explicit "talk to a human" → flag and respond deterministically (no AI),
   // so the handoff works even if no AI provider is configured.
   if (detectHumanRequest(message)) {
-    await prisma.conversation.update({ where: { id: conversation.id }, data: { needsHuman: true } });
+    await prisma.conversation.update({ where: { id: conversation.id }, data: { needsHuman: true, humanTakeover: true } });
     await notifySlack(`🙋 A website visitor asked to talk to a human:\n> ${message.trim()}`);
     const handoff = [
       "Of course — I'll connect you with a member of our team. 🙌",
@@ -85,7 +96,7 @@ export async function POST(req: NextRequest) {
       where: { id: conversation.id },
       data: { lastMessageAt: new Date(), unreadCount: { increment: handoff.length } },
     });
-    return NextResponse.json({ replies: handoff, suggestions: [], reply: handoff.join("\n\n"), handoff: true });
+    return NextResponse.json({ replies: handoff, suggestions: [], reply: handoff.join("\n\n"), handoff: true, humanTakeover: true });
   }
 
   // Flag for human attention if the message reads as frustrated/negative.
@@ -147,11 +158,13 @@ export async function GET(req: NextRequest) {
     where: { sessionId },
     include: { messages: { orderBy: { createdAt: "asc" }, take: 50 } },
   });
-  if (!conversation) return NextResponse.json({ messages: [] });
+  if (!conversation) return NextResponse.json({ messages: [], humanTakeover: false });
   return NextResponse.json({
+    humanTakeover: conversation.humanTakeover,
     messages: conversation.messages.map((m) => ({
       from: m.direction === "INBOUND" ? "user" : "bot",
       text: m.body,
+      createdAt: m.createdAt.toISOString(),
     })),
   });
 }

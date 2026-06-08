@@ -18,13 +18,17 @@ export async function POST(req: NextRequest) {
   });
   if (!conversation) return NextResponse.json({ error: "Conversation not found" }, { status: 404 });
 
-  // Attempt to deliver via WhatsApp. If not configured, we still persist the
-  // message locally so the UI works end-to-end during development.
   let status = "sent";
   let externalId: string | null = null;
   let deliveryError: string | undefined;
 
-  if (conversation.lead.phone) {
+  // Website-widget chats are delivered live to the visitor via polling — mark
+  // the message "agent" so the widget picks it up, and take over from the AI.
+  const isWidget = conversation.channel === "widget" || conversation.sessionId;
+
+  if (isWidget) {
+    status = "agent";
+  } else if (conversation.lead.phone) {
     const result = await sendWhatsAppText(conversation.lead.phone, body);
     externalId = result.id;
     if (result.error) {
@@ -48,7 +52,13 @@ export async function POST(req: NextRequest) {
 
   await prisma.conversation.update({
     where: { id: conversationId },
-    data: { lastMessageAt: message.createdAt, unreadCount: 0, needsHuman: false },
+    data: {
+      lastMessageAt: message.createdAt,
+      unreadCount: 0,
+      needsHuman: false,
+      // Once an agent replies on a widget chat, keep the AI out of it.
+      ...(isWidget ? { humanTakeover: true } : {}),
+    },
   });
 
   return NextResponse.json({

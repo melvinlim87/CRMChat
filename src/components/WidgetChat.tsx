@@ -43,6 +43,10 @@ export default function WidgetChat({
   const [verifying, setVerifying] = useState(false);
   const [authError, setAuthError] = useState("");
 
+  // Live human-takeover state.
+  const [humanMode, setHumanMode] = useState(false);
+  const lastPollRef = useRef<string>(new Date(0).toISOString());
+
   // Visual flow runtime state.
   const [flowActive, setFlowActive] = useState(false);
   const [flowButtons, setFlowButtons] = useState<FlowBtn[]>([]);
@@ -83,8 +87,11 @@ export default function WidgetChat({
     fetch(`/api/widget/chat?sessionId=${encodeURIComponent(sid)}`)
       .then((r) => r.json())
       .then((d) => {
+        if (d.humanTakeover) setHumanMode(true);
         if (Array.isArray(d.messages) && d.messages.length) {
-          setMessages(d.messages); // returning visitor — keep their history
+          setMessages(d.messages.map((m: any) => ({ from: m.from, text: m.text }))); // returning visitor — keep history
+          const last = d.messages[d.messages.length - 1]?.createdAt;
+          if (last) lastPollRef.current = last;
         } else if (!flowStartedRef.current && active.flowEnabled && (active.flow?.nodes?.length ?? 0) > 0) {
           flowStartedRef.current = true;
           startFlow();
@@ -93,6 +100,24 @@ export default function WidgetChat({
       .catch(() => {});
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [view, activeKey]);
+
+  // Poll for live agent replies (human takeover) while the chat is open.
+  useEffect(() => {
+    if (view !== "chat" || !sessionId) return;
+    const tick = async () => {
+      try {
+        const r = await fetch(`/api/widget/poll?sessionId=${encodeURIComponent(sessionId)}&after=${encodeURIComponent(lastPollRef.current)}`);
+        const d = await r.json();
+        if (d.humanTakeover) setHumanMode(true);
+        if (Array.isArray(d.messages) && d.messages.length) {
+          setMessages((m) => [...m, ...d.messages.map((x: any) => ({ from: "bot" as const, text: x.text }))]);
+          lastPollRef.current = d.messages[d.messages.length - 1].createdAt;
+        }
+      } catch {}
+    };
+    const id = setInterval(tick, 4000);
+    return () => clearInterval(id);
+  }, [view, sessionId]);
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight });
@@ -154,6 +179,8 @@ export default function WidgetChat({
     localStorage.setItem(`crmchat_widget_session_${activeKey}`, sid);
     setSessionId(sid);
     sidRef.current = sid;
+    lastPollRef.current = new Date().toISOString();
+    setHumanMode(false);
     setSuggestions([]);
     endFlow();
     if (active.flowEnabled && (active.flow?.nodes?.length ?? 0) > 0) {
@@ -286,6 +313,11 @@ export default function WidgetChat({
         body: JSON.stringify({ sessionId, message: text, widget: activeKey, email: studentEmail || undefined }),
       });
       const d = await res.json();
+      if (d.humanTakeover) setHumanMode(true);
+      // During human takeover the AI stays silent — the agent's reply arrives via polling.
+      if (d.humanTakeover && (!Array.isArray(d.replies) || d.replies.length === 0)) {
+        return;
+      }
       const replies: string[] = Array.isArray(d.replies) && d.replies.length
         ? d.replies
         : [d.reply || "Thanks! We'll be in touch."];
@@ -424,7 +456,7 @@ export default function WidgetChat({
   }
 
   // ---- Chat -------------------------------------------------------------------
-  const showStarters = !sending && !flowActive && !flowButtons.length && !flowCollect && messages.length <= 1 && suggestions.length === 0;
+  const showStarters = !sending && !humanMode && !flowActive && !flowButtons.length && !flowCollect && messages.length <= 1 && suggestions.length === 0;
   return (
     <div className={`flex h-full flex-col ${ui.panel}`}>
       <header className="flex items-center gap-2 px-4 py-3 text-white" style={{ backgroundColor: active.color }}>
@@ -437,7 +469,8 @@ export default function WidgetChat({
         <div className="flex-1 leading-tight">
           <p className="font-semibold">{active.title}</p>
           <p className="flex items-center gap-1 text-[11px] text-white/80">
-            <span className="h-1.5 w-1.5 rounded-full bg-green-400" /> AI assistant · replies instantly
+            <span className="h-1.5 w-1.5 rounded-full bg-green-400" />
+            {humanMode ? "Connected to our team" : "AI assistant · replies instantly"}
           </p>
         </div>
         <button onClick={newChat} title="New chat" className="rounded-md px-1.5 py-1 text-sm text-white/80 transition hover:bg-white/15 hover:text-white">

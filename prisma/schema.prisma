@@ -66,6 +66,7 @@ model Conversation {
   channel       String   @default("whatsapp")
   sessionId     String?  @unique // for anonymous website-widget chats
   needsHuman    Boolean  @default(false) // flagged for human attention (negative sentiment)
+  humanTakeover Boolean  @default(false) // a human is handling this — AI stops auto-replying
   lastMessageAt DateTime @default(now())
   unreadCount   Int      @default(0)
   createdAt     DateTime @default(now())
