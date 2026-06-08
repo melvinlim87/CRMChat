@@ -65,49 +65,81 @@ export async function POST(req: NextRequest) {
     `You are a warm, friendly human support agent chatting on a company's website — not a robot. Sound natural and conversational, like a real person texting. No markdown, no bullet points, no emoji spam. ` +
     `Reply with one to three SHORT messages, the way a person would split their thoughts across a few chat bubbles instead of one long paragraph. ` +
     `Put each separate message on its own line, separated by a line containing only "---". Most simple answers need just one message; use a second or third only when it genuinely helps (e.g. a quick greeting, then the answer, then a follow-up question). Keep every message to 1-2 sentences. ` +
-    `Only answer using the knowledge base below and the conversation. If you don't know or it's not covered, warmly say you'll connect them with the team and ask for their name and email. ${REPLY_RULES}` +
+    `Only answer using the knowledge base below and the conversation. If you don't know or it's not covered, warmly say you'll connect them with the team and ask for their name and email. ` +
+    `After your messages, you MAY add one final line starting with "SUGGESTIONS:" followed by 2-3 very short follow-up questions the visitor is likely to ask next, separated by " | " (max 6 words each). Only include it when natural; omit the line otherwise. ${REPLY_RULES}` +
     (widget.instruction ? `\n\n${widget.instruction}` : "") +
     (knowledge ? `\n\nKnowledge base (this is what you know about the company — rely on it):\n${knowledge}` : "");
 
   const result = await generateReply(history, system);
-  const replies = splitReplies(result.text) || [
+  const { replies, suggestions } = parseReply(result.text);
+  const finalReplies = replies || [
     "Thanks for reaching out! 🙏",
     "Our team will follow up shortly. Could you share your name and email so we can get back to you?",
   ];
 
   // Store each bubble as its own outbound message so the inbox mirrors the chat.
-  for (const body of replies) {
+  for (const body of finalReplies) {
     await prisma.message.create({
       data: { conversationId: conversation.id, direction: "OUTBOUND", body, status: result.text ? "sent" : "failed_local" },
     });
   }
   await prisma.conversation.update({
     where: { id: conversation.id },
-    data: { lastMessageAt: new Date(), unreadCount: { increment: replies.length } },
+    data: { lastMessageAt: new Date(), unreadCount: { increment: finalReplies.length } },
   });
 
   // Run message automations (n8n workflows) for this widget message.
   await runAutomations("MESSAGE_RECEIVED", { lead: conversation.lead, conversation, text: message.trim() }).catch(() => {});
 
   // `reply` kept for backwards compatibility with older widget clients.
-  return NextResponse.json({ replies, reply: replies.join("\n\n") });
+  return NextResponse.json({ replies: finalReplies, suggestions, reply: finalReplies.join("\n\n") });
 }
 
-// Turn the model's output into a sequence of human-like chat bubbles. The model
-// is asked to separate bubbles with a line of "---"; we also fall back to
-// splitting on blank lines, and cap it at 3 so it never floods the visitor.
-function splitReplies(text: string | null): string[] | null {
-  if (!text || !text.trim()) return null;
-  let parts = text
+// Restore an existing conversation so the widget keeps its history across reloads.
+export async function GET(req: NextRequest) {
+  const sessionId = req.nextUrl.searchParams.get("sessionId");
+  if (!sessionId) return NextResponse.json({ messages: [] });
+  const conversation = await prisma.conversation.findUnique({
+    where: { sessionId },
+    include: { messages: { orderBy: { createdAt: "asc" }, take: 50 } },
+  });
+  if (!conversation) return NextResponse.json({ messages: [] });
+  return NextResponse.json({
+    messages: conversation.messages.map((m) => ({
+      from: m.direction === "INBOUND" ? "user" : "bot",
+      text: m.body,
+    })),
+  });
+}
+
+// Turn the model's output into human-like chat bubbles plus optional follow-up
+// suggestion chips. Bubbles are separated by a line of "---" (with a blank-line
+// fallback) and capped at 3 so it never floods the visitor. A trailing
+// "SUGGESTIONS: a | b | c" line becomes tappable quick replies.
+function parseReply(text: string | null): { replies: string[] | null; suggestions: string[] } {
+  if (!text || !text.trim()) return { replies: null, suggestions: [] };
+
+  let body = text;
+  let suggestions: string[] = [];
+  const m = body.match(/^\s*SUGGESTIONS:\s*(.+)$/im);
+  if (m) {
+    suggestions = m[1]
+      .split("|")
+      .map((s) => s.trim())
+      .filter(Boolean)
+      .slice(0, 3);
+    body = body.slice(0, m.index).trimEnd();
+  }
+
+  let parts = body
     .split(/^\s*-{2,}\s*$/m)
     .map((p) => p.trim())
     .filter(Boolean);
   if (parts.length <= 1) {
-    parts = text
+    parts = body
       .split(/\n{2,}/)
       .map((p) => p.trim())
       .filter(Boolean);
   }
-  if (parts.length === 0) return null;
-  return parts.slice(0, 3);
+  return { replies: parts.length ? parts.slice(0, 3) : null, suggestions };
 }

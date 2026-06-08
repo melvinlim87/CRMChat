@@ -12,6 +12,7 @@ export default function WidgetChat({
   widgetKey?: string;
 }) {
   const [messages, setMessages] = useState<Msg[]>([{ from: "bot", text: config.welcome }]);
+  const [suggestions, setSuggestions] = useState<string[]>([]);
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
   const [sessionId, setSessionId] = useState("");
@@ -25,16 +26,25 @@ export default function WidgetChat({
       localStorage.setItem(storeKey, sid);
     }
     setSessionId(sid);
+
+    // Restore prior conversation so the chat survives page reloads.
+    fetch(`/api/widget/chat?sessionId=${encodeURIComponent(sid)}`)
+      .then((r) => r.json())
+      .then((d) => {
+        if (Array.isArray(d.messages) && d.messages.length) setMessages(d.messages);
+      })
+      .catch(() => {});
   }, [widgetKey]);
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight });
-  }, [messages, sending]);
+  }, [messages, sending, suggestions]);
 
-  async function send() {
-    const text = input.trim();
+  async function send(textArg?: string) {
+    const text = (textArg ?? input).trim();
     if (!text || sending || !sessionId) return;
     setInput("");
+    setSuggestions([]);
     setMessages((m) => [...m, { from: "user", text }]);
     setSending(true);
     try {
@@ -54,6 +64,7 @@ export default function WidgetChat({
         if (i > 0) await new Promise((r) => setTimeout(r, typingDelay(replies[i])));
         setMessages((m) => [...m, { from: "bot", text: replies[i] }]);
       }
+      if (Array.isArray(d.suggestions)) setSuggestions(d.suggestions);
     } catch {
       setMessages((m) => [...m, { from: "bot", text: "Sorry, something went wrong. Please try again." }]);
     } finally {
@@ -70,7 +81,12 @@ export default function WidgetChat({
     <div className="flex h-full flex-col bg-white">
       <header className="flex items-center gap-2 px-4 py-3 text-white" style={{ backgroundColor: config.color }}>
         <span className="flex h-7 w-7 items-center justify-center rounded-full bg-white/25 text-sm">💬</span>
-        <p className="font-semibold">{config.title}</p>
+        <div className="leading-tight">
+          <p className="font-semibold">{config.title}</p>
+          <p className="flex items-center gap-1 text-[11px] text-white/80">
+            <span className="h-1.5 w-1.5 rounded-full bg-green-400" /> Online
+          </p>
+        </div>
       </header>
 
       <div ref={scrollRef} className="flex-1 space-y-2 overflow-y-auto bg-slate-50 px-3 py-4">
@@ -88,7 +104,25 @@ export default function WidgetChat({
         ))}
         {sending && (
           <div className="flex justify-start">
-            <div className="rounded-2xl rounded-bl-sm bg-white px-3 py-2 text-sm text-slate-400 shadow-sm">…</div>
+            <div className="flex items-center gap-1 rounded-2xl rounded-bl-sm bg-white px-3 py-2.5 shadow-sm">
+              <span className="h-2 w-2 animate-bounce rounded-full bg-slate-400 [animation-delay:-0.3s]" />
+              <span className="h-2 w-2 animate-bounce rounded-full bg-slate-400 [animation-delay:-0.15s]" />
+              <span className="h-2 w-2 animate-bounce rounded-full bg-slate-400" />
+            </div>
+          </div>
+        )}
+        {!sending && suggestions.length > 0 && (
+          <div className="flex flex-wrap justify-end gap-1.5 pt-1">
+            {suggestions.map((s, i) => (
+              <button
+                key={i}
+                onClick={() => send(s)}
+                className="rounded-full border px-3 py-1.5 text-xs font-medium transition hover:bg-slate-100"
+                style={{ borderColor: config.color, color: config.color }}
+              >
+                {s}
+              </button>
+            ))}
           </div>
         )}
       </div>
@@ -102,7 +136,7 @@ export default function WidgetChat({
           className="flex-1 rounded-full border border-slate-200 bg-slate-50 px-4 py-2 text-sm text-slate-800 outline-none focus:border-slate-400"
         />
         <button
-          onClick={send}
+          onClick={() => send()}
           disabled={sending || !input.trim()}
           className="flex h-9 w-9 items-center justify-center rounded-full text-white disabled:opacity-50"
           style={{ backgroundColor: config.color }}
