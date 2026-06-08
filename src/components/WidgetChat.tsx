@@ -8,6 +8,7 @@ type FEdge = { source: string; target: string; sourceHandle?: string | null };
 type WConfig = {
   key?: string; title: string; welcome: string; color: string; starters?: string[]; avatar?: string | null;
   gateHeading?: string; studentLabel?: string; visitorLabel?: string;
+  studentColor?: string | null; visitorColor?: string | null;
   flowEnabled?: boolean; flow?: { nodes?: FNode[]; edges?: FEdge[] };
 };
 type FlowBtn = { label: string; target?: string; url?: string };
@@ -356,13 +357,23 @@ export default function WidgetChat({
             <button
               onClick={() => setView("studentAuth")}
               className="rounded-xl px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:opacity-90"
-              style={{ backgroundColor: studentConfig?.color || config.color }}
+              style={{ backgroundColor: config.studentColor || studentConfig?.color || config.color }}
             >
               {config.studentLabel || "🎓 Existing Student"}
             </button>
-            <button onClick={chooseVisitor} className={`rounded-xl border px-4 py-3 text-sm font-semibold transition ${ui.outline}`}>
-              {config.visitorLabel || "💬 General Enquiry"}
-            </button>
+            {config.visitorColor ? (
+              <button
+                onClick={chooseVisitor}
+                className="rounded-xl px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:opacity-90"
+                style={{ backgroundColor: config.visitorColor }}
+              >
+                {config.visitorLabel || "💬 General Enquiry"}
+              </button>
+            ) : (
+              <button onClick={chooseVisitor} className={`rounded-xl border px-4 py-3 text-sm font-semibold transition ${ui.outline}`}>
+                {config.visitorLabel || "💬 General Enquiry"}
+              </button>
+            )}
           </div>
         </div>
       </div>

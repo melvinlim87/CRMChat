@@ -17,6 +17,8 @@ export type WidgetConfig = {
   gateHeading: string;
   studentLabel: string;
   visitorLabel: string;
+  studentColor: string | null;
+  visitorColor: string | null;
 };
 
 export type WidgetFlow = { nodes?: any[]; edges?: any[] };
@@ -54,6 +56,8 @@ const DEFAULTS: WidgetConfig[] = [
     gateHeading: "Welcome! How can we help?",
     studentLabel: "🎓 Existing Student",
     visitorLabel: "💬 General Enquiry",
+    studentColor: null,
+    visitorColor: null,
   },
   {
     key: "students",
@@ -72,6 +76,8 @@ const DEFAULTS: WidgetConfig[] = [
     gateHeading: "Welcome! How can we help?",
     studentLabel: "🎓 Existing Student",
     visitorLabel: "💬 General Enquiry",
+    studentColor: null,
+    visitorColor: null,
   },
 ];
 
@@ -97,6 +103,7 @@ function toConfig(w: {
   key: string; name: string; title: string; welcome: string; color: string; instruction: string | null; tag: string | null;
   starters?: string[]; avatar?: string | null; tone?: string; flowEnabled?: boolean; flow?: unknown;
   gateEnabled?: boolean; gateHeading?: string; studentLabel?: string; visitorLabel?: string;
+  studentColor?: string | null; visitorColor?: string | null;
 }): WidgetConfig {
   return {
     key: w.key, name: w.name, title: w.title, welcome: w.welcome, color: w.color, instruction: w.instruction, tag: w.tag,
@@ -109,5 +116,7 @@ function toConfig(w: {
     gateHeading: w.gateHeading ?? "Welcome! How can we help?",
     studentLabel: w.studentLabel ?? "🎓 Existing Student",
     visitorLabel: w.visitorLabel ?? "💬 General Enquiry",
+    studentColor: w.studentColor ?? null,
+    visitorColor: w.visitorColor ?? null,
   };
 }

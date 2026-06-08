@@ -33,6 +33,8 @@ type Widget = {
   gateHeading: string;
   studentLabel: string;
   visitorLabel: string;
+  studentColor: string | null;
+  visitorColor: string | null;
 };
 
 export default function WidgetSetup() {
@@ -243,6 +245,14 @@ export default function WidgetSetup() {
                       <Field label="Student button"><input className={field} value={active.studentLabel} onChange={(e) => update({ studentLabel: e.target.value })} /></Field>
                       <Field label="Visitor button"><input className={field} value={active.visitorLabel} onChange={(e) => update({ visitorLabel: e.target.value })} /></Field>
                     </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <Field label="Student button colour">
+                        <GateColor value={active.studentColor} fallback={widgets.find((w) => w.key === "students")?.color || active.color} onChange={(v) => update({ studentColor: v })} />
+                      </Field>
+                      <Field label="Visitor button colour">
+                        <GateColor value={active.visitorColor} fallback="" outlineLabel="Outline" onChange={(v) => update({ visitorColor: v })} />
+                      </Field>
+                    </div>
                   </div>
                 )}
               </div>
@@ -276,7 +286,7 @@ export default function WidgetSetup() {
           )}
           <div className="h-[520px] overflow-hidden rounded-xl border border-white/10 shadow-lg">
             <WidgetChat
-              key={`${active.key}|${active.welcome}|${active.color}|${active.title}|${previewTheme}|${active.gateEnabled}|${active.tone}|${active.gateHeading}|${active.studentLabel}|${active.visitorLabel}|${active.avatar}|${active.flowEnabled}`}
+              key={`${active.key}|${active.welcome}|${active.color}|${active.title}|${previewTheme}|${active.gateEnabled}|${active.tone}|${active.gateHeading}|${active.studentLabel}|${active.visitorLabel}|${active.avatar}|${active.flowEnabled}|${active.studentColor}|${active.visitorColor}`}
               config={active}
               widgetKey={active.key}
               gate={active.gateEnabled}
@@ -296,6 +306,41 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
     <div>
       <label className="mb-1 block text-xs font-medium text-slate-400">{label}</label>
       {children}
+    </div>
+  );
+}
+
+// Colour picker that supports an empty "default" state (null).
+function GateColor({
+  value,
+  fallback,
+  outlineLabel,
+  onChange,
+}: {
+  value: string | null;
+  fallback: string;
+  outlineLabel?: string;
+  onChange: (v: string | null) => void;
+}) {
+  return (
+    <div className="flex items-center gap-2">
+      <input
+        type="color"
+        value={value || fallback || "#cda14a"}
+        onChange={(e) => onChange(e.target.value)}
+        className="h-9 w-12 cursor-pointer rounded border border-white/10 bg-transparent"
+      />
+      <input
+        className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-slate-100 outline-none focus:border-brand-500"
+        value={value ?? ""}
+        placeholder={value ? "" : outlineLabel || "Default"}
+        onChange={(e) => onChange(e.target.value.trim() || null)}
+      />
+      {value && (
+        <button onClick={() => onChange(null)} className="shrink-0 text-xs text-slate-400 hover:text-red-400" title="Reset to default">
+          Reset
+        </button>
+      )}
     </div>
   );
 }

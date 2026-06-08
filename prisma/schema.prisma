@@ -165,6 +165,8 @@ model Widget {
   gateHeading String   @default("Welcome! How can we help?")
   studentLabel String  @default("🎓 Existing Student")
   visitorLabel String  @default("💬 General Enquiry")
+  studentColor String? // gate "student" button colour (defaults to students widget colour)
+  visitorColor String? // gate "visitor" button colour (defaults to outline style)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }
