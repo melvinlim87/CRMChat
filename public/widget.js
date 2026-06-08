@@ -11,11 +11,33 @@
   var origin = new URL(cs.src).origin;
   var color = cs.getAttribute("data-color") || "#cda14a";
   var widgetKey = cs.getAttribute("data-widget") || "public";
+  var theme = cs.getAttribute("data-theme") || "light";
+  // Inline mode: render the chat inside a container on the page instead of a
+  // floating bubble. data-inline = a CSS selector for the target element.
+  var inlineSelector = cs.getAttribute("data-inline");
 
+  var src = origin + "/widget?w=" + encodeURIComponent(widgetKey) + "&theme=" + encodeURIComponent(theme);
+
+  // --- Inline embed: fills a container (e.g. your "AI Assistant" panel) -------
+  if (inlineSelector) {
+    var mount = document.querySelector(inlineSelector);
+    if (!mount) {
+      console.warn("[widget] inline target not found:", inlineSelector);
+      return;
+    }
+    var inlineFrame = document.createElement("iframe");
+    inlineFrame.src = src;
+    inlineFrame.title = "AI Assistant";
+    inlineFrame.style.cssText =
+      "width:100%;height:100%;min-height:520px;border:0;border-radius:16px;background:transparent;display:block;";
+    mount.appendChild(inlineFrame);
+    return;
+  }
+
+  // --- Floating launcher bubble ----------------------------------------------
   if (window.__crmchatWidgetLoaded) return;
   window.__crmchatWidgetLoaded = true;
 
-  // Floating launcher button
   var btn = document.createElement("button");
   btn.setAttribute("aria-label", "Open chat");
   btn.innerHTML = "💬";
@@ -26,9 +48,8 @@
   btn.onmouseenter = function () { btn.style.transform = "scale(1.06)"; };
   btn.onmouseleave = function () { btn.style.transform = "scale(1)"; };
 
-  // Chat panel iframe
   var frame = document.createElement("iframe");
-  frame.src = origin + "/widget?w=" + encodeURIComponent(widgetKey);
+  frame.src = src;
   frame.title = "Chat";
   frame.style.cssText =
     "position:fixed;bottom:88px;right:20px;width:380px;max-width:calc(100vw - 32px);height:560px;" +

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { generateReply, REPLY_RULES, type ChatMessage } from "@/lib/ai";
 import { getKnowledgeContext } from "@/lib/knowledge";
-import { detectNegative } from "@/lib/sentiment";
+import { detectNegative, detectHumanRequest } from "@/lib/sentiment";
 import { notifySlack } from "@/lib/slack";
 import { runAutomations } from "@/lib/automation-engine";
 import { getWidget } from "@/lib/widget";
@@ -66,6 +66,27 @@ export async function POST(req: NextRequest) {
   await prisma.message.create({
     data: { conversationId: conversation.id, direction: "INBOUND", body: message.trim(), status: "received" },
   });
+
+  // Explicit "talk to a human" → flag and respond deterministically (no AI),
+  // so the handoff works even if no AI provider is configured.
+  if (detectHumanRequest(message)) {
+    await prisma.conversation.update({ where: { id: conversation.id }, data: { needsHuman: true } });
+    await notifySlack(`🙋 A website visitor asked to talk to a human:\n> ${message.trim()}`);
+    const handoff = [
+      "Of course — I'll connect you with a member of our team. 🙌",
+      "They'll pick this up shortly. Could you share your name and email so we can follow up?",
+    ];
+    for (const body of handoff) {
+      await prisma.message.create({
+        data: { conversationId: conversation.id, direction: "OUTBOUND", body, status: "sent" },
+      });
+    }
+    await prisma.conversation.update({
+      where: { id: conversation.id },
+      data: { lastMessageAt: new Date(), unreadCount: { increment: handoff.length } },
+    });
+    return NextResponse.json({ replies: handoff, suggestions: [], reply: handoff.join("\n\n"), handoff: true });
+  }
 
   // Flag for human attention if the message reads as frustrated/negative.
   if (detectNegative(message)) {

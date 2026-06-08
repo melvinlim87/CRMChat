@@ -13,6 +13,21 @@ const NEGATIVE = [
   "退款", "投诉", "骗", "垃圾", "很差", "生气",
 ];
 
+// Explicit "please connect me with a person" requests (not necessarily angry).
+const HUMAN_REQUEST = [
+  "talk to a human", "speak to a human", "talk to a person", "speak to a person",
+  "real person", "speak to someone", "talk to someone", "talk to an agent",
+  "speak to an agent", "talk to a manager", "speak to a manager", "live agent",
+  "human agent", "contact the team", "talk to staff", "talk to support",
+  "人工", "真人", "客服",
+];
+
+export function detectHumanRequest(text: string): boolean {
+  if (!text) return false;
+  const lower = text.toLowerCase();
+  return HUMAN_REQUEST.some((w) => lower.includes(w));
+}
+
 export function detectNegative(text: string): boolean {
   if (!text) return false;
   const lower = text.toLowerCase();

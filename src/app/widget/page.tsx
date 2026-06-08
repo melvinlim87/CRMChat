@@ -4,20 +4,22 @@ import { getWidget } from "@/lib/widget";
 export const dynamic = "force-dynamic";
 
 // Public chat UI, embedded via an iframe by widget.js.
-//   ?w=<key>   picks the widget (e.g. "students" for the student-only embed)
-//   default/"public" shows the unified entry that first asks "Are you a student?"
-export default async function WidgetPage({ searchParams }: { searchParams: { w?: string } }) {
+//   ?w=<key>      picks the widget (e.g. "students" for the student-only embed)
+//   ?theme=dark   renders the dark theme (to sit inside a dark site)
+//   default/"public" shows the unified entry that first asks who they are.
+export default async function WidgetPage({ searchParams }: { searchParams: { w?: string; theme?: string } }) {
   const key = searchParams.w || "public";
   const config = await getWidget(key);
+  const theme = searchParams.theme === "dark" ? "dark" : "light";
 
   // The public widget is the unified front door: it gates students through a
-  // quick email sign-in, while visitors chat straight away.
+  // quick email sign-in, while general enquiries chat straight away.
   const gated = key === "public";
   const studentConfig = gated ? await getWidget("students") : undefined;
 
   return (
     <div className="h-screen">
-      <WidgetChat config={config} widgetKey={config.key} studentConfig={studentConfig} gate={gated} />
+      <WidgetChat config={config} widgetKey={config.key} studentConfig={studentConfig} gate={gated} theme={theme} />
     </div>
   );
 }
