@@ -46,6 +46,7 @@ export default function WidgetSetup() {
   const [copied, setCopied] = useState(false);
   const [embed, setEmbed] = useState<"floating" | "inline">("floating");
   const [previewTheme, setPreviewTheme] = useState<"light" | "dark">("light");
+  const [inlineHeight, setInlineHeight] = useState("600px");
   const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
@@ -64,9 +65,11 @@ export default function WidgetSetup() {
   }
 
   const themeAttr = previewTheme === "dark" ? ` data-theme="dark"` : "";
+  const h = inlineHeight.trim() || "600px";
+  const fill = h === "100%" || h === "fill";
   const snippet =
     embed === "inline"
-      ? `<!-- Put this where you want the assistant to appear (e.g. your AI Assistant panel) -->\n<div id="crmchat-assistant" style="height:600px"></div>\n<script src="${origin}/widget.js" data-widget="${active.key}" data-color="${active.color}"${themeAttr} data-inline="#crmchat-assistant" defer></script>`
+      ? `<!-- Put this where you want the assistant to appear (e.g. your AI Assistant panel) -->\n<div id="crmchat-assistant"${fill ? ' style="height:600px"' : ""}></div>\n<script src="${origin}/widget.js" data-widget="${active.key}" data-color="${active.color}"${themeAttr} data-inline="#crmchat-assistant" data-height="${h}" defer></script>`
       : `<script src="${origin}/widget.js" data-widget="${active.key}" data-color="${active.color}"${themeAttr} defer></script>`;
 
   async function save() {
@@ -163,7 +166,29 @@ export default function WidgetSetup() {
               </div>
             </div>
             {embed === "inline" && (
-              <p className="mt-3 text-xs text-slate-400">Inline mode drops the assistant straight into a container on your page — perfect for an “AI Assistant” section. Use a dark theme to match a dark site.</p>
+              <div className="mt-3 space-y-2">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="text-xs font-medium text-slate-400">Panel height</span>
+                  {["520px", "600px", "700px", "100%"].map((h) => (
+                    <button
+                      key={h}
+                      onClick={() => setInlineHeight(h)}
+                      className={`rounded-md border px-2.5 py-1 text-xs transition ${inlineHeight === h ? "border-brand-500 bg-brand-500/15 text-brand-300" : "border-white/10 text-slate-300 hover:bg-white/5"}`}
+                    >
+                      {h === "100%" ? "Fill panel" : h}
+                    </button>
+                  ))}
+                  <input
+                    value={inlineHeight}
+                    onChange={(e) => setInlineHeight(e.target.value)}
+                    className="w-24 rounded-md border border-white/10 bg-white/5 px-2 py-1 text-xs text-slate-100 outline-none focus:border-brand-500"
+                    placeholder="e.g. 80vh"
+                  />
+                </div>
+                <p className="text-xs text-slate-400">
+                  Inline mode drops the assistant into a container on your page. Choose <b>Fill panel</b> to expand to your AI Assistant card (the card must have its own height), or set a fixed height. Use a dark theme to match a dark site.
+                </p>
+              </div>
             )}
 
             <pre className="mt-4 overflow-x-auto whitespace-pre-wrap rounded-lg border border-white/10 bg-black/40 p-3 text-xs text-brand-300">{snippet}</pre>

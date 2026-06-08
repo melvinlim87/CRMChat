@@ -15,6 +15,11 @@
   // Inline mode: render the chat inside a container on the page instead of a
   // floating bubble. data-inline = a CSS selector for the target element.
   var inlineSelector = cs.getAttribute("data-inline");
+  // Height for inline mode: a number (px), a CSS value ("600px", "80vh"), or
+  // "100%"/"fill" to fill the parent (the parent must have its own height).
+  var height = cs.getAttribute("data-height") || "600px";
+  if (/^\d+$/.test(height)) height += "px";
+  if (height === "fill") height = "100%";
 
   var src = origin + "/widget?w=" + encodeURIComponent(widgetKey) + "&theme=" + encodeURIComponent(theme);
 
@@ -25,11 +30,16 @@
       console.warn("[widget] inline target not found:", inlineSelector);
       return;
     }
+    // If filling the parent, make sure the mount actually stretches.
+    if (height === "100%") {
+      mount.style.height = mount.style.height || "100%";
+      mount.style.minHeight = mount.style.minHeight || "480px";
+    }
     var inlineFrame = document.createElement("iframe");
     inlineFrame.src = src;
     inlineFrame.title = "AI Assistant";
     inlineFrame.style.cssText =
-      "width:100%;height:100%;min-height:520px;border:0;border-radius:16px;background:transparent;display:block;";
+      "width:100%;height:" + height + ";min-height:480px;border:0;border-radius:16px;background:transparent;display:block;";
     mount.appendChild(inlineFrame);
     return;
   }
