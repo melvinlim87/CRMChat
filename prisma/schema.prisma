@@ -156,8 +156,23 @@ model Widget {
   color       String   @default("#cda14a")
   instruction String? // extra AI persona/system instruction
   tag         String? // tag applied to leads from this widget
+  starters    String[] @default([]) // suggested starter prompts shown on open
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+}
+
+// Frequently-asked questions. Surfaced in the AI knowledge base so the
+// assistant can answer them, and available to render on the public site.
+model Faq {
+  id        String   @id @default(cuid())
+  question  String
+  answer    String
+  category  String?
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([order])
 }
 
 // A published/editable marketing page built in the drag-and-drop site builder.

@@ -24,6 +24,9 @@ export async function POST(req: NextRequest) {
     color: typeof b.color === "string" && b.color.trim() ? b.color.trim() : "#cda14a",
     instruction: typeof b.instruction === "string" && b.instruction.trim() ? b.instruction.trim() : null,
     tag: typeof b.tag === "string" && b.tag.trim() ? b.tag.trim() : null,
+    starters: Array.isArray(b.starters)
+      ? b.starters.map((s: unknown) => String(s).trim()).filter(Boolean).slice(0, 6)
+      : [],
   };
 
   await prisma.widget.upsert({

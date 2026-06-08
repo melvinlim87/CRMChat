@@ -11,6 +11,7 @@ type Widget = {
   color: string;
   instruction: string | null;
   tag: string | null;
+  starters: string[];
 };
 
 export default function WidgetSetup() {
@@ -141,6 +142,15 @@ export default function WidgetSetup() {
               <Field label="Welcome message"><input className={field} value={active.welcome} onChange={(e) => update({ welcome: e.target.value })} /></Field>
               <Field label="AI instruction (persona for this widget)">
                 <textarea rows={2} className={field} value={active.instruction ?? ""} onChange={(e) => update({ instruction: e.target.value })} placeholder="e.g. You are helping existing students." />
+              </Field>
+              <Field label="Starter prompts (one per line — shown as tappable buttons when the chat opens)">
+                <textarea
+                  rows={3}
+                  className={field}
+                  value={(active.starters ?? []).join("\n")}
+                  onChange={(e) => update({ starters: e.target.value.split("\n") })}
+                  placeholder={"What do you offer?\nHow do I get started?\nPricing & plans"}
+                />
               </Field>
               <div className="grid grid-cols-2 gap-3">
                 <Field label="Tag new leads with"><input className={field} value={active.tag ?? ""} onChange={(e) => update({ tag: e.target.value })} placeholder="website / student" /></Field>

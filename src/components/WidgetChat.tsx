@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState, Fragment } from "react";
 
 type Msg = { from: "bot" | "user"; text: string };
-type WConfig = { key?: string; title: string; welcome: string; color: string };
+type WConfig = { key?: string; title: string; welcome: string; color: string; starters?: string[] };
 type View = "gate" | "studentAuth" | "chat";
 type Theme = "light" | "dark";
 
@@ -182,11 +182,16 @@ export default function WidgetChat({
       : "border-slate-300 bg-white text-slate-700 hover:bg-slate-100",
   };
 
-  // Starter prompts shown when a fresh chat opens.
+  // Starter prompts shown when a fresh chat opens — use the ones configured for
+  // this widget, falling back to sensible defaults.
   const isStudent = Boolean(studentEmail);
-  const starters = isStudent
-    ? ["Help with my account", "Where are my course materials?", "Payment & billing"]
-    : ["What do you offer?", "How do I get started?", "Pricing & plans"];
+  const configured = (active.starters ?? []).map((s) => s.trim()).filter(Boolean);
+  const starters =
+    configured.length
+      ? configured
+      : isStudent
+      ? ["Help with my account", "Where are my course materials?", "Payment & billing"]
+      : ["What do you offer?", "How do I get started?", "Pricing & plans"];
 
   const headerColor = view === "studentAuth" ? studentConfig?.color || config.color : active.color;
   const headerTitle = view === "gate" ? config.title : view === "studentAuth" ? studentConfig?.title || "Student login" : active.title;

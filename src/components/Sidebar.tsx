@@ -14,6 +14,7 @@ const NAV = [
   { href: "/chat-widget", label: "Chat Widget", icon: WidgetIcon },
   { href: "/flows", label: "AI Flows", icon: FlowIcon },
   { href: "/knowledge", label: "Knowledge", icon: BookIcon },
+  { href: "/faq", label: "FAQs", icon: BookIcon },
   { href: "/automations", label: "Automations", icon: BoltIcon },
   { href: "/integrations", label: "Integrations", icon: PlugIcon },
   { href: "/go-live", label: "Go Live", icon: RocketIcon },

@@ -8,6 +8,7 @@ export type WidgetConfig = {
   color: string;
   instruction: string | null;
   tag: string | null;
+  starters: string[];
 };
 
 // The two widgets every workspace starts with.
@@ -20,6 +21,7 @@ const DEFAULTS: WidgetConfig[] = [
     color: "#cda14a",
     instruction: null,
     tag: "website",
+    starters: ["What do you offer?", "How do I get started?", "Pricing & plans"],
   },
   {
     key: "students",
@@ -29,6 +31,7 @@ const DEFAULTS: WidgetConfig[] = [
     color: "#7c3aed",
     instruction: "You are assisting an existing student of the academy. Be supportive and reference their course where relevant.",
     tag: "student",
+    starters: ["Help with my account", "Where are my course materials?", "Payment & billing"],
   },
 ];
 
@@ -51,7 +54,7 @@ export async function getWidget(key: string): Promise<WidgetConfig> {
 }
 
 function toConfig(w: {
-  key: string; name: string; title: string; welcome: string; color: string; instruction: string | null; tag: string | null;
+  key: string; name: string; title: string; welcome: string; color: string; instruction: string | null; tag: string | null; starters?: string[];
 }): WidgetConfig {
-  return { key: w.key, name: w.name, title: w.title, welcome: w.welcome, color: w.color, instruction: w.instruction, tag: w.tag };
+  return { key: w.key, name: w.name, title: w.title, welcome: w.welcome, color: w.color, instruction: w.instruction, tag: w.tag, starters: w.starters ?? [] };
 }
