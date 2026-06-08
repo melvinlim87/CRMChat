@@ -9,12 +9,17 @@ export type WidgetConfig = {
   instruction: string | null;
   tag: string | null;
   starters: string[];
+  avatar: string | null;
   tone: string;
+  flowEnabled: boolean;
+  flow: WidgetFlow;
   gateEnabled: boolean;
   gateHeading: string;
   studentLabel: string;
   visitorLabel: string;
 };
+
+export type WidgetFlow = { nodes?: any[]; edges?: any[] };
 
 // AI tone presets → guidance appended to the system prompt.
 export const TONES: { key: string; label: string; guidance: string }[] = [
@@ -41,7 +46,10 @@ const DEFAULTS: WidgetConfig[] = [
     instruction: null,
     tag: "website",
     starters: ["What do you offer?", "How do I get started?", "Pricing & plans"],
+    avatar: null,
     tone: "friendly",
+    flowEnabled: false,
+    flow: {},
     gateEnabled: true,
     gateHeading: "Welcome! How can we help?",
     studentLabel: "🎓 Existing Student",
@@ -56,7 +64,10 @@ const DEFAULTS: WidgetConfig[] = [
     instruction: "You are assisting an existing student of the academy. Be supportive and reference their course where relevant.",
     tag: "student",
     starters: ["Help with my account", "Where are my course materials?", "Payment & billing"],
+    avatar: null,
     tone: "friendly",
+    flowEnabled: false,
+    flow: {},
     gateEnabled: false,
     gateHeading: "Welcome! How can we help?",
     studentLabel: "🎓 Existing Student",
@@ -84,12 +95,16 @@ export async function getWidget(key: string): Promise<WidgetConfig> {
 
 function toConfig(w: {
   key: string; name: string; title: string; welcome: string; color: string; instruction: string | null; tag: string | null;
-  starters?: string[]; tone?: string; gateEnabled?: boolean; gateHeading?: string; studentLabel?: string; visitorLabel?: string;
+  starters?: string[]; avatar?: string | null; tone?: string; flowEnabled?: boolean; flow?: unknown;
+  gateEnabled?: boolean; gateHeading?: string; studentLabel?: string; visitorLabel?: string;
 }): WidgetConfig {
   return {
     key: w.key, name: w.name, title: w.title, welcome: w.welcome, color: w.color, instruction: w.instruction, tag: w.tag,
     starters: w.starters ?? [],
+    avatar: w.avatar ?? null,
     tone: w.tone ?? "friendly",
+    flowEnabled: w.flowEnabled ?? false,
+    flow: (w.flow && typeof w.flow === "object" ? (w.flow as WidgetFlow) : {}) || {},
     gateEnabled: w.gateEnabled ?? false,
     gateHeading: w.gateHeading ?? "Welcome! How can we help?",
     studentLabel: w.studentLabel ?? "🎓 Existing Student",

@@ -157,7 +157,10 @@ model Widget {
   instruction String? // extra AI persona/system instruction
   tag         String? // tag applied to leads from this widget
   starters    String[] @default([]) // suggested starter prompts shown on open
+  avatar      String? // header logo/avatar image URL
   tone        String   @default("friendly") // AI tone of voice
+  flowEnabled Boolean  @default(false) // run the visual widget flow on open
+  flow        Json     @default("{}") // { nodes, edges } for the widget flow builder
   gateEnabled Boolean  @default(false) // show the "Are you a student?" intro flow
   gateHeading String   @default("Welcome! How can we help?")
   studentLabel String  @default("🎓 Existing Student")

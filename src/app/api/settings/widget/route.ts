@@ -27,7 +27,10 @@ export async function POST(req: NextRequest) {
     starters: Array.isArray(b.starters)
       ? b.starters.map((s: unknown) => String(s).trim()).filter(Boolean).slice(0, 6)
       : [],
+    avatar: typeof b.avatar === "string" && b.avatar.trim() ? b.avatar.trim() : null,
     tone: typeof b.tone === "string" && b.tone.trim() ? b.tone.trim() : "friendly",
+    flowEnabled: Boolean(b.flowEnabled),
+    flow: b.flow && typeof b.flow === "object" ? b.flow : {},
     gateEnabled: Boolean(b.gateEnabled),
     gateHeading: typeof b.gateHeading === "string" && b.gateHeading.trim() ? b.gateHeading.trim() : "Welcome! How can we help?",
     studentLabel: typeof b.studentLabel === "string" && b.studentLabel.trim() ? b.studentLabel.trim() : "🎓 Existing Student",

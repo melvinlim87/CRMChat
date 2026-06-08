@@ -4,7 +4,7 @@ import { useEffect, useRef, useState, Fragment } from "react";
 
 type Msg = { from: "bot" | "user"; text: string };
 type WConfig = {
-  key?: string; title: string; welcome: string; color: string; starters?: string[];
+  key?: string; title: string; welcome: string; color: string; starters?: string[]; avatar?: string | null;
   gateHeading?: string; studentLabel?: string; visitorLabel?: string;
 };
 type View = "gate" | "studentAuth" | "chat";
@@ -204,7 +204,12 @@ export default function WidgetChat({
     return (
       <div className={`flex h-full flex-col ${ui.panel}`}>
         <header className="flex items-center gap-2 px-4 py-3 text-white" style={{ backgroundColor: config.color }}>
-          <span className="flex h-7 w-7 items-center justify-center rounded-full bg-white/25 text-sm">💬</span>
+          {config.avatar ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={config.avatar} alt="" className="h-7 w-7 rounded-full object-cover ring-2 ring-white/30" />
+          ) : (
+            <span className="flex h-7 w-7 items-center justify-center rounded-full bg-white/25 text-sm">💬</span>
+          )}
           <p className="font-semibold">{config.title}</p>
         </header>
         <div className={`flex flex-1 flex-col items-center justify-center gap-4 px-6 text-center ${ui.body}`}>
@@ -276,7 +281,12 @@ export default function WidgetChat({
   return (
     <div className={`flex h-full flex-col ${ui.panel}`}>
       <header className="flex items-center gap-2 px-4 py-3 text-white" style={{ backgroundColor: active.color }}>
-        <span className="flex h-8 w-8 items-center justify-center rounded-full bg-white/25 text-sm">🤖</span>
+        {active.avatar ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={active.avatar} alt="" className="h-8 w-8 rounded-full object-cover ring-2 ring-white/30" />
+        ) : (
+          <span className="flex h-8 w-8 items-center justify-center rounded-full bg-white/25 text-sm">🤖</span>
+        )}
         <div className="flex-1 leading-tight">
           <p className="font-semibold">{active.title}</p>
           <p className="flex items-center gap-1 text-[11px] text-white/80">

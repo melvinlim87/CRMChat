@@ -23,7 +23,10 @@ type Widget = {
   instruction: string | null;
   tag: string | null;
   starters: string[];
+  avatar: string | null;
   tone: string;
+  flowEnabled: boolean;
+  flow: { nodes?: unknown[]; edges?: unknown[] };
   gateEnabled: boolean;
   gateHeading: string;
   studentLabel: string;
@@ -39,6 +42,7 @@ export default function WidgetSetup() {
   const [copied, setCopied] = useState(false);
   const [embed, setEmbed] = useState<"floating" | "inline">("floating");
   const [previewTheme, setPreviewTheme] = useState<"light" | "dark">("light");
+  const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
     setOrigin(window.location.origin);
@@ -83,6 +87,20 @@ export default function WidgetSetup() {
       setCopied(true);
       setTimeout(() => setCopied(false), 1500);
     });
+  }
+
+  async function uploadAvatar(file: File) {
+    setUploading(true);
+    const fd = new FormData();
+    fd.append("file", file);
+    const res = await fetch("/api/upload", { method: "POST", body: fd });
+    setUploading(false);
+    if (res.ok) {
+      const d = await res.json();
+      update({ avatar: d.url });
+    } else {
+      alert("Upload failed (images only, max 5 MB).");
+    }
   }
 
   const field = "w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-slate-100 outline-none focus:border-brand-500";
@@ -184,6 +202,24 @@ export default function WidgetSetup() {
                   </div>
                 </Field>
               </div>
+              <Field label="Header logo / avatar">
+                <div className="flex items-center gap-3">
+                  {active.avatar ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={active.avatar} alt="" className="h-10 w-10 rounded-full object-cover ring-1 ring-white/10" />
+                  ) : (
+                    <span className="flex h-10 w-10 items-center justify-center rounded-full bg-white/5 text-lg ring-1 ring-white/10">🤖</span>
+                  )}
+                  <label className="cursor-pointer rounded-lg border border-white/10 px-3 py-1.5 text-xs font-medium text-slate-200 hover:bg-white/5">
+                    {uploading ? "Uploading…" : "Upload"}
+                    <input type="file" accept="image/*" className="hidden" onChange={(e) => e.target.files?.[0] && uploadAvatar(e.target.files[0])} />
+                  </label>
+                  {active.avatar && (
+                    <button onClick={() => update({ avatar: null })} className="rounded-lg border border-white/10 px-3 py-1.5 text-xs text-slate-400 hover:bg-white/5 hover:text-red-400">Remove</button>
+                  )}
+                </div>
+                <input className={`${field} mt-2`} value={active.avatar ?? ""} onChange={(e) => update({ avatar: e.target.value || null })} placeholder="…or paste an image URL" />
+              </Field>
               {/* Intro flow */}
               <div className="rounded-xl border border-white/10 bg-white/[0.02] p-4">
                 <label className="flex items-center justify-between gap-3">
@@ -227,7 +263,7 @@ export default function WidgetSetup() {
           )}
           <div className="h-[520px] overflow-hidden rounded-xl border border-white/10 shadow-lg">
             <WidgetChat
-              key={`${active.key}|${active.welcome}|${active.color}|${active.title}|${previewTheme}|${active.gateEnabled}|${active.tone}|${active.gateHeading}|${active.studentLabel}|${active.visitorLabel}`}
+              key={`${active.key}|${active.welcome}|${active.color}|${active.title}|${previewTheme}|${active.gateEnabled}|${active.tone}|${active.gateHeading}|${active.studentLabel}|${active.visitorLabel}|${active.avatar}`}
               config={active}
               widgetKey={active.key}
               gate={active.gateEnabled}
