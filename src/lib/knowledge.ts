@@ -2,7 +2,9 @@ import { prisma } from "./prisma";
 
 // Returns concatenated knowledge-base text, capped so it fits in a prompt.
 // Simple "context stuffing" RAG — good for a modest number of documents.
-export async function getKnowledgeContext(maxChars = 6000): Promise<string> {
+// `audience` scopes which PDFs are used: "public" and "student" each also
+// include docs marked "all". Omitting it (e.g. WhatsApp flows) uses everything.
+export async function getKnowledgeContext(maxChars = 6000, audience?: "public" | "student"): Promise<string> {
   let out = "";
 
   // FAQs first — they're short, high-signal answers the assistant should know.
@@ -16,6 +18,7 @@ export async function getKnowledgeContext(maxChars = 6000): Promise<string> {
   }
 
   const docs = await prisma.document.findMany({
+    where: audience ? { audience: { in: ["all", audience] } } : undefined,
     orderBy: { createdAt: "desc" },
     select: { name: true, text: true },
   });

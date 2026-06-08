@@ -135,6 +135,7 @@ model Document {
   size      Int      @default(0)
   text      String   @default("") // extracted text
   content   Bytes? // original file bytes (for download)
+  audience  String   @default("all") // "all" | "public" | "student" — who the AI uses this for
   createdAt DateTime @default(now())
 }
 

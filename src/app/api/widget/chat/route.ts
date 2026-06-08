@@ -101,7 +101,10 @@ export async function POST(req: NextRequest) {
   }));
   history.push({ role: "user", content: message.trim() });
 
-  const knowledge = await getKnowledgeContext();
+  // Verified students chat on the "students" widget → student-scoped PDFs;
+  // everyone else gets the general ones (both also include "all" docs).
+  const audience: "public" | "student" = widget.key === "students" ? "student" : "public";
+  const knowledge = await getKnowledgeContext(6000, audience);
   const system =
     `You are a human support agent chatting on a company's website — not a robot. Sound natural and conversational, like a real person texting. ${toneGuidance(widget.tone)} No markdown, no bullet points, no emoji spam. ` +
     `Reply with one to three SHORT messages, the way a person would split their thoughts across a few chat bubbles instead of one long paragraph. ` +

@@ -13,7 +13,7 @@ export async function GET() {
 
   const docs = await prisma.document.findMany({
     orderBy: { createdAt: "desc" },
-    select: { id: true, name: true, size: true, text: true, createdAt: true },
+    select: { id: true, name: true, size: true, text: true, audience: true, createdAt: true },
   });
   return NextResponse.json({
     documents: docs.map((d) => ({
@@ -22,6 +22,7 @@ export async function GET() {
       size: d.size,
       chars: d.text.length,
       preview: d.text.slice(0, 160),
+      audience: d.audience,
       createdAt: d.createdAt.toISOString(),
     })),
   });
@@ -44,6 +45,8 @@ export async function POST(req: NextRequest) {
   }
 
   const buffer = Buffer.from(await file.arrayBuffer());
+  const audienceRaw = String(formData?.get("audience") || "all");
+  const audience = ["all", "public", "student"].includes(audienceRaw) ? audienceRaw : "all";
 
   let text = "";
   try {
@@ -54,8 +57,8 @@ export async function POST(req: NextRequest) {
   }
 
   const doc = await prisma.document.create({
-    data: { name: file.name, mimeType: "application/pdf", size: file.size, text, content: buffer },
-    select: { id: true, name: true, size: true, text: true, createdAt: true },
+    data: { name: file.name, mimeType: "application/pdf", size: file.size, text, content: buffer, audience },
+    select: { id: true, name: true, size: true, text: true, audience: true, createdAt: true },
   });
 
   return NextResponse.json({
@@ -65,6 +68,7 @@ export async function POST(req: NextRequest) {
       size: doc.size,
       chars: doc.text.length,
       preview: doc.text.slice(0, 160),
+      audience: doc.audience,
       createdAt: doc.createdAt.toISOString(),
     },
   });
