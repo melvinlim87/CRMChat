@@ -10,6 +10,11 @@ const secret = new TextEncoder().encode(
 
 export type SessionUser = { id: string; email: string; name: string | null };
 
+// Login is disabled — the app runs without an auth gate. When there's no
+// session cookie we fall back to a default owner so admin APIs keep working.
+const NO_LOGIN = true;
+const DEFAULT_USER: SessionUser = { id: "owner", email: "owner@local", name: "Owner" };
+
 export async function createSession(user: SessionUser) {
   const token = await new SignJWT({ ...user })
     .setProtectedHeader({ alg: "HS256" })
@@ -28,12 +33,12 @@ export async function createSession(user: SessionUser) {
 
 export async function getSession(): Promise<SessionUser | null> {
   const token = cookies().get(COOKIE_NAME)?.value;
-  if (!token) return null;
+  if (!token) return NO_LOGIN ? DEFAULT_USER : null;
   try {
     const { payload } = await jwtVerify(token, secret);
     return { id: payload.id as string, email: payload.email as string, name: (payload.name as string) ?? null };
   } catch {
-    return null;
+    return NO_LOGIN ? DEFAULT_USER : null;
   }
 }
 

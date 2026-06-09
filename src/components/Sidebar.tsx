@@ -6,25 +6,7 @@ import clsx from "clsx";
 import Logo from "./Logo";
 
 const NAV = [
-  { href: "/dashboard", label: "Dashboard", icon: GridIcon },
-  { href: "/leads", label: "Students", icon: LeadsIcon },
-  { href: "/pipeline", label: "Pipeline", icon: ColumnsIcon },
-  { href: "/chat", label: "Chat", icon: ChatIcon },
-  { href: "/website", label: "Website", icon: GlobeIcon },
   { href: "/chat-widget", label: "Chat Widget", icon: WidgetIcon },
-  { href: "/flows", label: "AI Flows", icon: FlowIcon },
-  { href: "/knowledge", label: "Knowledge", icon: BookIcon },
-  { href: "/faq", label: "FAQs", icon: BookIcon },
-  { href: "/automations", label: "Automations", icon: BoltIcon },
-  { href: "/integrations", label: "Integrations", icon: PlugIcon },
-  { href: "/go-live", label: "Go Live", icon: RocketIcon },
-  { href: "/settings", label: "Settings", icon: GearIcon },
-];
-
-const GOOGLE_NAV = [
-  { href: "/gmail", label: "Gmail", icon: MailIcon },
-  { href: "/calendar", label: "Calendar", icon: CalendarIcon },
-  { href: "/drive", label: "Drive", icon: DriveIcon },
 ];
 
 export default function Sidebar({ user }: { user: { name: string | null; email: string } }) {
@@ -45,29 +27,6 @@ export default function Sidebar({ user }: { user: { name: string | null; email: 
 
       <nav className="flex-1 space-y-1 px-3 py-2">
         {NAV.map((item) => {
-          const active = pathname === item.href || pathname.startsWith(item.href + "/");
-          const Icon = item.icon;
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={clsx(
-                "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition",
-                active
-                  ? "bg-brand-500/20 text-white ring-1 ring-inset ring-brand-500/40 shadow-glow"
-                  : "text-slate-300 hover:bg-white/5 hover:text-slate-100"
-              )}
-            >
-              <Icon className="h-[18px] w-[18px]" />
-              {item.label}
-            </Link>
-          );
-        })}
-
-        <p className="px-3 pb-1 pt-5 text-xs font-semibold uppercase tracking-wide text-slate-500">
-          Google
-        </p>
-        {GOOGLE_NAV.map((item) => {
           const active = pathname === item.href || pathname.startsWith(item.href + "/");
           const Icon = item.icon;
           return (
