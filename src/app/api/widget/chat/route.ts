@@ -162,7 +162,7 @@ export async function GET(req: NextRequest) {
   return NextResponse.json({
     humanTakeover: conversation.humanTakeover,
     messages: conversation.messages.map((m) => ({
-      from: m.direction === "INBOUND" ? "user" : "bot",
+      from: m.direction === "INBOUND" ? "user" : m.status === "agent" ? "agent" : "bot",
       text: m.body,
       createdAt: m.createdAt.toISOString(),
     })),

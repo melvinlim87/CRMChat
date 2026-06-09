@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, Fragment } from "react";
 
-type Msg = { from: "bot" | "user"; text: string };
+type Msg = { from: "bot" | "user" | "agent" | "system"; text: string };
 type FNode = { id: string; type: string; data: Record<string, any> };
 type FEdge = { source: string; target: string; sourceHandle?: string | null };
 type WConfig = {
@@ -45,7 +45,15 @@ export default function WidgetChat({
 
   // Live human-takeover state.
   const [humanMode, setHumanMode] = useState(false);
+  const humanModeRef = useRef(false);
   const lastPollRef = useRef<string>(new Date(0).toISOString());
+  function setHuman(v: boolean) {
+    humanModeRef.current = v;
+    setHumanMode(v);
+  }
+  function pushSystem(text: string) {
+    setMessages((m) => (m[m.length - 1]?.text === text ? m : [...m, { from: "system", text }]));
+  }
 
   // Visual flow runtime state.
   const [flowActive, setFlowActive] = useState(false);
@@ -87,7 +95,7 @@ export default function WidgetChat({
     fetch(`/api/widget/chat?sessionId=${encodeURIComponent(sid)}`)
       .then((r) => r.json())
       .then((d) => {
-        if (d.humanTakeover) setHumanMode(true);
+        if (d.humanTakeover) setHuman(true);
         if (Array.isArray(d.messages) && d.messages.length) {
           setMessages(d.messages.map((m: any) => ({ from: m.from, text: m.text }))); // returning visitor — keep history
           const last = d.messages[d.messages.length - 1]?.createdAt;
@@ -108,9 +116,15 @@ export default function WidgetChat({
       try {
         const r = await fetch(`/api/widget/poll?sessionId=${encodeURIComponent(sessionId)}&after=${encodeURIComponent(lastPollRef.current)}`);
         const d = await r.json();
-        if (d.humanTakeover) setHumanMode(true);
+        if (d.humanTakeover && !humanModeRef.current) {
+          setHuman(true);
+          pushSystem("Connecting you with our team… 👤");
+        } else if (!d.humanTakeover && humanModeRef.current) {
+          setHuman(false);
+          pushSystem("You're back with the AI assistant 🤖");
+        }
         if (Array.isArray(d.messages) && d.messages.length) {
-          setMessages((m) => [...m, ...d.messages.map((x: any) => ({ from: "bot" as const, text: x.text }))]);
+          setMessages((m) => [...m, ...d.messages.map((x: any) => ({ from: "agent" as const, text: x.text }))]);
           lastPollRef.current = d.messages[d.messages.length - 1].createdAt;
         }
       } catch {}
@@ -180,7 +194,7 @@ export default function WidgetChat({
     setSessionId(sid);
     sidRef.current = sid;
     lastPollRef.current = new Date().toISOString();
-    setHumanMode(false);
+    setHuman(false);
     setSuggestions([]);
     endFlow();
     if (active.flowEnabled && (active.flow?.nodes?.length ?? 0) > 0) {
@@ -313,7 +327,10 @@ export default function WidgetChat({
         body: JSON.stringify({ sessionId, message: text, widget: activeKey, email: studentEmail || undefined }),
       });
       const d = await res.json();
-      if (d.humanTakeover) setHumanMode(true);
+      if (d.humanTakeover && !humanModeRef.current) {
+        setHuman(true);
+        pushSystem("Connecting you with our team… 👤");
+      }
       // During human takeover the AI stays silent — the agent's reply arrives via polling.
       if (d.humanTakeover && (!Array.isArray(d.replies) || d.replies.length === 0)) {
         return;
@@ -484,18 +501,37 @@ export default function WidgetChat({
       </header>
 
       <div ref={scrollRef} className={`flex-1 space-y-2 overflow-y-auto px-3 py-4 ${ui.body}`}>
-        {messages.map((m, i) => (
-          <div key={i} className={`flex ${m.from === "user" ? "justify-end" : "justify-start"}`}>
-            <div
-              className={`max-w-[82%] whitespace-pre-wrap break-words rounded-2xl px-3 py-2 text-sm shadow-sm ${
-                m.from === "user" ? "rounded-br-sm text-white" : `rounded-bl-sm ${ui.botBubble}`
-              }`}
-              style={m.from === "user" ? { backgroundColor: active.color } : undefined}
-            >
-              {linkify(m.text, m.from === "user")}
+        {messages.map((m, i) =>
+          m.from === "system" ? (
+            <div key={i} className="flex justify-center py-1">
+              <span className={`rounded-full px-3 py-1 text-[11px] ${dark ? "bg-white/10 text-slate-300" : "bg-slate-200 text-slate-600"}`}>{m.text}</span>
             </div>
-          </div>
-        ))}
+          ) : (
+            <div key={i} className={`flex ${m.from === "user" ? "justify-end" : "justify-start"}`}>
+              <div className="max-w-[82%]">
+                {m.from === "agent" && (
+                  <p className="mb-0.5 flex items-center gap-1 px-1 text-[10px] font-semibold" style={{ color: active.color }}>
+                    <span>👤</span> Our team
+                  </p>
+                )}
+                <div
+                  className={`whitespace-pre-wrap break-words rounded-2xl px-3 py-2 text-sm shadow-sm ${
+                    m.from === "user" ? "rounded-br-sm text-white" : `rounded-bl-sm ${ui.botBubble}`
+                  } ${m.from === "agent" ? "ring-1 ring-inset" : ""}`}
+                  style={
+                    m.from === "user"
+                      ? { backgroundColor: active.color }
+                      : m.from === "agent"
+                      ? ({ ["--tw-ring-color" as any]: active.color } as any)
+                      : undefined
+                  }
+                >
+                  {linkify(m.text, m.from === "user")}
+                </div>
+              </div>
+            </div>
+          )
+        )}
 
         {sending && (
           <div className="flex justify-start">

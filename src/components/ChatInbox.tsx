@@ -21,6 +21,7 @@ export type ConversationDTO = {
   channel: string;
   unreadCount: number;
   needsHuman?: boolean;
+  humanTakeover?: boolean;
   lastMessageAt: string;
   lead: {
     id: string;
@@ -168,6 +169,16 @@ export default function ChatInbox({
     }
   }
 
+  async function returnToAI() {
+    if (!active) return;
+    updateConversation(active.id, (c) => ({ ...c, humanTakeover: false, needsHuman: false }));
+    await fetch(`/api/conversations/${active.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ humanTakeover: false, needsHuman: false }),
+    }).catch(() => {});
+  }
+
   function updateConversation(id: string, fn: (c: ConversationDTO) => ConversationDTO) {
     setConversations((prev) => prev.map((c) => (c.id === id ? fn(c) : c)));
   }
@@ -277,6 +288,7 @@ export default function ChatInbox({
                   </div>
                   <div className="flex items-center gap-1.5">
                     <ChannelBadge channel={c.channel} />
+                    {c.humanTakeover && <span className="flex shrink-0 items-center gap-1 rounded bg-emerald-500/20 px-1.5 py-0.5 text-[10px] font-medium text-emerald-300"><span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-400" />live</span>}
                     {c.needsHuman && <span className="shrink-0 rounded bg-red-500/20 px-1.5 py-0.5 text-[10px] font-medium text-red-300">⚠ needs you</span>}
                     <p className="truncate text-sm text-slate-400">{last?.body ?? "No messages yet"}</p>
                   </div>
@@ -308,18 +320,34 @@ export default function ChatInbox({
                 <p className="font-medium text-slate-100">{active.lead.name}</p>
                 <div className="flex items-center gap-1.5">
                   <ChannelBadge channel={active.channel} />
+                  {active.humanTakeover && (
+                    <span className="flex items-center gap-1 rounded bg-emerald-500/20 px-1.5 py-0.5 text-[10px] font-medium text-emerald-300">
+                      <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-400" /> Live · you&apos;re replying
+                    </span>
+                  )}
                   <p className="text-xs text-slate-500">{active.lead.phone || active.lead.email || ""}</p>
                 </div>
               </div>
             </div>
-            <StatusBadge status={active.lead.status} />
+            <div className="flex items-center gap-2">
+              {active.humanTakeover && (
+                <button onClick={returnToAI} className="rounded-lg border border-white/10 px-3 py-1.5 text-xs font-medium text-slate-300 transition hover:bg-white/5" title="Hand this chat back to the AI assistant">
+                  🤖 Return to AI
+                </button>
+              )}
+              <StatusBadge status={active.lead.status} />
+            </div>
           </div>
 
-          {active.needsHuman && (
+          {active.humanTakeover ? (
+            <div className="border-b border-emerald-500/20 bg-emerald-500/10 px-6 py-2 text-xs text-emerald-300">
+              👤 You&apos;ve taken over this chat — the AI is paused. Your replies appear live in the visitor&apos;s widget. Click “Return to AI” to hand it back.
+            </div>
+          ) : active.needsHuman ? (
             <div className="border-b border-red-500/20 bg-red-500/10 px-6 py-2 text-xs text-red-300">
               ⚠️ This customer may be frustrated — consider replying personally. Sending a message clears this flag.
             </div>
-          )}
+          ) : null}
 
           <div ref={scrollRef} className="flex-1 space-y-2 overflow-auto px-6 py-6">
             {active.messages.map((m) => (
