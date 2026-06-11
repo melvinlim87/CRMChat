@@ -119,9 +119,34 @@ select option {
 .theme-light .hover\:bg-white\/5:hover { background-color: rgba(15, 23, 42, 0.06); }
 .theme-light .bg-black\/40,
 .theme-light .bg-black\/30 { background-color: rgba(15, 23, 42, 0.06); }
+.theme-light .bg-\[\#14151b\] { background-color: #ffffff; }
+.theme-light .bg-\[\#0c0d11\] { background-color: #ffffff; }
 .theme-light input::placeholder,
 .theme-light textarea::placeholder { color: rgb(148 163 184); }
 .theme-light select option { background-color: #ffffff; color: #0f172a; }
+.theme-light pre { color: #8a6622 !important; }
+
+/* React Flow canvas in light mode */
+.theme-light .react-flow__controls-button {
+  background: #ffffff !important;
+  border-color: rgba(15, 23, 42, 0.12) !important;
+  color: #0f172a !important;
+}
+.theme-light .react-flow__controls-button:hover { background: #f1f5f9 !important; }
+.theme-light .react-flow__minimap { background-color: #eef1f5 !important; }
+.theme-light .react-flow__background { background-color: #f8fafc; }
+.theme-light .react-flow__edge-path { stroke: #94a3b8; }
+
+/* Keep the embeddable-widget live preview rendering with its OWN theme,
+   immune to the admin light overrides above (it manages light/dark itself). */
+.theme-light .widget-preview-frame .text-slate-100 { color: #f1f5f9; }
+.theme-light .widget-preview-frame .text-slate-200 { color: #e2e8f0; }
+.theme-light .widget-preview-frame .text-slate-300 { color: #cbd5e1; }
+.theme-light .widget-preview-frame .text-slate-400 { color: #94a3b8; }
+.theme-light .widget-preview-frame .text-slate-500 { color: #64748b; }
+.theme-light .widget-preview-frame .border-white\/10,
+.theme-light .widget-preview-frame .border-white\/5 { border-color: rgba(255, 255, 255, 0.1); }
+.theme-light .widget-preview-frame .bg-white\/5 { background-color: rgba(255, 255, 255, 0.05); }
 
 /* React Flow dark tweaks */
 .react-flow__attribution {

@@ -311,7 +311,7 @@ export default function WidgetSetup() {
           {active.gateEnabled && (
             <p className="mb-2 text-xs text-brand-300">This widget greets visitors with the intro flow first.</p>
           )}
-          <div className="h-[520px] overflow-hidden rounded-xl border border-white/10 shadow-lg">
+          <div className="widget-preview-frame h-[520px] overflow-hidden rounded-xl border border-white/10 shadow-lg">
             <WidgetChat
               key={`${active.key}|${active.welcome}|${active.color}|${active.title}|${previewTheme}|${active.gateEnabled}|${active.tone}|${active.gateHeading}|${active.studentLabel}|${active.visitorLabel}|${active.avatar}|${active.flowEnabled}|${active.studentColor}|${active.visitorColor}`}
               config={active}
@@ -339,6 +339,17 @@ export default function WidgetSetup() {
       {/* Test / validate the AI agent */}
       <div className="rounded-2xl border border-white/10 bg-surface-panel p-6">
         <AgentValidation />
+      </div>
+
+      {/* WhatsApp integration */}
+      <div className="rounded-2xl border border-blue-400/20 bg-blue-500/[0.07] p-6">
+        <h2 className="font-semibold text-slate-100">WhatsApp Integration</h2>
+        <p className="mt-1 max-w-2xl text-sm text-slate-400">
+          Connect this knowledge base to your WhatsApp account for autonomous customer engagement. Optimize instant customer support and sales operations.
+        </p>
+        <Link href="/integrations" className="mt-3 inline-flex items-center gap-1 text-sm font-semibold text-blue-400 hover:text-blue-300">
+          Configure WhatsApp Agent →
+        </Link>
       </div>
     </div>
   );
