@@ -29,28 +29,38 @@ export default function AgentValidation() {
   const [error, setError] = useState<string | null>(null);
   const [recent, setRecent] = useState<Recent[]>([]);
 
-  useEffect(() => {
-    fetch("/api/settings/ai")
+  // API-key connection state.
+  const [keysSet, setKeysSet] = useState<Record<string, boolean>>({});
+  const [providerLabels, setProviderLabels] = useState<Record<string, string>>({});
+  const [apiKey, setApiKey] = useState("");
+  const [savingKey, setSavingKey] = useState(false);
+  const [keyMsg, setKeyMsg] = useState("");
+
+  function loadSettings() {
+    return fetch("/api/settings/ai")
       .then((r) => r.json())
       .then((d) => {
         const catalog = d.catalog ?? {};
         const opts: ModelOpt[] = [];
+        const labels: Record<string, string> = {};
         for (const p of Object.keys(catalog)) {
+          labels[p] = catalog[p].label;
           for (const m of catalog[p].models ?? []) {
             opts.push({ provider: p, id: m.id, label: `[${catalog[p].label}] ${m.label}` });
           }
         }
         setModels(opts);
+        setProviderLabels(labels);
+        setKeysSet(d.settings?.keysSet ?? {});
         const cur = d.settings;
-        if (cur?.provider && cur?.model) {
-          setProvider(cur.provider);
-          setModel(cur.model);
-        } else if (opts[0]) {
-          setProvider(opts[0].provider);
-          setModel(opts[0].id);
-        }
-      })
-      .catch(() => {});
+        setProvider((prev) => prev || cur?.provider || opts[0]?.provider || "");
+        setModel((prev) => prev || cur?.model || opts[0]?.id || "");
+        return d;
+      });
+  }
+
+  useEffect(() => {
+    loadSettings().catch(() => {});
     loadRecent();
   }, []);
 
@@ -66,6 +76,32 @@ export default function AgentValidation() {
     if (opt) {
       setProvider(opt.provider);
       setModel(opt.id);
+      setApiKey("");
+      setKeyMsg("");
+    }
+  }
+
+  async function connectKey() {
+    if (!apiKey.trim() || savingKey) return;
+    setSavingKey(true);
+    setKeyMsg("");
+    try {
+      const res = await fetch("/api/settings/ai", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ keys: { [provider]: apiKey.trim() } }),
+      });
+      if (res.ok) {
+        setApiKey("");
+        setKeyMsg("Connected ✓");
+        await loadSettings();
+      } else {
+        setKeyMsg("Couldn't save key");
+      }
+    } catch {
+      setKeyMsg("Couldn't save key");
+    } finally {
+      setSavingKey(false);
     }
   }
 
@@ -106,6 +142,37 @@ export default function AgentValidation() {
                 <option key={`${m.provider}|${m.id}`} value={`${m.provider}|${m.id}`}>{m.label}</option>
               ))}
             </select>
+
+            {/* API key — connect the selected provider */}
+            <div className="mt-2 rounded-lg border border-white/10 bg-white/[0.02] p-2.5">
+              {keysSet[provider] && !apiKey ? (
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-emerald-400">✓ {providerLabels[provider] || provider} connected</span>
+                  <button onClick={() => setKeysSet((k) => ({ ...k, [provider]: false }))} className="text-xs text-slate-400 hover:text-slate-200">
+                    Replace key
+                  </button>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <input
+                    type="password"
+                    value={apiKey}
+                    onChange={(e) => setApiKey(e.target.value)}
+                    onKeyDown={(e) => e.key === "Enter" && connectKey()}
+                    placeholder={`${providerLabels[provider] || "Provider"} API key`}
+                    className="flex-1 rounded-md border border-white/10 bg-white/5 px-2.5 py-1.5 text-sm text-slate-100 outline-none focus:border-brand-500"
+                  />
+                  <button
+                    onClick={connectKey}
+                    disabled={savingKey || !apiKey.trim()}
+                    className="shrink-0 rounded-md bg-brand-500 px-3 py-1.5 text-xs font-semibold text-slate-950 transition hover:bg-brand-600 disabled:opacity-50"
+                  >
+                    {savingKey ? "…" : "Connect"}
+                  </button>
+                </div>
+              )}
+              {keyMsg && <p className="mt-1 text-[11px] text-slate-400">{keyMsg}</p>}
+            </div>
           </div>
           <div>
             <label className="mb-1 block text-xs font-medium text-slate-400">AI Tone</label>

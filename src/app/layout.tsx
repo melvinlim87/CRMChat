@@ -18,6 +18,14 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={`${inter.variable} ${playfair.variable}`}>
+      <head>
+        {/* Apply the saved admin theme before paint to avoid a flash. */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `try{if(localStorage.getItem('crmchat_admin_theme')==='light')document.documentElement.classList.add('theme-light')}catch(e){}`,
+          }}
+        />
+      </head>
       <body className="font-sans">{children}</body>
     </html>
   );

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import clsx from "clsx";
 import Logo from "./Logo";
+import ThemeToggle from "./ThemeToggle";
 
 const NAV = [
   { href: "/chat-widget", label: "Chat Widget", icon: WidgetIcon },
@@ -39,6 +40,10 @@ export default function Sidebar() {
           );
         })}
       </nav>
+
+      <div className="border-t border-white/10 p-3">
+        <ThemeToggle />
+      </div>
     </aside>
   );
 }

@@ -81,6 +81,48 @@ select option {
   border-radius: 9999px;
 }
 
+/* ----------------------------------------------------------------------------
+   Light theme for the admin. Toggled by adding `.theme-light` to <html>.
+   Overrides the most-used dark utility classes so the admin reads on a light
+   background. (The embeddable widget has its own independent Light/Dark.)
+---------------------------------------------------------------------------- */
+.theme-light {
+  color-scheme: light;
+}
+.theme-light body {
+  background-color: #f4f5f7;
+  background-image: radial-gradient(1100px 600px at 50% -15%, rgba(205, 161, 74, 0.12), transparent 60%);
+  color: #0f172a;
+}
+.theme-light .glass {
+  background-color: rgba(255, 255, 255, 0.85);
+}
+.theme-light .bg-surface-panel {
+  background-color: #ffffff;
+}
+.theme-light .bg-\[\#070709\] {
+  background-color: #f8fafc;
+}
+.theme-light .bg-\[\#050507\] {
+  background-color: #f4f5f7;
+}
+.theme-light .text-slate-100 { color: #0f172a; }
+.theme-light .text-slate-200 { color: #1e293b; }
+.theme-light .text-slate-300 { color: #334155; }
+.theme-light .text-slate-400 { color: #475569; }
+.theme-light .text-slate-500 { color: #64748b; }
+.theme-light .border-white\/10,
+.theme-light .border-white\/5 { border-color: rgba(15, 23, 42, 0.12); }
+.theme-light .bg-white\/5 { background-color: rgba(15, 23, 42, 0.04); }
+.theme-light .bg-white\/\[0\.02\] { background-color: rgba(15, 23, 42, 0.03); }
+.theme-light .bg-white\/\[0\.03\] { background-color: rgba(15, 23, 42, 0.04); }
+.theme-light .hover\:bg-white\/5:hover { background-color: rgba(15, 23, 42, 0.06); }
+.theme-light .bg-black\/40,
+.theme-light .bg-black\/30 { background-color: rgba(15, 23, 42, 0.06); }
+.theme-light input::placeholder,
+.theme-light textarea::placeholder { color: rgb(148 163 184); }
+.theme-light select option { background-color: #ffffff; color: #0f172a; }
+
 /* React Flow dark tweaks */
 .react-flow__attribution {
   display: none;
