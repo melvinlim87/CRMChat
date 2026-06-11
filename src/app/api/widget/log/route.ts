@@ -8,7 +8,7 @@ import { getWidget } from "@/lib/widget";
 export const runtime = "nodejs";
 
 export async function POST(req: NextRequest) {
-  const { sessionId, widget: widgetKey, direction, body, name, email, needsHuman } = await req.json().catch(() => ({}));
+  const { sessionId, widget: widgetKey, direction, body, name, email, needsHuman, tag } = await req.json().catch(() => ({}));
   if (!sessionId) return NextResponse.json({ error: "sessionId required" }, { status: 400 });
 
   const widget = await getWidget(widgetKey || "public");
@@ -65,6 +65,13 @@ export async function POST(req: NextRequest) {
   if (needsHuman) {
     await prisma.conversation.update({ where: { id: conversation.id }, data: { needsHuman: true } });
     await notifySlack(`🙋 A website visitor asked to talk to a human (via flow).`);
+  }
+
+  // "Set tag" flow node — add a tag to the lead.
+  if (typeof tag === "string" && tag.trim()) {
+    const lead = await prisma.lead.findUnique({ where: { id: conversation.leadId }, select: { tags: true } });
+    const tags = Array.from(new Set([...(lead?.tags ?? []), tag.trim()]));
+    await prisma.lead.update({ where: { id: conversation.leadId }, data: { tags } });
   }
 
   return NextResponse.json({ ok: true });

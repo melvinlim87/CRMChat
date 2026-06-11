@@ -72,6 +72,7 @@ export default function WidgetChat({
   const [flowButtons, setFlowButtons] = useState<FlowBtn[]>([]);
   const [flowCollect, setFlowCollect] = useState<{ next?: string } | null>(null);
   const [flowAwait, setFlowAwait] = useState<string | null>(null);
+  const [flowTyping, setFlowTyping] = useState(false);
   const [collectName, setCollectName] = useState("");
   const [collectEmail, setCollectEmail] = useState("");
 
@@ -283,9 +284,29 @@ export default function WidgetChat({
         setFlowCollect({ next: ftarget(node.id, "out") });
         break;
       }
-      case "question": {
+      case "question":
+      case "airoute": {
         if (node.data?.text) botSay(node.data.text);
         setFlowAwait(node.id); // next typed message is captured & branched
+        break;
+      }
+      case "tag": {
+        if (node.data?.text) botSay(node.data.text);
+        if (node.data?.tag) logMsg("OUTBOUND", "", { tag: node.data.tag });
+        const next = ftarget(node.id, "out");
+        if (next) setTimeout(() => stepFlow(next), 300);
+        else endFlow();
+        break;
+      }
+      case "delay": {
+        const ms = Math.max(0, Number(node.data?.seconds ?? 1.2)) * 1000;
+        setFlowTyping(true);
+        const next = ftarget(node.id, "out");
+        setTimeout(() => {
+          setFlowTyping(false);
+          if (next) stepFlow(next);
+          else endFlow();
+        }, ms);
         break;
       }
       case "link": {
@@ -337,18 +358,35 @@ export default function WidgetChat({
     setInput("");
     setSuggestions([]);
 
-    // A flow "Ask" node is waiting for free-text — capture it and branch.
+    // A flow "Ask"/"AI route" node is waiting for free-text — capture & branch.
     if (flowAwait) {
       const node = fnode(flowAwait);
       setMessages((m) => [...m, { from: "user", text }]);
       logMsg("INBOUND", text);
-      const kw = String(node?.data?.keyword || "").toLowerCase();
-      const matched = kw ? text.toLowerCase().includes(kw) : true;
-      const next = node
-        ? (matched ? ftarget(node.id, "match") : ftarget(node.id, "else")) ?? ftarget(node.id, "match")
-        : undefined;
       setFlowAwait(null);
-      setTimeout(() => stepFlow(next), 300);
+      if (node?.type === "airoute") {
+        // Let the AI choose the matching intent branch.
+        setFlowTyping(true);
+        const options: string[] = Array.isArray(node.data?.options) ? node.data.options : [];
+        let idx = 0;
+        try {
+          const r = await fetch("/api/widget/classify", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ text, options }),
+          });
+          idx = (await r.json()).index ?? 0;
+        } catch {}
+        setFlowTyping(false);
+        stepFlow(ftarget(node.id, `opt-${idx}`) ?? ftarget(node.id, "opt-0"));
+      } else {
+        const kw = String(node?.data?.keyword || "").toLowerCase();
+        const matched = kw ? text.toLowerCase().includes(kw) : true;
+        const next = node
+          ? (matched ? ftarget(node.id, "match") : ftarget(node.id, "else")) ?? ftarget(node.id, "match")
+          : undefined;
+        setTimeout(() => stepFlow(next), 300);
+      }
       return;
     }
 
@@ -581,7 +619,7 @@ export default function WidgetChat({
           )
         )}
 
-        {sending && (
+        {(sending || flowTyping) && (
           <div className="flex justify-start">
             <div className={`flex items-center gap-1 rounded-2xl rounded-bl-sm px-3 py-2.5 shadow-sm ${ui.typing}`}>
               <span className="h-2 w-2 animate-bounce rounded-full bg-slate-400 [animation-delay:-0.3s]" />

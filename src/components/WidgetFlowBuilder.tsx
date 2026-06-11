@@ -33,8 +33,11 @@ const NODE_DEFAULTS: Record<string, Record<string, unknown>> = {
   message: { text: "Hi! 👋 How can we help you today?" },
   choice: { text: "What can I help with?", options: ["Pricing", "Get started"] },
   question: { text: "What would you like to ask?", keyword: "" },
+  airoute: { text: "What can I help you with?", options: ["Sales", "Support"] },
   ai: { instruction: "" },
   collect: { text: "Sure — what's your name and email?" },
+  tag: { tag: "", text: "" },
+  delay: { seconds: 1.2 },
   handoff: { text: "No problem, I'll connect you with a human. 🙌" },
   link: { text: "Here's the link you need:", label: "Open", url: "https://" },
 };
@@ -43,8 +46,11 @@ const PALETTE = [
   { type: "message", label: "Message" },
   { type: "choice", label: "Buttons" },
   { type: "question", label: "Ask (text)" },
+  { type: "airoute", label: "AI route" },
   { type: "ai", label: "AI answer" },
   { type: "collect", label: "Collect info" },
+  { type: "tag", label: "Set tag" },
+  { type: "delay", label: "Delay" },
   { type: "link", label: "Link button" },
   { type: "handoff", label: "Talk to human" },
 ];
@@ -290,6 +296,64 @@ function QuestionNode({ id, data, selected }: NodeProps) {
   );
 }
 
+function AiRouteNode({ id, data, selected }: NodeProps) {
+  const update = useUpdate(id);
+  const options: string[] = Array.isArray(data.options) ? data.options : [];
+  return (
+    <div className={`${card} border-fuchsia-300`} style={{ minWidth: 250, minHeight: 150 }}>
+      <Resizer visible={selected} />
+      <Handle type="target" position={Position.Top} />
+      <p className="text-[10px] font-bold uppercase tracking-wide text-fuchsia-400">✨ AI route (by intent)</p>
+      <textarea value={data.text ?? ""} onChange={(e) => update({ text: e.target.value })} placeholder="Prompt (optional)…" className={`${inputCls} min-h-[36px] resize-none`} />
+      <p className="mt-1 text-[10px] text-slate-400">AI picks the branch that best matches what the visitor types.</p>
+      <div className="mt-1 space-y-1.5">
+        {options.map((opt, i) => (
+          <div key={i} className="relative flex items-center gap-1">
+            <input
+              value={opt}
+              onChange={(e) => update({ options: options.map((o, j) => (j === i ? e.target.value : o)) })}
+              placeholder={`Intent ${i + 1}`}
+              className="nodrag w-full rounded-md border border-white/10 bg-white/5 px-2 py-1 text-xs outline-none focus:border-brand-500"
+            />
+            <button onClick={() => update({ options: options.filter((_, j) => j !== i) })} className="nodrag text-slate-500 hover:text-red-400">×</button>
+            <Handle type="source" position={Position.Right} id={`opt-${i}`} style={{ top: "50%" }} />
+          </div>
+        ))}
+        <button onClick={() => update({ options: [...options, ""] })} className="nodrag text-xs font-medium text-brand-300 hover:text-brand-200">+ Add intent</button>
+      </div>
+    </div>
+  );
+}
+
+function TagNode({ id, data, selected }: NodeProps) {
+  const update = useUpdate(id);
+  return (
+    <div className={`${card} border-pink-300`} style={{ minWidth: 220 }}>
+      <Resizer visible={selected} />
+      <Handle type="target" position={Position.Top} />
+      <p className="text-[10px] font-bold uppercase tracking-wide text-pink-400">🏷 Set tag</p>
+      <input value={data.tag ?? ""} onChange={(e) => update({ tag: e.target.value })} placeholder="tag the lead, e.g. hot-lead" className={inputCls} />
+      <Handle type="source" position={Position.Bottom} id="out" />
+    </div>
+  );
+}
+
+function DelayNode({ id, data, selected }: NodeProps) {
+  const update = useUpdate(id);
+  return (
+    <div className={`${card} border-slate-300`} style={{ minWidth: 200 }}>
+      <Resizer visible={selected} />
+      <Handle type="target" position={Position.Top} />
+      <p className="text-[10px] font-bold uppercase tracking-wide text-slate-400">⏳ Delay (typing…)</p>
+      <div className="mt-1 flex items-center gap-1">
+        <input type="number" step="0.1" min="0" value={data.seconds ?? 1.2} onChange={(e) => update({ seconds: Number(e.target.value) })} className={`${inputCls} w-20`} />
+        <span className="text-xs text-slate-400">seconds</span>
+      </div>
+      <Handle type="source" position={Position.Bottom} id="out" />
+    </div>
+  );
+}
+
 function AINode({ id, data, selected }: NodeProps) {
   const update = useUpdate(id);
   return (
@@ -348,6 +412,9 @@ const nodeTypes = {
   message: MessageNode,
   choice: ChoiceNode,
   question: QuestionNode,
+  airoute: AiRouteNode,
+  tag: TagNode,
+  delay: DelayNode,
   ai: AINode,
   collect: CollectNode,
   link: LinkNode,
