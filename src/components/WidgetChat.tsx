@@ -71,6 +71,7 @@ export default function WidgetChat({
   const [flowActive, setFlowActive] = useState(false);
   const [flowButtons, setFlowButtons] = useState<FlowBtn[]>([]);
   const [flowCollect, setFlowCollect] = useState<{ next?: string } | null>(null);
+  const [flowAwait, setFlowAwait] = useState<string | null>(null);
   const [collectName, setCollectName] = useState("");
   const [collectEmail, setCollectEmail] = useState("");
 
@@ -245,6 +246,7 @@ export default function WidgetChat({
     setFlowActive(false);
     setFlowButtons([]);
     setFlowCollect(null);
+    setFlowAwait(null);
   }
   function startFlow() {
     const { nodes } = flowGraph();
@@ -279,6 +281,11 @@ export default function WidgetChat({
       case "collect": {
         if (node.data?.text) botSay(node.data.text);
         setFlowCollect({ next: ftarget(node.id, "out") });
+        break;
+      }
+      case "question": {
+        if (node.data?.text) botSay(node.data.text);
+        setFlowAwait(node.id); // next typed message is captured & branched
         break;
       }
       case "link": {
@@ -329,6 +336,22 @@ export default function WidgetChat({
     if (!text || sending || !sessionId) return;
     setInput("");
     setSuggestions([]);
+
+    // A flow "Ask" node is waiting for free-text — capture it and branch.
+    if (flowAwait) {
+      const node = fnode(flowAwait);
+      setMessages((m) => [...m, { from: "user", text }]);
+      logMsg("INBOUND", text);
+      const kw = String(node?.data?.keyword || "").toLowerCase();
+      const matched = kw ? text.toLowerCase().includes(kw) : true;
+      const next = node
+        ? (matched ? ftarget(node.id, "match") : ftarget(node.id, "else")) ?? ftarget(node.id, "match")
+        : undefined;
+      setFlowAwait(null);
+      setTimeout(() => stepFlow(next), 300);
+      return;
+    }
+
     if (flowActive || flowButtons.length || flowCollect) endFlow(); // typing exits the scripted flow
     setMessages((m) => [...m, { from: "user", text }]);
     setSending(true);
@@ -538,7 +561,7 @@ export default function WidgetChat({
                       : undefined
                   }
                 >
-                  {linkify(m.text, m.from === "user")}
+                  {renderRich(m.text, m.from === "user")}
                 </div>
                 {m.from === "bot" && i > 0 && (
                   <div className="mt-1 flex items-center gap-2 px-1">
@@ -550,6 +573,7 @@ export default function WidgetChat({
                         <button onClick={() => rate(i, -1, m.text)} className={`text-xs opacity-60 transition hover:opacity-100 ${ui.sub}`} title="Not helpful">👎</button>
                       </>
                     )}
+                    <button onClick={() => navigator.clipboard?.writeText(m.text)} className={`text-xs opacity-60 transition hover:opacity-100 ${ui.sub}`} title="Copy">⧉</button>
                   </div>
                 )}
               </div>
@@ -667,6 +691,19 @@ export default function WidgetChat({
         </button>
       </div>
     </div>
+  );
+}
+
+// Render light formatting: **bold** + clickable links, newlines preserved by
+// the bubble's whitespace-pre-wrap (so "- " bullet lines render naturally).
+function renderRich(text: string, onAccent: boolean) {
+  const parts = text.split(/(\*\*[^*\n]+\*\*)/g);
+  return parts.map((p, i) =>
+    /^\*\*[^*\n]+\*\*$/.test(p) ? (
+      <strong key={i}>{p.slice(2, -2)}</strong>
+    ) : (
+      <Fragment key={i}>{linkify(p, onAccent)}</Fragment>
+    )
   );
 }
 

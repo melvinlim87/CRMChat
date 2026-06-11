@@ -32,6 +32,7 @@ export type FlowWidget = Record<string, unknown> & {
 const NODE_DEFAULTS: Record<string, Record<string, unknown>> = {
   message: { text: "Hi! 👋 How can we help you today?" },
   choice: { text: "What can I help with?", options: ["Pricing", "Get started"] },
+  question: { text: "What would you like to ask?", keyword: "" },
   ai: { instruction: "" },
   collect: { text: "Sure — what's your name and email?" },
   handoff: { text: "No problem, I'll connect you with a human. 🙌" },
@@ -41,10 +42,60 @@ const NODE_DEFAULTS: Record<string, Record<string, unknown>> = {
 const PALETTE = [
   { type: "message", label: "Message" },
   { type: "choice", label: "Buttons" },
+  { type: "question", label: "Ask (text)" },
   { type: "ai", label: "AI answer" },
   { type: "collect", label: "Collect info" },
   { type: "link", label: "Link button" },
   { type: "handoff", label: "Talk to human" },
+];
+
+// Ready-made starter flows. Selecting one replaces the canvas.
+const TEMPLATES: { name: string; graph: { nodes: Node[]; edges: Edge[] } }[] = [
+  {
+    name: "Support menu",
+    graph: {
+      nodes: [
+        { id: "start", type: "start", position: { x: 60, y: 20 }, data: {} },
+        { id: "c1", type: "choice", position: { x: 40, y: 150 }, data: { text: "Hi! 👋 How can we help?", options: ["💰 Pricing", "🛠 Support", "🙋 Talk to a human"] } },
+        { id: "m1", type: "message", position: { x: -180, y: 360 }, data: { text: "Our plans start from $X. Ask me anything about pricing!" } },
+        { id: "a1", type: "ai", position: { x: 110, y: 360 }, data: { instruction: "" } },
+        { id: "h1", type: "handoff", position: { x: 380, y: 360 }, data: { text: "Sure — connecting you with our team. 🙌" } },
+      ] as Node[],
+      edges: [
+        { id: "e0", source: "start", target: "c1", sourceHandle: "out" },
+        { id: "e1", source: "c1", target: "m1", sourceHandle: "opt-0" },
+        { id: "e2", source: "c1", target: "a1", sourceHandle: "opt-1" },
+        { id: "e3", source: "c1", target: "h1", sourceHandle: "opt-2" },
+      ] as Edge[],
+    },
+  },
+  {
+    name: "Lead capture",
+    graph: {
+      nodes: [
+        { id: "start", type: "start", position: { x: 60, y: 20 }, data: {} },
+        { id: "m1", type: "message", position: { x: 40, y: 150 }, data: { text: "Hey! 👋 Happy to help you get started." } },
+        { id: "col", type: "collect", position: { x: 40, y: 300 }, data: { text: "First — what's your name and email so we can follow up?" } },
+        { id: "a1", type: "ai", position: { x: 40, y: 470 }, data: { instruction: "" } },
+      ] as Node[],
+      edges: [
+        { id: "e0", source: "start", target: "m1", sourceHandle: "out" },
+        { id: "e1", source: "m1", target: "col", sourceHandle: "out" },
+        { id: "e2", source: "col", target: "a1", sourceHandle: "out" },
+      ] as Edge[],
+    },
+  },
+  {
+    name: "Book a call",
+    graph: {
+      nodes: [
+        { id: "start", type: "start", position: { x: 60, y: 20 }, data: {} },
+        { id: "m1", type: "message", position: { x: 40, y: 150 }, data: { text: "Want to talk to us directly? Book a quick call 👇" } },
+        { id: "lk", type: "link", position: { x: 40, y: 300 }, data: { text: "Pick a time that suits you:", label: "📅 Book a call", url: "https://calendly.com/your-link" } },
+      ] as Node[],
+      edges: [{ id: "e0", source: "start", target: "m1", sourceHandle: "out" }, { id: "e1", source: "m1", target: "lk", sourceHandle: "out" }] as Edge[],
+    },
+  },
 ];
 
 function Inner({ widget }: { widget: FlowWidget }) {
@@ -101,6 +152,23 @@ function Inner({ widget }: { widget: FlowWidget }) {
         </label>
 
         <div className="ml-auto flex flex-wrap items-center gap-2">
+          <select
+            value=""
+            onChange={(e) => {
+              const t = TEMPLATES.find((x) => x.name === e.target.value);
+              if (t && confirm(`Replace the canvas with the "${t.name}" template?`)) {
+                setNodes(t.graph.nodes.map((n) => ({ ...n })));
+                setEdges(t.graph.edges.map((ed) => ({ ...ed, animated: true })));
+              }
+              e.target.value = "";
+            }}
+            className="rounded-lg border border-white/10 bg-white/5 px-2.5 py-1.5 text-xs font-medium text-slate-200 outline-none"
+          >
+            <option value="">＋ Template…</option>
+            {TEMPLATES.map((t) => (
+              <option key={t.name} value={t.name}>{t.name}</option>
+            ))}
+          </select>
           {PALETTE.map((p) => (
             <button key={p.type} onClick={() => addNode(p.type)} className="rounded-lg border border-white/10 px-2.5 py-1.5 text-xs font-medium text-slate-300 transition hover:bg-white/5">
               + {p.label}
@@ -203,6 +271,25 @@ function ChoiceNode({ id, data, selected }: NodeProps) {
   );
 }
 
+function QuestionNode({ id, data, selected }: NodeProps) {
+  const update = useUpdate(id);
+  return (
+    <div className={`${card} border-orange-300`} style={{ minWidth: 250, minHeight: 140 }}>
+      <Resizer visible={selected} />
+      <Handle type="target" position={Position.Top} />
+      <p className="text-[10px] font-bold uppercase tracking-wide text-orange-400">Ask (free text)</p>
+      <textarea value={data.text ?? ""} onChange={(e) => update({ text: e.target.value })} placeholder="Question to ask…" className={`${inputCls} min-h-[40px] resize-none`} />
+      <input value={data.keyword ?? ""} onChange={(e) => update({ keyword: e.target.value })} placeholder="branch if answer contains… (optional)" className={inputCls} />
+      <div className="mt-2 flex justify-between px-1 text-[10px] font-medium text-slate-500">
+        <span>match ↙</span>
+        <span>↘ else</span>
+      </div>
+      <Handle type="source" position={Position.Bottom} id="match" style={{ left: "25%" }} />
+      <Handle type="source" position={Position.Bottom} id="else" style={{ left: "75%" }} />
+    </div>
+  );
+}
+
 function AINode({ id, data, selected }: NodeProps) {
   const update = useUpdate(id);
   return (
@@ -260,6 +347,7 @@ const nodeTypes = {
   start: StartNode,
   message: MessageNode,
   choice: ChoiceNode,
+  question: QuestionNode,
   ai: AINode,
   collect: CollectNode,
   link: LinkNode,
