@@ -13,7 +13,7 @@ export async function GET() {
   const widgetWhere = { conversation: { channel: "widget" } } as const;
   const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
 
-  const [chats, chatsWeek, inbound, outbound, needsHuman, takenOver, up, down, top] = await Promise.all([
+  const [chats, chatsWeek, inbound, outbound, needsHuman, takenOver, up, down, bookings, top] = await Promise.all([
     prisma.conversation.count({ where: { channel: "widget" } }),
     prisma.conversation.count({ where: { channel: "widget", createdAt: { gte: weekAgo } } }),
     prisma.message.count({ where: { ...widgetWhere, direction: "INBOUND" } }),
@@ -22,6 +22,7 @@ export async function GET() {
     prisma.conversation.count({ where: { channel: "widget", humanTakeover: true } }),
     prisma.widgetFeedback.count({ where: { rating: 1 } }),
     prisma.widgetFeedback.count({ where: { rating: -1 } }),
+    prisma.booking.count(),
     prisma.message.groupBy({
       by: ["body"],
       where: { ...widgetWhere, direction: "INBOUND" },
@@ -40,6 +41,7 @@ export async function GET() {
     takenOver,
     feedbackUp: up,
     feedbackDown: down,
+    bookings,
     topQuestions: top.map((t) => ({ text: t.body, count: t._count.body })),
   });
 }

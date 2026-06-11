@@ -38,6 +38,7 @@ const NODE_DEFAULTS: Record<string, Record<string, unknown>> = {
   collect: { text: "Sure — what's your name and email?" },
   tag: { tag: "", text: "" },
   delay: { seconds: 1.2 },
+  booking: { text: "Let's get you booked in — pick a time 👇", startHour: 9, endHour: 17, slotMins: 30, days: 5 },
   handoff: { text: "No problem, I'll connect you with a human. 🙌" },
   link: { text: "Here's the link you need:", label: "Open", url: "https://" },
 };
@@ -51,6 +52,7 @@ const PALETTE = [
   { type: "collect", label: "Collect info" },
   { type: "tag", label: "Set tag" },
   { type: "delay", label: "Delay" },
+  { type: "booking", label: "Booking" },
   { type: "link", label: "Link button" },
   { type: "handoff", label: "Talk to human" },
 ];
@@ -338,6 +340,33 @@ function TagNode({ id, data, selected }: NodeProps) {
   );
 }
 
+function BookingNode({ id, data, selected }: NodeProps) {
+  const update = useUpdate(id);
+  return (
+    <div className={`${card} border-green-300`} style={{ minWidth: 240, minHeight: 150 }}>
+      <Resizer visible={selected} />
+      <Handle type="target" position={Position.Top} />
+      <p className="text-[10px] font-bold uppercase tracking-wide text-green-500">📅 Booking</p>
+      <textarea value={data.text ?? ""} onChange={(e) => update({ text: e.target.value })} placeholder="Prompt…" className={`${inputCls} min-h-[36px] resize-none`} />
+      <div className="mt-1 grid grid-cols-2 gap-1.5">
+        <label className="text-[10px] text-slate-400">From hour
+          <input type="number" min="0" max="23" value={data.startHour ?? 9} onChange={(e) => update({ startHour: Number(e.target.value) })} className={inputCls} />
+        </label>
+        <label className="text-[10px] text-slate-400">To hour
+          <input type="number" min="1" max="24" value={data.endHour ?? 17} onChange={(e) => update({ endHour: Number(e.target.value) })} className={inputCls} />
+        </label>
+        <label className="text-[10px] text-slate-400">Slot mins
+          <input type="number" min="5" step="5" value={data.slotMins ?? 30} onChange={(e) => update({ slotMins: Number(e.target.value) })} className={inputCls} />
+        </label>
+        <label className="text-[10px] text-slate-400">Days ahead
+          <input type="number" min="1" max="14" value={data.days ?? 5} onChange={(e) => update({ days: Number(e.target.value) })} className={inputCls} />
+        </label>
+      </div>
+      <Handle type="source" position={Position.Bottom} id="out" />
+    </div>
+  );
+}
+
 function DelayNode({ id, data, selected }: NodeProps) {
   const update = useUpdate(id);
   return (
@@ -415,6 +444,7 @@ const nodeTypes = {
   airoute: AiRouteNode,
   tag: TagNode,
   delay: DelayNode,
+  booking: BookingNode,
   ai: AINode,
   collect: CollectNode,
   link: LinkNode,

@@ -73,6 +73,10 @@ export default function WidgetChat({
   const [flowCollect, setFlowCollect] = useState<{ next?: string } | null>(null);
   const [flowAwait, setFlowAwait] = useState<string | null>(null);
   const [flowTyping, setFlowTyping] = useState(false);
+  const [booking, setBooking] = useState<{ node: FNode; next?: string } | null>(null);
+  const [bookStep, setBookStep] = useState<"day" | "time" | "details">("day");
+  const [bookDay, setBookDay] = useState("");
+  const [bookTime, setBookTime] = useState("");
   const [collectName, setCollectName] = useState("");
   const [collectEmail, setCollectEmail] = useState("");
 
@@ -248,6 +252,7 @@ export default function WidgetChat({
     setFlowButtons([]);
     setFlowCollect(null);
     setFlowAwait(null);
+    setBooking(null);
   }
   function startFlow() {
     const { nodes } = flowGraph();
@@ -296,6 +301,15 @@ export default function WidgetChat({
         const next = ftarget(node.id, "out");
         if (next) setTimeout(() => stepFlow(next), 300);
         else endFlow();
+        break;
+      }
+      case "booking": {
+        if (node.data?.text) botSay(node.data.text);
+        setBooking({ node, next: ftarget(node.id, "out") });
+        setBookStep("day");
+        setBookDay("");
+        setBookTime("");
+        if (studentEmail) setCollectEmail(studentEmail);
         break;
       }
       case "delay": {
@@ -425,6 +439,52 @@ export default function WidgetChat({
 
   function typingDelay(text: string) {
     return Math.min(1600, 500 + text.length * 18);
+  }
+
+  // ---- Booking helpers ----
+  function bookingDays(): { iso: string; label: string }[] {
+    const n = Math.max(1, Math.min(14, Number(booking?.node.data?.days ?? 5)));
+    const out: { iso: string; label: string }[] = [];
+    const d = new Date();
+    while (out.length < n) {
+      d.setDate(d.getDate() + 1);
+      const dow = d.getDay();
+      if (dow === 0 || dow === 6) continue; // skip weekends
+      out.push({ iso: d.toISOString().slice(0, 10), label: d.toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" }) });
+    }
+    return out;
+  }
+  function bookingTimes(): string[] {
+    const s = Number(booking?.node.data?.startHour ?? 9);
+    const e = Number(booking?.node.data?.endHour ?? 17);
+    const step = Math.max(5, Number(booking?.node.data?.slotMins ?? 30));
+    const out: string[] = [];
+    for (let m = s * 60; m + step <= e * 60; m += step) {
+      out.push(`${String(Math.floor(m / 60)).padStart(2, "0")}:${String(m % 60).padStart(2, "0")}`);
+    }
+    return out;
+  }
+  async function confirmBooking() {
+    const name = collectName.trim();
+    const email = collectEmail.trim();
+    if (!email || !bookDay || !bookTime) return;
+    const dt = new Date(`${bookDay}T${bookTime}:00`);
+    const pretty = dt.toLocaleString(undefined, { weekday: "short", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
+    setMessages((m) => [...m, { from: "user", text: `Book ${pretty}` }]);
+    const next = booking?.next;
+    setBooking(null);
+    setBookDay("");
+    setBookTime("");
+    fetch("/api/widget/booking", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ sessionId, widget: activeKey, name, email, datetime: dt.toISOString() }),
+    }).catch(() => {});
+    botSay(`✅ You're booked for ${pretty}. We'll see you then!`);
+    if (name || email) logMsg("INBOUND", "", { name, email });
+    setCollectName("");
+    if (next) setTimeout(() => stepFlow(next), 400);
+    else endFlow();
   }
 
   // Theme tokens.
@@ -656,6 +716,43 @@ export default function WidgetChat({
                 {b.label}
               </button>
             ))}
+          </div>
+        )}
+
+        {/* Flow booking picker */}
+        {booking && (
+          <div className="space-y-2 pt-1">
+            {bookStep === "day" && (
+              <div className="flex flex-wrap gap-1.5">
+                {bookingDays().map((d) => (
+                  <button key={d.iso} onClick={() => { setBookDay(d.iso); setBookStep("time"); }} className="rounded-full px-3 py-1.5 text-xs font-semibold text-white shadow-sm transition hover:opacity-90" style={{ backgroundColor: active.color }}>
+                    {d.label}
+                  </button>
+                ))}
+              </div>
+            )}
+            {bookStep === "time" && (
+              <div>
+                <button onClick={() => setBookStep("day")} className={`mb-1 text-[11px] ${ui.sub}`}>‹ change day</button>
+                <div className="flex flex-wrap gap-1.5">
+                  {bookingTimes().map((t) => (
+                    <button key={t} onClick={() => { setBookTime(t); setBookStep("details"); }} className={`rounded-full border px-3 py-1.5 text-xs font-medium transition ${ui.outline}`}>
+                      {t}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+            {bookStep === "details" && (
+              <div className="space-y-1.5">
+                <button onClick={() => setBookStep("time")} className={`text-[11px] ${ui.sub}`}>‹ change time</button>
+                <input value={collectName} onChange={(e) => setCollectName(e.target.value)} placeholder="Your name" className={`w-full rounded-xl border px-3 py-2 text-sm outline-none ${ui.input}`} />
+                <input type="email" value={collectEmail} onChange={(e) => setCollectEmail(e.target.value)} placeholder="Email" className={`w-full rounded-xl border px-3 py-2 text-sm outline-none ${ui.input}`} />
+                <button onClick={confirmBooking} disabled={!collectEmail.trim()} className="w-full rounded-xl px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:opacity-90 disabled:opacity-50" style={{ backgroundColor: active.color }}>
+                  Confirm booking
+                </button>
+              </div>
+            )}
           </div>
         )}
 

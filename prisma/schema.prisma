@@ -197,6 +197,21 @@ model AiTestQuery {
   @@index([createdAt])
 }
 
+// A meeting/call booked by a visitor through a widget flow "Booking" node.
+model Booking {
+  id        String   @id @default(cuid())
+  name      String?
+  email     String?
+  datetime  DateTime
+  note      String   @default("")
+  sessionId String?
+  widget    String?
+  status    String   @default("booked")
+  createdAt DateTime @default(now())
+
+  @@index([datetime])
+}
+
 // 👍/👎 feedback a visitor left on an assistant reply in the widget.
 model WidgetFeedback {
   id        String   @id @default(cuid())
