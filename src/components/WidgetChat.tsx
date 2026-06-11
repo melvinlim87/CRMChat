@@ -43,6 +43,18 @@ export default function WidgetChat({
   const [verifying, setVerifying] = useState(false);
   const [authError, setAuthError] = useState("");
 
+  // Feedback (👍/👎) given on bot replies, keyed by message index.
+  const [rated, setRated] = useState<Record<number, number>>({});
+  function rate(i: number, value: number, text: string) {
+    if (rated[i]) return;
+    setRated((r) => ({ ...r, [i]: value }));
+    fetch("/api/widget/feedback", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ sessionId, widget: activeKey, rating: value, message: text }),
+    }).catch(() => {});
+  }
+
   // Live human-takeover state.
   const [humanMode, setHumanMode] = useState(false);
   const humanModeRef = useRef(false);
@@ -528,6 +540,18 @@ export default function WidgetChat({
                 >
                   {linkify(m.text, m.from === "user")}
                 </div>
+                {m.from === "bot" && i > 0 && (
+                  <div className="mt-1 flex items-center gap-2 px-1">
+                    {rated[i] ? (
+                      <span className={`text-[11px] ${ui.sub}`}>Thanks for the feedback!</span>
+                    ) : (
+                      <>
+                        <button onClick={() => rate(i, 1, m.text)} className={`text-xs opacity-60 transition hover:opacity-100 ${ui.sub}`} title="Helpful">👍</button>
+                        <button onClick={() => rate(i, -1, m.text)} className={`text-xs opacity-60 transition hover:opacity-100 ${ui.sub}`} title="Not helpful">👎</button>
+                      </>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
           )

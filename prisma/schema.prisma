@@ -197,6 +197,18 @@ model AiTestQuery {
   @@index([createdAt])
 }
 
+// 👍/👎 feedback a visitor left on an assistant reply in the widget.
+model WidgetFeedback {
+  id        String   @id @default(cuid())
+  sessionId String?
+  widget    String?
+  rating    Int // 1 = up, -1 = down
+  message   String   @default("") // the answer that was rated
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+}
+
 // A published/editable marketing page built in the drag-and-drop site builder.
 model Page {
   id        String   @id @default(cuid())

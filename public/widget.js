@@ -66,14 +66,52 @@
     "max-height:calc(100vh - 120px);border:0;border-radius:16px;z-index:2147483000;display:none;" +
     "box-shadow:0 12px 48px rgba(0,0,0,.3);background:#fff;";
 
+  // Unread dot on the bubble (shown until first open).
+  var dot = document.createElement("span");
+  dot.style.cssText =
+    "position:fixed;bottom:62px;right:22px;width:12px;height:12px;border-radius:9999px;background:#ef4444;" +
+    "border:2px solid #fff;z-index:2147483001;display:none;";
+
+  // Proactive greeting bubble.
+  var greetText = cs.getAttribute("data-greeting") || "👋 Need help? Chat with us!";
+  var greetDelay = parseInt(cs.getAttribute("data-greeting-delay") || "6000", 10);
+  var greet = document.createElement("div");
+  greet.style.cssText =
+    "position:fixed;bottom:84px;right:20px;max-width:240px;background:#fff;color:#0f172a;padding:10px 30px 10px 12px;" +
+    "border-radius:14px;font:14px/1.35 system-ui,sans-serif;box-shadow:0 10px 30px rgba(0,0,0,.18);" +
+    "z-index:2147483000;display:none;cursor:pointer;";
+  greet.textContent = greetText;
+  var greetClose = document.createElement("span");
+  greetClose.textContent = "✕";
+  greetClose.style.cssText = "position:absolute;top:6px;right:8px;color:#94a3b8;font-size:12px;cursor:pointer;";
+  greet.appendChild(greetClose);
+
   var open = false;
+  var greeted = false;
   function toggle() {
     open = !open;
     frame.style.display = open ? "block" : "none";
     btn.innerHTML = open ? "✕" : "💬";
+    dot.style.display = "none";
+    greet.style.display = "none";
   }
   btn.onclick = toggle;
+  greet.onclick = function (e) { if (e.target !== greetClose) toggle(); };
+  greetClose.onclick = function (e) { e.stopPropagation(); greet.style.display = "none"; };
+
+  // After a delay, nudge the visitor (once) if they haven't opened the chat.
+  if (greetDelay >= 0) {
+    setTimeout(function () {
+      if (!open && !greeted) {
+        greeted = true;
+        dot.style.display = "block";
+        greet.style.display = "block";
+      }
+    }, greetDelay);
+  }
 
   document.body.appendChild(frame);
+  document.body.appendChild(greet);
   document.body.appendChild(btn);
+  document.body.appendChild(dot);
 })();

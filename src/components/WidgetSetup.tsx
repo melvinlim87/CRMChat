@@ -5,6 +5,7 @@ import Link from "next/link";
 import WidgetChat from "@/components/WidgetChat";
 import KnowledgeBase from "@/components/KnowledgeBase";
 import AgentValidation from "@/components/AgentValidation";
+import AssistantAnalytics from "@/components/AssistantAnalytics";
 
 // Tone presets (kept in sync with TONES in lib/widget.ts; defined here to keep
 // the server-only widget module out of this client bundle).
@@ -116,6 +117,11 @@ export default function WidgetSetup() {
 
   return (
     <div className="space-y-5">
+      {/* Analytics */}
+      <div className="rounded-2xl border border-white/10 bg-surface-panel p-6">
+        <AssistantAnalytics />
+      </div>
+
       {/* Widget switcher */}
       <div className="flex gap-2">
         {widgets.map((w) => (
