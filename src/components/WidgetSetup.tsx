@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import WidgetChat from "@/components/WidgetChat";
 import KnowledgeBase from "@/components/KnowledgeBase";
+import AgentValidation from "@/components/AgentValidation";
 
 // Tone presets (kept in sync with TONES in lib/widget.ts; defined here to keep
 // the server-only widget module out of this client bundle).
@@ -333,6 +334,11 @@ export default function WidgetSetup() {
         <div className="mt-4">
           <KnowledgeBase />
         </div>
+      </div>
+
+      {/* Test / validate the AI agent */}
+      <div className="rounded-2xl border border-white/10 bg-surface-panel p-6">
+        <AgentValidation />
       </div>
     </div>
   );

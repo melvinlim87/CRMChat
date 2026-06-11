@@ -187,6 +187,16 @@ model Faq {
   @@index([order])
 }
 
+// A test query run from the admin "validate the agent" console.
+model AiTestQuery {
+  id        String   @id @default(cuid())
+  query     String
+  answer    String   @default("")
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+}
+
 // A published/editable marketing page built in the drag-and-drop site builder.
 model Page {
   id        String   @id @default(cuid())
