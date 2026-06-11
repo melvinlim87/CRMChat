@@ -28,6 +28,7 @@ export default function AgentValidation() {
   const [answer, setAnswer] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [recent, setRecent] = useState<Recent[]>([]);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
 
   // API-key connection state.
   const [keysSet, setKeysSet] = useState<Record<string, boolean>>({});
@@ -67,8 +68,33 @@ export default function AgentValidation() {
   function loadRecent() {
     fetch("/api/widget/test")
       .then((r) => r.json())
-      .then((d) => setRecent(d.recent ?? []))
+      .then((d) => {
+        setRecent(d.recent ?? []);
+        setSelected(new Set());
+      })
       .catch(() => {});
+  }
+
+  function toggle(id: string) {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  }
+  function toggleAll() {
+    setSelected((prev) => (prev.size === recent.length ? new Set() : new Set(recent.map((r) => r.id))));
+  }
+  async function deleteSelected() {
+    if (selected.size === 0) return;
+    const ids = Array.from(selected);
+    setRecent((prev) => prev.filter((r) => !selected.has(r.id)));
+    setSelected(new Set());
+    await fetch("/api/widget/test", {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ids }),
+    }).catch(() => {});
   }
 
   function pickModel(value: string) {
@@ -208,18 +234,42 @@ export default function AgentValidation() {
 
       {/* Recent queries */}
       <div className="h-fit rounded-2xl border border-white/10 bg-surface-panel p-4">
-        <p className="mb-3 text-xs font-medium uppercase tracking-wide text-slate-400">Recent queries</p>
+        <div className="mb-3 flex items-center justify-between">
+          <p className="text-xs font-medium uppercase tracking-wide text-slate-400">Recent queries</p>
+          {recent.length > 0 && (
+            <div className="flex items-center gap-2">
+              <label className="flex cursor-pointer items-center gap-1 text-[11px] text-slate-400">
+                <input type="checkbox" checked={selected.size === recent.length} onChange={toggleAll} className="accent-brand-500" />
+                All
+              </label>
+              {selected.size > 0 && (
+                <button onClick={deleteSelected} className="rounded-md border border-red-500/30 bg-red-500/10 px-2 py-0.5 text-[11px] font-medium text-red-300 transition hover:bg-red-500/20">
+                  🗑 Delete ({selected.size})
+                </button>
+              )}
+            </div>
+          )}
+        </div>
         <div className="space-y-2">
           {recent.length === 0 && <p className="text-xs text-slate-500">No queries yet.</p>}
           {recent.map((r) => (
-            <button
+            <div
               key={r.id}
-              onClick={() => setQuery(r.query)}
-              className="block w-full rounded-lg border border-white/10 bg-white/[0.02] px-3 py-2 text-left transition hover:bg-white/5"
+              className={`flex items-start gap-2 rounded-lg border px-3 py-2 transition ${
+                selected.has(r.id) ? "border-brand-500/50 bg-brand-500/10" : "border-white/10 bg-white/[0.02]"
+              }`}
             >
-              <p className="truncate text-sm text-slate-200">{r.query}</p>
-              <p className="mt-0.5 text-[11px] text-slate-500">{new Date(r.createdAt).toLocaleDateString()}</p>
-            </button>
+              <input
+                type="checkbox"
+                checked={selected.has(r.id)}
+                onChange={() => toggle(r.id)}
+                className="mt-0.5 accent-brand-500"
+              />
+              <button onClick={() => setQuery(r.query)} className="min-w-0 flex-1 text-left">
+                <p className="truncate text-sm text-slate-200">{r.query}</p>
+                <p className="mt-0.5 text-[11px] text-slate-500">{new Date(r.createdAt).toLocaleDateString()}</p>
+              </button>
+            </div>
           ))}
         </div>
       </div>

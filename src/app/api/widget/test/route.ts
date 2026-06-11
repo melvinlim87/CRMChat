@@ -33,6 +33,19 @@ export async function POST(req: NextRequest) {
   return NextResponse.json({ text: result.text, error: result.error });
 }
 
+// Delete recent test queries — selected ids, or all.
+export async function DELETE(req: NextRequest) {
+  const session = await getSession();
+  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const { ids, all } = await req.json().catch(() => ({}));
+  if (all) {
+    await prisma.aiTestQuery.deleteMany({});
+  } else if (Array.isArray(ids) && ids.length) {
+    await prisma.aiTestQuery.deleteMany({ where: { id: { in: ids } } });
+  }
+  return NextResponse.json({ ok: true });
+}
+
 // Recent test queries (and recent real visitor questions) for the side list.
 export async function GET() {
   const session = await getSession();
