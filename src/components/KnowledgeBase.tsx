@@ -103,10 +103,10 @@ export default function KnowledgeBase() {
           dragOver ? "border-brand-400 bg-brand-500/10" : "border-white/15 hover:border-white/25 hover:bg-white/5"
         }`}
       >
-        <input ref={inputRef} type="file" accept="application/pdf,.pdf" multiple className="hidden" onChange={(e) => upload(e.target.files)} />
+        <input ref={inputRef} type="file" accept=".pdf,.html,.htm,.txt,.md,.markdown,application/pdf,text/html,text/plain,text/markdown" multiple className="hidden" onChange={(e) => upload(e.target.files)} />
         <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-xl bg-brand-500/20 text-xl text-brand-300">📄</div>
-        <p className="font-medium text-slate-200">{uploading ? "Uploading…" : "Drop a PDF here, or click to browse"}</p>
-        <p className="mt-1 text-xs text-slate-500">PDFs up to 8 MB. Text is extracted so your AI can use it.</p>
+        <p className="font-medium text-slate-200">{uploading ? "Uploading…" : "Drop a file here, or click to browse"}</p>
+        <p className="mt-1 text-xs text-slate-500">PDF, HTML, TXT or Markdown up to 8 MB. HTML/text import instantly; PDFs take a little longer.</p>
         {error && <p className="mt-3 text-sm text-red-400">{error}</p>}
       </div>
 
@@ -115,7 +115,7 @@ export default function KnowledgeBase() {
         {docs.map((d) => (
           <div key={d.id} className="flex items-start justify-between gap-3 rounded-xl border border-white/10 bg-surface-panel p-4">
             <div className="flex min-w-0 gap-3">
-              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-red-500/15 text-red-300">PDF</span>
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-brand-500/15 text-[10px] font-semibold text-brand-300">{(d.name.split(".").pop() || "DOC").toUpperCase().slice(0, 4)}</span>
               <div className="min-w-0">
                 <div className="flex items-center gap-2">
                   <a href={`/api/documents/${d.id}/download`} target="_blank" rel="noreferrer" className="font-medium text-slate-100 hover:text-brand-300">

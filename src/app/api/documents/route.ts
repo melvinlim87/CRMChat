@@ -37,8 +37,13 @@ export async function POST(req: NextRequest) {
   if (!file || !(file instanceof File)) {
     return NextResponse.json({ error: "No file provided" }, { status: 400 });
   }
-  if (file.type !== "application/pdf" && !file.name.toLowerCase().endsWith(".pdf")) {
-    return NextResponse.json({ error: "Only PDF files are supported" }, { status: 400 });
+  const lower = file.name.toLowerCase();
+  const isPdf = file.type === "application/pdf" || lower.endsWith(".pdf");
+  const isHtml = file.type === "text/html" || lower.endsWith(".html") || lower.endsWith(".htm");
+  const isText =
+    file.type.startsWith("text/") || lower.endsWith(".txt") || lower.endsWith(".md") || lower.endsWith(".markdown");
+  if (!isPdf && !isHtml && !isText) {
+    return NextResponse.json({ error: "Supported types: PDF, HTML, TXT, Markdown" }, { status: 400 });
   }
   if (file.size > MAX_BYTES) {
     return NextResponse.json({ error: "File is too large (max 8 MB)" }, { status: 400 });
@@ -49,15 +54,26 @@ export async function POST(req: NextRequest) {
   const audience = ["all", "public", "student"].includes(audienceRaw) ? audienceRaw : "all";
 
   let text = "";
+  let mimeType = "text/plain";
   try {
-    const parsed = await pdfParse(buffer);
-    text = (parsed.text || "").replace(/\n{3,}/g, "\n\n").trim();
+    if (isPdf) {
+      mimeType = "application/pdf";
+      const parsed = await pdfParse(buffer);
+      text = parsed.text || "";
+    } else if (isHtml) {
+      mimeType = "text/html";
+      text = htmlToText(buffer.toString("utf8"));
+    } else {
+      text = buffer.toString("utf8");
+    }
+    text = text.replace(/\n{3,}/g, "\n\n").trim();
   } catch {
-    return NextResponse.json({ error: "Couldn't read that PDF" }, { status: 400 });
+    return NextResponse.json({ error: "Couldn't read that file" }, { status: 400 });
   }
+  if (!text) return NextResponse.json({ error: "No readable text found in that file" }, { status: 400 });
 
   const doc = await prisma.document.create({
-    data: { name: file.name, mimeType: "application/pdf", size: file.size, text, content: buffer, audience },
+    data: { name: file.name, mimeType, size: file.size, text, content: buffer, audience },
     select: { id: true, name: true, size: true, text: true, audience: true, createdAt: true },
   });
 
@@ -72,4 +88,23 @@ export async function POST(req: NextRequest) {
       createdAt: doc.createdAt.toISOString(),
     },
   });
+}
+
+// Strip HTML down to readable plain text for the knowledge base.
+function htmlToText(html: string): string {
+  return html
+    .replace(/<script[\s\S]*?<\/script>/gi, " ")
+    .replace(/<style[\s\S]*?<\/style>/gi, " ")
+    .replace(/<!--[\s\S]*?-->/g, " ")
+    .replace(/<\/(p|div|li|h[1-6]|tr|section|article)>/gi, "\n")
+    .replace(/<br\s*\/?>/gi, "\n")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/&nbsp;/gi, " ")
+    .replace(/&amp;/gi, "&")
+    .replace(/&lt;/gi, "<")
+    .replace(/&gt;/gi, ">")
+    .replace(/&quot;/gi, '"')
+    .replace(/&#3?9;|&apos;/gi, "'")
+    .replace(/[ \t]+/g, " ")
+    .replace(/\n{3,}/g, "\n\n");
 }
