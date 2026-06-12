@@ -6,7 +6,6 @@ import WidgetChat from "@/components/WidgetChat";
 import KnowledgeBase from "@/components/KnowledgeBase";
 import AgentValidation from "@/components/AgentValidation";
 import AssistantAnalytics from "@/components/AssistantAnalytics";
-import WhatsAppConfig from "@/components/WhatsAppConfig";
 
 // Tone presets (kept in sync with TONES in lib/widget.ts; defined here to keep
 // the server-only widget module out of this client bundle).
@@ -348,14 +347,7 @@ export default function WidgetSetup() {
         <AgentValidation />
       </div>
 
-      {/* WhatsApp integration */}
-      <div className="rounded-2xl border border-green-400/20 bg-green-500/[0.06] p-6">
-        <h2 className="flex items-center gap-2 font-semibold text-slate-100">💬 WhatsApp Integration</h2>
-        <p className="mt-1 max-w-2xl text-sm text-slate-400">
-          Connect your WhatsApp Business account so the same AI assistant (knowledge base + FAQs) answers leads on WhatsApp too.
-        </p>
-        <WhatsAppConfig />
-      </div>
+      {/* WhatsApp integration — hidden for now (re-enable by restoring <WhatsAppConfig />). */}
     </div>
   );
 }
