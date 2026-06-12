@@ -56,8 +56,8 @@ export async function POST(req: NextRequest) {
       lastMessageAt: message.createdAt,
       unreadCount: 0,
       needsHuman: false,
-      // Once an agent replies on a widget chat, keep the AI out of it.
-      ...(isWidget ? { humanTakeover: true } : {}),
+      // Once an agent replies, keep the AI out of it (widget + WhatsApp).
+      humanTakeover: true,
     },
   });
 

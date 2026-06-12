@@ -10,6 +10,7 @@ export default function WhatsAppConfig() {
   const [phoneNumberId, setPhoneNumberId] = useState("");
   const [accessToken, setAccessToken] = useState("");
   const [verifyToken, setVerifyToken] = useState("crmchat-verify");
+  const [aiReply, setAiReply] = useState(true);
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState("");
   const [error, setError] = useState("");
@@ -24,9 +25,19 @@ export default function WhatsAppConfig() {
         setHasToken(Boolean(d.hasToken));
         setPhoneNumberId(d.phoneNumberId || "");
         setVerifyToken(d.verifyToken || "crmchat-verify");
+        setAiReply(d.aiReply !== false);
       })
       .catch(() => {});
   }, []);
+
+  async function toggleAi(next: boolean) {
+    setAiReply(next);
+    await fetch("/api/integrations/whatsapp", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ aiReply: next }),
+    }).catch(() => {});
+  }
 
   async function save() {
     setBusy(true);
@@ -80,6 +91,14 @@ export default function WhatsAppConfig() {
         <label className="mb-1 block text-xs font-medium text-slate-400">Access token</label>
         <input className={field} type="password" value={accessToken} onChange={(e) => setAccessToken(e.target.value)} placeholder={hasToken ? "•••••••• (leave blank to keep current)" : "Permanent or temporary token"} />
       </div>
+
+      <label className="flex items-center justify-between gap-3 rounded-lg border border-white/10 bg-white/[0.02] p-3">
+        <span>
+          <span className="block text-sm font-medium text-slate-200">AI auto-reply</span>
+          <span className="block text-xs text-slate-400">Answer WhatsApp messages automatically from your knowledge base + FAQs. A request for a human (or a frustrated message) pauses the AI and hands off to your inbox.</span>
+        </span>
+        <input type="checkbox" checked={aiReply} onChange={(e) => toggleAi(e.target.checked)} className="h-5 w-5 shrink-0 accent-brand-500" />
+      </label>
 
       <div className="rounded-lg border border-white/10 bg-white/5 p-3 text-xs text-slate-400">
         In Meta, set the webhook callback URL to:

@@ -6,13 +6,29 @@ export async function GET() {
   const session = await getSession();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const row = await prisma.integration.findUnique({ where: { provider: "whatsapp" } });
-  const cfg = (row?.config as { phoneNumberId?: string; accessToken?: string; verifyToken?: string }) || {};
+  const cfg = (row?.config as { phoneNumberId?: string; accessToken?: string; verifyToken?: string; aiReply?: boolean }) || {};
   return NextResponse.json({
     connected: row?.status === "connected",
     phoneNumberId: cfg.phoneNumberId || "",
     verifyToken: cfg.verifyToken || "crmchat-verify",
     hasToken: Boolean(cfg.accessToken),
+    aiReply: cfg.aiReply !== false,
   });
+}
+
+// Toggle the knowledge-base AI auto-reply without re-entering credentials.
+export async function PATCH(req: NextRequest) {
+  const session = await getSession();
+  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const { aiReply } = await req.json().catch(() => ({}));
+  const row = await prisma.integration.findUnique({ where: { provider: "whatsapp" } });
+  const cfg = (row?.config as Record<string, unknown>) || {};
+  await prisma.integration.upsert({
+    where: { provider: "whatsapp" },
+    update: { config: { ...cfg, aiReply: Boolean(aiReply) } },
+    create: { provider: "whatsapp", status: "disconnected", config: { aiReply: Boolean(aiReply) } },
+  });
+  return NextResponse.json({ ok: true, aiReply: Boolean(aiReply) });
 }
 
 export async function POST(req: NextRequest) {
@@ -28,10 +44,12 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Phone number ID and access token are required" }, { status: 400 });
   }
 
+  const prevAiReply = (existing?.config as { aiReply?: boolean })?.aiReply;
   const config = {
     phoneNumberId: phoneNumberId.trim(),
     accessToken: token,
     verifyToken: verifyToken?.trim() || "crmchat-verify",
+    aiReply: prevAiReply !== false, // default on
   };
 
   await prisma.integration.upsert({
