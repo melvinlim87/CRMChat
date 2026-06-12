@@ -20,6 +20,7 @@ const field =
 
 export default function AgentValidation() {
   const [models, setModels] = useState<ModelOpt[]>([]);
+  const [providers, setProviders] = useState<string[]>([]);
   const [provider, setProvider] = useState("");
   const [model, setModel] = useState("");
   const [tone, setTone] = useState("customer-service");
@@ -52,6 +53,7 @@ export default function AgentValidation() {
         }
         setModels(opts);
         setProviderLabels(labels);
+        setProviders((d.settings?.providerOrder ?? Object.keys(catalog)).filter((p: string) => catalog[p]));
         setKeysSet(d.settings?.keysSet ?? {});
         const cur = d.settings;
         setProvider((prev) => prev || cur?.provider || opts[0]?.provider || "");
@@ -97,14 +99,13 @@ export default function AgentValidation() {
     }).catch(() => {});
   }
 
-  function pickModel(value: string) {
-    const opt = models.find((m) => `${m.provider}|${m.id}` === value);
-    if (opt) {
-      setProvider(opt.provider);
-      setModel(opt.id);
-      setApiKey("");
-      setKeyMsg("");
-    }
+  function changeProvider(p: string) {
+    setProvider(p);
+    setApiKey("");
+    setKeyMsg("");
+    // default to that provider's first catalog model
+    const first = models.find((m) => m.provider === p);
+    if (first) setModel(first.id);
   }
 
   async function connectKey() {
@@ -163,11 +164,26 @@ export default function AgentValidation() {
         <div className="mt-4 space-y-3">
           <div>
             <label className="mb-1 block text-xs font-medium text-slate-400">AI Model</label>
-            <select className={field} value={`${provider}|${model}`} onChange={(e) => pickModel(e.target.value)}>
-              {models.map((m) => (
-                <option key={`${m.provider}|${m.id}`} value={`${m.provider}|${m.id}`}>{m.label}</option>
-              ))}
-            </select>
+            <div className="grid grid-cols-[140px_1fr] gap-2">
+              <select className={field} value={provider} onChange={(e) => changeProvider(e.target.value)}>
+                {providers.map((p) => (
+                  <option key={p} value={p}>{providerLabels[p] || p}</option>
+                ))}
+              </select>
+              <input
+                className={field}
+                list="cc-model-list"
+                value={model}
+                onChange={(e) => setModel(e.target.value)}
+                placeholder="Search or type a model id…"
+              />
+              <datalist id="cc-model-list">
+                {models.filter((m) => m.provider === provider).map((m) => (
+                  <option key={m.id} value={m.id}>{m.label}</option>
+                ))}
+              </datalist>
+            </div>
+            <p className="mt-1 text-[11px] text-slate-500">Pick a provider, then search the list or paste any model id that provider supports.</p>
 
             {/* API key — connect the selected provider */}
             <div className="mt-2 rounded-lg border border-white/10 bg-white/[0.02] p-2.5">
