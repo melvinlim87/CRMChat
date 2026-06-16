@@ -164,8 +164,16 @@ async function callOpenAICompatible(baseURL: string, key: string, model: string,
     body: JSON.stringify({ model, messages: [{ role: "system", content: system }, ...messages] }),
   });
   const data = await res.json().catch(() => ({}));
-  if (!res.ok) return { text: null, error: data?.error?.message || `AI error (${res.status})` };
-  return { text: data?.choices?.[0]?.message?.content ?? "" };
+  // OpenRouter (and others) can return an error in the body even with HTTP 200.
+  const err = data?.error;
+  if (!res.ok || err) {
+    const base = (typeof err === "string" ? err : err?.message) || `AI error (${res.status})`;
+    const meta = err?.metadata?.raw || err?.metadata?.provider_name;
+    return { text: null, error: meta ? `${base} — ${String(meta).slice(0, 200)}` : base };
+  }
+  const content = data?.choices?.[0]?.message?.content;
+  if (!content) return { text: null, error: "The model returned an empty response. Try another model." };
+  return { text: content };
 }
 
 async function callAnthropic(key: string, model: string, system: string, messages: ChatMessage[]): Promise<AIResult> {
