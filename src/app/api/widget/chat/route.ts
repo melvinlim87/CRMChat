@@ -24,7 +24,7 @@ export async function POST(req: NextRequest) {
   // Find or create the conversation for this widget session.
   let conversation = await prisma.conversation.findUnique({
     where: { sessionId },
-    include: { lead: true, messages: { orderBy: { createdAt: "asc" }, take: 20 } },
+    include: { lead: true, messages: { orderBy: { createdAt: "asc" }, take: 40 } },
   });
 
   if (!conversation) {
@@ -33,7 +33,7 @@ export async function POST(req: NextRequest) {
     let existing = email?.trim()
       ? await prisma.lead.findFirst({
           where: { email: { equals: email.trim(), mode: "insensitive" } },
-          include: { conversation: { include: { messages: { orderBy: { createdAt: "asc" }, take: 20 } } } },
+          include: { conversation: { include: { messages: { orderBy: { createdAt: "asc" }, take: 40 } } } },
         })
       : null;
 
@@ -42,7 +42,7 @@ export async function POST(req: NextRequest) {
       conversation = await prisma.conversation.update({
         where: { id: existing.conversation.id },
         data: { sessionId: existing.conversation.sessionId ?? sessionId },
-        include: { lead: true, messages: { orderBy: { createdAt: "asc" }, take: 20 } },
+        include: { lead: true, messages: { orderBy: { createdAt: "asc" }, take: 40 } },
       });
     } else {
       const lead =
@@ -52,7 +52,7 @@ export async function POST(req: NextRequest) {
         }));
       conversation = await prisma.conversation.create({
         data: { leadId: lead.id, channel: "widget", sessionId },
-        include: { lead: true, messages: { orderBy: { createdAt: "asc" }, take: 20 } },
+        include: { lead: true, messages: { orderBy: { createdAt: "asc" }, take: 40 } },
       });
     }
   } else if ((name?.trim() || email?.trim()) && conversation.lead.name === "Website Visitor") {
@@ -116,6 +116,24 @@ export async function POST(req: NextRequest) {
   // everyone else gets the general ones (both also include "all" docs).
   const audience: "public" | "student" = widget.key === "students" ? "student" : "public";
   const knowledge = await getKnowledgeContext(12000, audience, message.trim());
+
+  // Student memory — what the assistant "remembers" about this person across
+  // visits: their CRM profile + recent notes. (Their full chat history already
+  // persists because a verified student reconnects to the same conversation.)
+  let memory = "";
+  if (audience === "student") {
+    const lead = conversation.lead;
+    const notes = await prisma.note.findMany({
+      where: { leadId: lead.id },
+      orderBy: { createdAt: "desc" },
+      take: 10,
+      select: { body: true },
+    });
+    memory =
+      `\n\nWhat you already know about this student (use it naturally; don't recite it back):\n` +
+      `- Name: ${lead.name}\n- Email: ${lead.email || "unknown"}\n- Course/tags: ${lead.tags.join(", ") || "none"}\n- Status: ${lead.status}` +
+      (notes.length ? `\n- Notes from previous interactions:\n${notes.map((n) => `  • ${n.body}`).join("\n")}` : "");
+  }
   const system =
     `You are a human support agent chatting on a company's website — not a robot. Sound natural and conversational, like a real person texting. ${toneGuidance(widget.tone)} ` +
     `Keep it light: you may **bold** a key term and use short "- " bullet lists when listing steps or options, but no headings, tables or emoji spam. ` +
@@ -124,6 +142,7 @@ export async function POST(req: NextRequest) {
     `Answer using the knowledge base below and the conversation. If something isn't covered, just say you'll pass it to the team — be helpful and DO NOT ask the visitor for their name or email unless they explicitly ask to be contacted or to speak to a person. ` +
     `After your messages, you MAY add one final line starting with "SUGGESTIONS:" followed by 2-3 very short follow-up questions the visitor is likely to ask next, separated by " | " (max 6 words each). Only include it when natural; omit the line otherwise. ${REPLY_RULES}` +
     (widget.instruction ? `\n\n${widget.instruction}` : "") +
+    memory +
     (knowledge ? `\n\nKnowledge base (this is what you know about the company — rely on it):\n${knowledge}` : "");
 
   const result = await generateReply(history, system);
