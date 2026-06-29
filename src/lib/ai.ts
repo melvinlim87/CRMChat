@@ -138,14 +138,38 @@ export async function generateReply(
   override?: { provider?: AIProvider; model?: string }
 ): Promise<AIResult> {
   const cfg = await getAIConfig();
-  const provider = override?.provider ?? cfg.provider;
-  const model = override?.model ?? cfg.model;
-  const key = cfg.keys[provider];
+  const primaryProvider = override?.provider ?? cfg.provider;
+  const primaryModel = override?.model ?? cfg.model;
 
+  // Try the chosen provider first, then fall back to any other configured
+  // provider — so a flaky/over-capacity model never takes the assistant down.
+  const attempts: { provider: AIProvider; model: string }[] = [{ provider: primaryProvider, model: primaryModel }];
+  for (const p of PROVIDER_ORDER) {
+    if (p === primaryProvider) continue;
+    if (!KEYLESS.includes(p) && !cfg.keys[p]) continue;
+    attempts.push({ provider: p, model: MODEL_CATALOG[p].models[0]?.id });
+  }
+
+  let lastError = "No AI provider is configured. Add a key in Settings.";
+  for (const a of attempts) {
+    const r = await tryProvider(cfg, a.provider, a.model, system, messages);
+    if (r.text && r.text.trim()) return r;
+    if (r.error) lastError = r.error;
+  }
+  return { text: null, error: lastError };
+}
+
+async function tryProvider(
+  cfg: AIConfig,
+  provider: AIProvider,
+  model: string,
+  system: string,
+  messages: ChatMessage[]
+): Promise<AIResult> {
+  const key = cfg.keys[provider];
   if (!KEYLESS.includes(provider) && !key) {
     return { text: null, error: `No API key set for ${MODEL_CATALOG[provider].label}. Add one in Settings.` };
   }
-
   try {
     if (provider === "anthropic") return await callAnthropic(key!, model, system, messages);
     if (provider === "google") return await callGoogle(key!, model, system, messages);

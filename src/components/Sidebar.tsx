@@ -8,6 +8,9 @@ import ThemeToggle from "./ThemeToggle";
 
 const NAV = [
   { href: "/chat-widget", label: "Chat Widget", icon: WidgetIcon },
+  { href: "/chat", label: "Inbox", icon: ChatIcon },
+  { href: "/go-live", label: "Go Live", icon: RocketIcon },
+  { href: "/settings", label: "Settings", icon: GearIcon },
 ];
 
 export default function Sidebar() {

@@ -2,34 +2,36 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { getGoogleStatus } from "@/lib/google";
 import { whatsappConfigured } from "@/lib/whatsapp";
-import { getAIConfig } from "@/lib/ai";
+import { getAIConfig, embeddingsAvailable } from "@/lib/ai";
 
 export const dynamic = "force-dynamic";
 
 type Check = { label: string; done: boolean; required: boolean; detail: string; href: string; cta: string };
 
 export default async function GoLivePage() {
-  const [google, waReady, ai, docCount, slack, publishedPages] = await Promise.all([
+  const [google, waReady, ai, docCount, faqCount, semantic, slack] = await Promise.all([
     getGoogleStatus(),
     whatsappConfigured(),
     getAIConfig(),
     prisma.document.count(),
+    prisma.faq.count(),
+    embeddingsAvailable(),
     prisma.integration.findUnique({ where: { provider: "slack" } }),
-    prisma.page.count({ where: { published: true } }),
   ]);
 
   const aiReady = ai.provider === "ollama" || Boolean(ai.keys[ai.provider]);
-  const secretOk = Boolean(process.env.AUTH_SECRET) && process.env.AUTH_SECRET !== "change-me-to-a-long-random-string";
+  const knowledgeReady = docCount > 0 || faqCount > 0;
 
   const checks: Check[] = [
-    { label: "Database connected", done: true, required: true, detail: "Your Postgres database is reachable.", href: "/dashboard", cta: "View" },
-    { label: "Secure login secret", done: secretOk, required: true, detail: "Set a strong AUTH_SECRET in your environment (openssl rand -base64 32).", href: "#deploy", cta: "How" },
-    { label: "AI model connected", done: aiReady, required: true, detail: aiReady ? `Using ${ai.provider} · ${ai.model}.` : "Add a free Groq or Gemini key so AI replies work.", href: "/settings", cta: "Set up" },
-    { label: "WhatsApp Business connected", done: waReady, required: false, detail: waReady ? "Cloud API credentials saved." : "Connect the official WhatsApp Cloud API to send/receive.", href: "/integrations", cta: "Connect" },
-    { label: "Google connected (Gmail/Calendar/Drive)", done: google.connected, required: false, detail: google.connected ? `Connected${google.email ? ` as ${google.email}` : ""}.` : "Authorize Google for email, calendar and drive.", href: "/integrations", cta: "Connect" },
-    { label: "Knowledge base", done: docCount > 0, required: false, detail: docCount > 0 ? `${docCount} document(s) — AI answers from these.` : "Upload PDFs so the AI answers accurately.", href: "/knowledge", cta: "Upload" },
+    { label: "Database connected", done: true, required: true, detail: "Your Postgres database is reachable.", href: "/chat-widget", cta: "View" },
+    { label: "AI model connected", done: aiReady, required: true, detail: aiReady ? `Using ${ai.provider} · ${ai.model} (auto-falls back to other connected providers).` : "Add a free Groq or Gemini key so AI replies work.", href: "/settings", cta: "Set up" },
+    { label: "Knowledge base", done: knowledgeReady, required: true, detail: knowledgeReady ? `${docCount} document(s) + ${faqCount} FAQ(s) — the AI answers from these.` : "Upload a PDF/HTML/text doc or add FAQs so the AI can answer.", href: "/chat-widget", cta: "Add" },
+    { label: "Semantic search (embeddings)", done: semantic, required: false, detail: semantic ? "On — answers find the right section by meaning." : "Optional: add an OpenAI or Gemini key to enable it (keyword search used otherwise).", href: "/settings", cta: "Enable" },
+    { label: "Chat widget embedded", done: false, required: true, detail: "Copy the embed snippet from the Chat Widget page into your website.", href: "/chat-widget", cta: "Get code" },
+    { label: "Protect the admin", done: false, required: true, detail: "Login is currently OFF — anyone with the URL can open the admin. Add protection before going public.", href: "#deploy", cta: "How" },
+    { label: "WhatsApp Business connected", done: waReady, required: false, detail: waReady ? "Cloud API credentials saved — AI auto-reply available." : "Optional: connect WhatsApp so the AI answers there too.", href: "/integrations", cta: "Connect" },
+    { label: "Google connected (Gmail/Calendar/Drive)", done: google.connected, required: false, detail: google.connected ? `Connected${google.email ? ` as ${google.email}` : ""}.` : "Optional: authorize Google.", href: "/integrations", cta: "Connect" },
     { label: "Slack notifications", done: slack?.status === "connected", required: false, detail: slack?.status === "connected" ? "New leads ping your Slack." : "Optional: get new-lead alerts in Slack.", href: "/integrations", cta: "Connect" },
-    { label: "Website / chat widget", done: publishedPages > 0, required: false, detail: publishedPages > 0 ? `${publishedPages} page(s) published.` : "Publish a page or embed the chat widget on your site.", href: "/chat-widget", cta: "Set up" },
   ];
 
   const required = checks.filter((c) => c.required);
