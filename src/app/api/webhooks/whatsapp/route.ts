@@ -141,7 +141,7 @@ async function maybeAiReply(p: { conversationId: string; leadName: string; phone
     content: m.body,
   }));
 
-  const knowledge = await getKnowledgeContext();
+  const knowledge = await getKnowledgeContext(12000, undefined, p.text);
   const system =
     `You are a friendly human support agent replying to a customer on WhatsApp. Sound natural and concise (1-3 short sentences), warm and helpful. ` +
     `Only answer from the knowledge base below and the conversation; if it's not covered, say you'll get a team member to follow up. ${REPLY_RULES}` +

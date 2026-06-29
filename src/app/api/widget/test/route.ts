@@ -16,7 +16,7 @@ export async function POST(req: NextRequest) {
   const { query, provider, model, tone } = await req.json().catch(() => ({}));
   if (!query?.trim()) return NextResponse.json({ error: "Query is required" }, { status: 400 });
 
-  const knowledge = await getKnowledgeContext();
+  const knowledge = await getKnowledgeContext(12000, undefined, query);
   const system =
     `You are the AI assistant on a company's website. Answer the question clearly and naturally. ${toneGuidance(tone)} No markdown. ` +
     `Only answer using the knowledge base below and say so if it isn't covered. ${REPLY_RULES}` +

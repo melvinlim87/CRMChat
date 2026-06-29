@@ -115,7 +115,7 @@ export async function POST(req: NextRequest) {
   // Verified students chat on the "students" widget → student-scoped PDFs;
   // everyone else gets the general ones (both also include "all" docs).
   const audience: "public" | "student" = widget.key === "students" ? "student" : "public";
-  const knowledge = await getKnowledgeContext(6000, audience);
+  const knowledge = await getKnowledgeContext(12000, audience, message.trim());
   const system =
     `You are a human support agent chatting on a company's website — not a robot. Sound natural and conversational, like a real person texting. ${toneGuidance(widget.tone)} ` +
     `Keep it light: you may **bold** a key term and use short "- " bullet lists when listing steps or options, but no headings, tables or emoji spam. ` +
