@@ -121,7 +121,7 @@ export async function POST(req: NextRequest) {
     `Keep it light: you may **bold** a key term and use short "- " bullet lists when listing steps or options, but no headings, tables or emoji spam. ` +
     `Reply with one to three SHORT messages, the way a person would split their thoughts across a few chat bubbles instead of one long paragraph. ` +
     `Put each separate message on its own line, separated by a line containing only "---". Most simple answers need just one message; use a second or third only when it genuinely helps (e.g. a quick greeting, then the answer, then a follow-up question). Keep every message to 1-2 sentences. ` +
-    `Only answer using the knowledge base below and the conversation. If you don't know or it's not covered, warmly say you'll connect them with the team and ask for their name and email. ` +
+    `Answer using the knowledge base below and the conversation. If something isn't covered, just say you'll pass it to the team — be helpful and DO NOT ask the visitor for their name or email unless they explicitly ask to be contacted or to speak to a person. ` +
     `After your messages, you MAY add one final line starting with "SUGGESTIONS:" followed by 2-3 very short follow-up questions the visitor is likely to ask next, separated by " | " (max 6 words each). Only include it when natural; omit the line otherwise. ${REPLY_RULES}` +
     (widget.instruction ? `\n\n${widget.instruction}` : "") +
     (knowledge ? `\n\nKnowledge base (this is what you know about the company — rely on it):\n${knowledge}` : "");
@@ -130,7 +130,7 @@ export async function POST(req: NextRequest) {
   const { replies, suggestions } = parseReply(result.text);
   const finalReplies = replies || [
     "Thanks for reaching out! 🙏",
-    "Our team will follow up shortly. Could you share your name and email so we can get back to you?",
+    "I'll pass this to our team and someone will follow up shortly.",
   ];
 
   // Store each bubble as its own outbound message so the inbox mirrors the chat.

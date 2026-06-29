@@ -24,6 +24,9 @@ export default function KnowledgeBase() {
   const [error, setError] = useState<string | null>(null);
   const [dragOver, setDragOver] = useState(false);
   const [audience, setAudience] = useState("all");
+  const [semantic, setSemantic] = useState(false);
+  const [reindexing, setReindexing] = useState(false);
+  const [reindexMsg, setReindexMsg] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -31,7 +34,20 @@ export default function KnowledgeBase() {
       .then((r) => r.json())
       .then((d) => setDocs(d.documents ?? []))
       .catch(() => {});
+    fetch("/api/documents/reindex")
+      .then((r) => r.json())
+      .then((d) => setSemantic(Boolean(d.available)))
+      .catch(() => {});
   }, []);
+
+  async function reindex() {
+    setReindexing(true);
+    setReindexMsg("");
+    const res = await fetch("/api/documents/reindex", { method: "POST" });
+    const d = await res.json().catch(() => ({}));
+    setReindexing(false);
+    setReindexMsg(res.ok ? `Indexed ${d.chunks} chunks ✓` : d.error || "Reindex failed");
+  }
 
   async function upload(files: FileList | null) {
     if (!files || files.length === 0) return;
@@ -70,6 +86,21 @@ export default function KnowledgeBase() {
 
   return (
     <div className="max-w-3xl space-y-6">
+      {/* Semantic search status */}
+      <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-white/10 bg-white/[0.02] px-4 py-2.5">
+        <span className="text-xs text-slate-400">
+          {semantic ? "🔎 Semantic search is on — answers find the right section by meaning." : "🔎 Semantic search off — add an OpenAI or Google key in Settings to enable it (keyword search is used meanwhile)."}
+        </span>
+        {semantic && (
+          <div className="flex items-center gap-2">
+            {reindexMsg && <span className="text-[11px] text-emerald-400">{reindexMsg}</span>}
+            <button onClick={reindex} disabled={reindexing} className="rounded-lg border border-white/10 px-3 py-1.5 text-xs font-medium text-slate-200 transition hover:bg-white/5 disabled:opacity-50">
+              {reindexing ? "Indexing…" : "Reindex existing docs"}
+            </button>
+          </div>
+        )}
+      </div>
+
       {/* Who is this upload for? */}
       <div className="flex flex-wrap items-center gap-2">
         <span className="text-xs font-medium text-slate-400">Upload for</span>

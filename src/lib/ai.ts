@@ -157,6 +157,60 @@ export async function generateReply(
   }
 }
 
+// ---- Embeddings (for semantic knowledge-base search) -----------------------
+// Uses the first embeddings-capable provider that has a key configured. Returns
+// null when none is available, so callers can fall back to keyword search.
+export async function embeddingsAvailable(): Promise<boolean> {
+  const cfg = await getAIConfig();
+  return Boolean(cfg.keys.openai || cfg.keys.google || cfg.provider === "ollama");
+}
+
+export async function embed(texts: string[]): Promise<number[][] | null> {
+  if (texts.length === 0) return [];
+  const cfg = await getAIConfig();
+  try {
+    if (cfg.keys.openai) return await openaiEmbed("https://api.openai.com/v1", cfg.keys.openai, "text-embedding-3-small", texts);
+    if (cfg.provider === "ollama") return await openaiEmbed(OPENAI_COMPATIBLE.ollama!, "ollama", "nomic-embed-text", texts);
+    if (cfg.keys.google) return await googleEmbed(cfg.keys.google, "text-embedding-004", texts);
+  } catch {
+    return null;
+  }
+  return null;
+}
+
+async function openaiEmbed(baseURL: string, key: string, model: string, texts: string[]): Promise<number[][] | null> {
+  const res = await fetch(`${baseURL}/embeddings`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
+    body: JSON.stringify({ model, input: texts }),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok || !Array.isArray(data?.data)) return null;
+  return data.data.map((d: { embedding: number[] }) => d.embedding);
+}
+
+async function googleEmbed(key: string, model: string, texts: string[]): Promise<number[][] | null> {
+  const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:batchEmbedContents?key=${key}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ requests: texts.map((t) => ({ model: `models/${model}`, content: { parts: [{ text: t }] } })) }),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok || !Array.isArray(data?.embeddings)) return null;
+  return data.embeddings.map((e: { values: number[] }) => e.values);
+}
+
+export function cosineSim(a: number[], b: number[]): number {
+  let dot = 0, na = 0, nb = 0;
+  const n = Math.min(a.length, b.length);
+  for (let i = 0; i < n; i++) {
+    dot += a[i] * b[i];
+    na += a[i] * a[i];
+    nb += b[i] * b[i];
+  }
+  return na && nb ? dot / (Math.sqrt(na) * Math.sqrt(nb)) : 0;
+}
+
 async function callOpenAICompatible(baseURL: string, key: string, model: string, system: string, messages: ChatMessage[]): Promise<AIResult> {
   const res = await fetch(`${baseURL}/chat/completions`, {
     method: "POST",

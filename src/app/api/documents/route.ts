@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
 import pdfParse from "pdf-parse/lib/pdf-parse.js";
+import { indexDocument } from "@/lib/knowledge";
 
 export const runtime = "nodejs";
 
@@ -76,6 +77,9 @@ export async function POST(req: NextRequest) {
     data: { name: file.name, mimeType, size: file.size, text, content: buffer, audience },
     select: { id: true, name: true, size: true, text: true, audience: true, createdAt: true },
   });
+
+  // Build semantic-search embeddings (best-effort; keyword search works regardless).
+  await indexDocument(doc.id, text).catch(() => {});
 
   return NextResponse.json({
     document: {

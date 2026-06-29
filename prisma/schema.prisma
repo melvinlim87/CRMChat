@@ -138,6 +138,20 @@ model Document {
   content   Bytes? // original file bytes (for download)
   audience  String   @default("all") // "all" | "public" | "student" — who the AI uses this for
   createdAt DateTime @default(now())
+
+  chunks DocumentChunk[]
+}
+
+// A chunk of a document with its embedding vector, for semantic search.
+model DocumentChunk {
+  id         String   @id @default(cuid())
+  documentId String
+  document   Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  text       String
+  embedding  Json // number[]
+  createdAt  DateTime @default(now())
+
+  @@index([documentId])
 }
 
 // Uploaded image assets used in the website builder (served via /api/assets/[id]).
