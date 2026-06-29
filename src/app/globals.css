@@ -1,0 +1,175 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  @apply text-slate-200 antialiased;
+  background-color: #050507;
+  /* Faint gold glow + subtle starfield */
+  background-image:
+    radial-gradient(1100px 600px at 50% -15%, rgba(205, 161, 74, 0.12), transparent 60%),
+    radial-gradient(700px 500px at 100% 0%, rgba(205, 161, 74, 0.06), transparent 55%),
+    radial-gradient(1px 1px at 12% 18%, rgba(255, 255, 255, 0.35), transparent),
+    radial-gradient(1px 1px at 28% 62%, rgba(255, 255, 255, 0.22), transparent),
+    radial-gradient(1px 1px at 47% 28%, rgba(255, 255, 255, 0.3), transparent),
+    radial-gradient(1px 1px at 64% 74%, rgba(255, 255, 255, 0.2), transparent),
+    radial-gradient(1px 1px at 78% 38%, rgba(255, 255, 255, 0.28), transparent),
+    radial-gradient(1px 1px at 88% 66%, rgba(255, 255, 255, 0.18), transparent),
+    radial-gradient(1.5px 1.5px at 35% 85%, rgba(255, 255, 255, 0.25), transparent);
+  background-attachment: fixed;
+}
+
+/* Elegant serif headings (Algo Venture vibe) */
+h1 {
+  font-family: var(--font-display), Georgia, serif;
+  letter-spacing: -0.01em;
+}
+
+/* Glassy panel helper */
+.glass {
+  background-color: rgba(12, 13, 17, 0.72);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+/* Gold text accent */
+.text-gold {
+  background: linear-gradient(135deg, #f3d989 0%, #d9b15e 55%, #b2862f 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+input,
+textarea,
+select {
+  color: inherit;
+}
+input::placeholder,
+textarea::placeholder {
+  color: rgb(100 116 139);
+}
+select option {
+  background-color: #14151b;
+  color: #e2e8f0;
+}
+
+/* Dark scrollbars */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(148, 163, 184, 0.25) transparent;
+}
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+*::-webkit-scrollbar-thumb {
+  background-color: rgba(148, 163, 184, 0.25);
+  border-radius: 9999px;
+}
+
+/* ----------------------------------------------------------------------------
+   Light theme for the admin. Toggled by adding `.theme-light` to <html>.
+   Overrides the most-used dark utility classes so the admin reads on a light
+   background. (The embeddable widget has its own independent Light/Dark.)
+---------------------------------------------------------------------------- */
+.theme-light {
+  color-scheme: light;
+}
+.theme-light body {
+  background-color: #f4f5f7;
+  background-image: radial-gradient(1100px 600px at 50% -15%, rgba(205, 161, 74, 0.05), transparent 60%);
+  color: #0f172a;
+}
+.theme-light .glass {
+  background-color: rgba(255, 255, 255, 0.9);
+}
+/* In the (now light) sidebar, white text/logo would be invisible. */
+.theme-light .glass .text-white { color: #0f172a; }
+.theme-light .bg-surface-panel {
+  background-color: #ffffff;
+}
+.theme-light .bg-\[\#070709\] {
+  background-color: #f8fafc;
+}
+.theme-light .bg-\[\#050507\] {
+  background-color: #f4f5f7;
+}
+.theme-light .text-slate-100 { color: #0f172a; }
+.theme-light .text-slate-200 { color: #1e293b; }
+.theme-light .text-slate-300 { color: #334155; }
+.theme-light .text-slate-400 { color: #475569; }
+.theme-light .text-slate-500 { color: #64748b; }
+.theme-light .border-white\/10,
+.theme-light .border-white\/5,
+.theme-light .border-white\/15,
+.theme-light .border-white\/20 { border-color: rgba(15, 23, 42, 0.14); }
+
+/* Gold/brand text is too pale on white — darken it so it stays readable. */
+.theme-light .text-gold {
+  background: none;
+  -webkit-text-fill-color: #8a6622;
+  color: #8a6622;
+}
+.theme-light .text-brand-200,
+.theme-light .text-brand-300,
+.theme-light .text-brand-400,
+.theme-light .text-brand-500 { color: #8a6622; }
+.theme-light h1 .text-gold { -webkit-text-fill-color: #8a6622; }
+.theme-light .bg-white\/5 { background-color: rgba(15, 23, 42, 0.04); }
+.theme-light .bg-white\/\[0\.02\] { background-color: rgba(15, 23, 42, 0.03); }
+.theme-light .bg-white\/\[0\.03\] { background-color: rgba(15, 23, 42, 0.04); }
+.theme-light .hover\:bg-white\/5:hover { background-color: rgba(15, 23, 42, 0.06); }
+.theme-light .bg-black\/40,
+.theme-light .bg-black\/30 { background-color: rgba(15, 23, 42, 0.06); }
+.theme-light .bg-\[\#14151b\] { background-color: #ffffff; }
+.theme-light .bg-\[\#0c0d11\] { background-color: #ffffff; }
+.theme-light input::placeholder,
+.theme-light textarea::placeholder { color: rgb(148 163 184); }
+.theme-light select option { background-color: #ffffff; color: #0f172a; }
+.theme-light pre { color: #8a6622 !important; }
+
+/* React Flow canvas in light mode */
+.theme-light .react-flow__controls-button {
+  background: #ffffff !important;
+  border-color: rgba(15, 23, 42, 0.12) !important;
+  color: #0f172a !important;
+}
+.theme-light .react-flow__controls-button:hover { background: #f1f5f9 !important; }
+.theme-light .react-flow__minimap { background-color: #eef1f5 !important; }
+.theme-light .react-flow__background { background-color: #f8fafc; }
+.theme-light .react-flow__edge-path { stroke: #94a3b8; }
+
+/* Keep the embeddable-widget live preview rendering with its OWN theme,
+   immune to the admin light overrides above (it manages light/dark itself). */
+.theme-light .widget-preview-frame .text-slate-100 { color: #f1f5f9; }
+.theme-light .widget-preview-frame .text-slate-200 { color: #e2e8f0; }
+.theme-light .widget-preview-frame .text-slate-300 { color: #cbd5e1; }
+.theme-light .widget-preview-frame .text-slate-400 { color: #94a3b8; }
+.theme-light .widget-preview-frame .text-slate-500 { color: #64748b; }
+.theme-light .widget-preview-frame .border-white\/10,
+.theme-light .widget-preview-frame .border-white\/5 { border-color: rgba(255, 255, 255, 0.1); }
+.theme-light .widget-preview-frame .bg-white\/5 { background-color: rgba(255, 255, 255, 0.05); }
+
+/* React Flow dark tweaks */
+.react-flow__attribution {
+  display: none;
+}
+.react-flow__controls-button {
+  background: #14151b !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+  color: #e2e8f0 !important;
+}

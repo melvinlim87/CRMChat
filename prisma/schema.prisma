@@ -1,0 +1,287 @@
+// CRMChat — chat-based CRM with WhatsApp Business integration
+// Docs: https://www.prisma.io/docs
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  password  String
+  createdAt DateTime @default(now())
+
+  leads Lead[]
+  notes Note[]
+}
+
+enum LeadStatus {
+  NEW
+  CONTACTED
+  QUALIFIED
+  WON
+  LOST
+}
+
+model Lead {
+  id        String     @id @default(cuid())
+  name      String
+  phone     String?    @unique
+  email     String?
+  company   String?
+  status    LeadStatus @default(NEW)
+  source    String?    @default("whatsapp")
+  tags      String[]   @default([])
+  ownerId   String?
+  owner     User?      @relation(fields: [ownerId], references: [id])
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  conversation Conversation?
+  notes        Note[]
+}
+
+model Note {
+  id        String   @id @default(cuid())
+  leadId    String
+  lead      Lead     @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  body      String
+  authorId  String?
+  author    User?    @relation(fields: [authorId], references: [id])
+  createdAt DateTime @default(now())
+
+  @@index([leadId])
+}
+
+model Conversation {
+  id            String   @id @default(cuid())
+  leadId        String   @unique
+  lead          Lead     @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  channel       String   @default("whatsapp")
+  sessionId     String?  @unique // for anonymous website-widget chats
+  needsHuman    Boolean  @default(false) // flagged for human attention (negative sentiment)
+  humanTakeover Boolean  @default(false) // a human is handling this — AI stops auto-replying
+  lastMessageAt DateTime @default(now())
+  unreadCount   Int      @default(0)
+  createdAt     DateTime @default(now())
+
+  messages Message[]
+}
+
+enum MessageDirection {
+  INBOUND
+  OUTBOUND
+}
+
+model Message {
+  id             String           @id @default(cuid())
+  conversationId String
+  conversation   Conversation     @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  direction      MessageDirection
+  body           String
+  status         String           @default("sent")
+  externalId     String? // WhatsApp message id
+  createdAt      DateTime         @default(now())
+
+  @@index([conversationId])
+}
+
+model Integration {
+  id        String   @id @default(cuid())
+  provider  String   @unique // e.g. "whatsapp", "google", "slack"
+  status    String   @default("disconnected")
+  config    Json?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+enum AutomationTrigger {
+  MESSAGE_RECEIVED
+  LEAD_CREATED
+  FORM_SUBMITTED
+}
+
+enum AutomationAction {
+  AUTO_REPLY
+  ADD_TAG
+  SET_STATUS
+}
+
+model Setting {
+  id        String   @id @default(cuid())
+  key       String   @unique // e.g. "ai"
+  value     Json
+  updatedAt DateTime @updatedAt
+}
+
+// Canned responses for the chat composer.
+model CannedResponse {
+  id        String   @id @default(cuid())
+  title     String
+  body      String
+  createdAt DateTime @default(now())
+}
+
+// Uploaded knowledge-base documents (PDFs). Extracted text powers AI replies.
+model Document {
+  id        String   @id @default(cuid())
+  name      String
+  mimeType  String   @default("application/pdf")
+  size      Int      @default(0)
+  text      String   @default("") // extracted text
+  content   Bytes? // original file bytes (for download)
+  audience  String   @default("all") // "all" | "public" | "student" — who the AI uses this for
+  createdAt DateTime @default(now())
+
+  chunks DocumentChunk[]
+}
+
+// A chunk of a document with its embedding vector, for semantic search.
+model DocumentChunk {
+  id         String   @id @default(cuid())
+  documentId String
+  document   Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  text       String
+  embedding  Json // number[]
+  createdAt  DateTime @default(now())
+
+  @@index([documentId])
+}
+
+// Uploaded image assets used in the website builder (served via /api/assets/[id]).
+model Asset {
+  id        String   @id @default(cuid())
+  mimeType  String
+  data      Bytes
+  createdAt DateTime @default(now())
+}
+
+// An embeddable chat widget (e.g. "public" for leads, "students" for support).
+model Widget {
+  id          String   @id @default(cuid())
+  key         String   @unique // slug used in the embed snippet
+  name        String
+  title       String
+  welcome     String
+  color       String   @default("#cda14a")
+  instruction String? // extra AI persona/system instruction
+  tag         String? // tag applied to leads from this widget
+  starters    String[] @default([]) // suggested starter prompts shown on open
+  avatar      String? // header logo/avatar image URL
+  tone        String   @default("friendly") // AI tone of voice
+  flowEnabled Boolean  @default(false) // run the visual widget flow on open
+  flow        Json     @default("{}") // { nodes, edges } for the widget flow builder
+  gateEnabled Boolean  @default(false) // show the "Are you a student?" intro flow
+  gateHeading String   @default("Welcome! How can we help?")
+  studentLabel String  @default("🎓 Existing Student")
+  visitorLabel String  @default("💬 General Enquiry")
+  studentColor String? // gate "student" button colour (defaults to students widget colour)
+  visitorColor String? // gate "visitor" button colour (defaults to outline style)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// Frequently-asked questions. Surfaced in the AI knowledge base so the
+// assistant can answer them, and available to render on the public site.
+model Faq {
+  id        String   @id @default(cuid())
+  question  String
+  answer    String
+  category  String?
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([order])
+}
+
+// A test query run from the admin "validate the agent" console.
+model AiTestQuery {
+  id        String   @id @default(cuid())
+  query     String
+  answer    String   @default("")
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+}
+
+// A meeting/call booked by a visitor through a widget flow "Booking" node.
+model Booking {
+  id        String   @id @default(cuid())
+  name      String?
+  email     String?
+  datetime  DateTime
+  note      String   @default("")
+  sessionId String?
+  widget    String?
+  status    String   @default("booked")
+  createdAt DateTime @default(now())
+
+  @@index([datetime])
+}
+
+// 👍/👎 feedback a visitor left on an assistant reply in the widget.
+model WidgetFeedback {
+  id        String   @id @default(cuid())
+  sessionId String?
+  widget    String?
+  rating    Int // 1 = up, -1 = down
+  message   String   @default("") // the answer that was rated
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+}
+
+// A published/editable marketing page built in the drag-and-drop site builder.
+model Page {
+  id        String   @id @default(cuid())
+  slug      String   @unique
+  title     String
+  published Boolean  @default(false)
+  blocks    Json     @default("[]") // ordered array of widget blocks
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Flow {
+  id        String   @id @default(cuid())
+  name      String
+  enabled   Boolean  @default(false)
+  keyword   String? // optional trigger keyword; empty = any inbound message
+  graph     Json     @default("{}") // { nodes: [...], edges: [...] }
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  runs FlowRun[]
+}
+
+// Tracks where a conversation currently is inside a flow, so flows can span
+// multiple messages (multi-turn). One active run per conversation.
+model FlowRun {
+  id             String   @id @default(cuid())
+  flowId         String
+  flow           Flow     @relation(fields: [flowId], references: [id], onDelete: Cascade)
+  conversationId String   @unique
+  currentNodeId  String
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+model Automation {
+  id          String            @id @default(cuid())
+  name        String
+  enabled     Boolean           @default(true)
+  trigger     AutomationTrigger @default(MESSAGE_RECEIVED)
+  keyword     String? // substring match on inbound text; empty = any message
+  action      AutomationAction? // legacy single-action automations
+  actionValue String? // legacy: reply text, tag name, or status
+  graph       Json              @default("{}") // n8n-style visual workflow
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+}
